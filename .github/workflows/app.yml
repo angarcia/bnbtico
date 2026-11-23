@@ -265,12 +265,13 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # Por nombre y con su carpeta: con un patrón que coincide con un solo artefacto, download-artifact lo extrae sin
+      # subcarpeta y el informe no lo encuentra (pasó con las e2e en un trozo, 2026-11-16, y con los tiempos de preparación
+      # tras «Re-run failed jobs», que no repite el inventario, 2026-11-23).
       - uses: actions/download-artifact@v8
         with:
-          pattern: e2e-*-attempt-${{ github.run_attempt }}
-          path: ci-artifacts/
-      # Por nombre y con su carpeta: con un patrón que coincide con un solo artefacto, download-artifact lo extrae sin
-      # subcarpeta y el informe no lo encuentra (pasó con las e2e en un trozo, 2026-11-16).
+          name: e2e-preparation-1-of-1-attempt-${{ github.run_attempt }}
+          path: ci-artifacts/e2e-preparation-1-of-1-attempt-${{ github.run_attempt }}
       - uses: actions/download-artifact@v8
         with:
           name: playwright-1-of-1-attempt-${{ github.run_attempt }}
@@ -288,7 +289,7 @@ jobs:
         env:
           SHARD_COUNT: "1"
         run: |
-          inventory="ci-artifacts/e2e-inventory-attempt-${{ github.run_attempt }}/inventory.json"
+          inventory="ci-artifacts/inventarios/e2e-inventory-attempt-${{ github.run_attempt }}/inventory.json"
           if [ ! -f "$inventory" ]; then
             inventory=$(find ci-artifacts/inventarios -name inventory.json 2>/dev/null | sort -V | tail -n 1)
           fi

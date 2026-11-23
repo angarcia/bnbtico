@@ -77,7 +77,7 @@ No modifique `publish` ni añada archivos después de la promoción. Elimine la 
 
 ## Diagnosticar un rechazo en CI
 
-El coordinador `ci-artifacts.mjs` imprime `Playwright: código de salida N.` antes del saneamiento: `0` indica que el proceso terminó correctamente; otro valor indica un fallo o una interrupción. Las puertas posteriores siguen siendo obligatorias. Este dato permite conocer el resultado del proceso incluso si no se puede publicar el diagnóstico.
+El coordinador `ci-artifacts.mjs` imprime `Playwright: código de salida N.` antes del saneamiento: `0` indica que el proceso terminó correctamente; otro valor indica un fallo o una interrupción. Las puertas posteriores siguen siendo obligatorias. Este dato permite conocer el resultado del proceso incluso si no se puede publicar el diagnóstico. Debajo imprime una línea por caso que falló o fue inestable (`Falló: <archivo>:<línea> › <título>` o `Inestable: …`), leída del informe JSON en bruto: solo archivo, línea y título, que escribe el repositorio; nunca el error, la salida ni los adjuntos, que pueden llevar sesiones o tokens. Así, cuando el saneador rechaza la subida (p. ej. `credential-shape`), el log de Actions sigue diciendo qué prueba falló (2026-11-23).
 
 Los rechazos de entradas ZIP se distinguen por códigos fijos: `zip-duplicate` (nombre repetido), `zip-encrypted` (entrada cifrada), `zip-compression` (método no admitido) y `zip-type` (tipo de archivo no admitido). No se imprimen nombres, rutas ni contenido del ZIP. Todos estos rechazos siguen bloqueando la publicación y el job.
 
