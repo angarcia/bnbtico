@@ -40,6 +40,7 @@ import { Button, TextButton } from "../../../shared/ui/button";
 import { LoadError, Notice, Skeleton, StatusTag } from "../../../shared/ui/structure";
 import { Card } from "../../../shared/ui/card";
 import { RouterListRow } from "../../comun/router-rows";
+import * as SUB_COPY from "./copy/subscription";
 
 const route = getRouteApi("/_flow/_privateFlow/propietario/suscripcion");
 const message = (e: unknown) => toDomainError(e).message;
@@ -81,12 +82,12 @@ function usePaymentPage() {
   return useMutation({ mutationFn: (publicId?: string) => openPaymentPage(publicId) });
 }
 
-function PayButton({ publicId, label = "Añadir método de pago", ghost }: { publicId?: string; label?: string; ghost?: boolean }) {
+function PayButton({ publicId, label = SUB_COPY.addMethod, ghost }: { publicId?: string; label?: string; ghost?: boolean }) {
   const pay = usePaymentPage();
   return (
     <>
       <Button variant={ghost ? "secondary" : "pay"} block={!ghost} disabled={pay.isPending} onClick={() => pay.mutate(publicId)}>
-        {pay.isPending ? "Abriendo la página de pago…" : label}
+        {pay.isPending ? SUB_COPY.opening : label}
       </Button>
       {pay.isError ? (
         <Notice tone="error" small>
@@ -172,7 +173,7 @@ function HouseCard({ hb, today, userId, hasMethod, target, onAction }: { hb: Hou
   return (
     <Card as="article" ref={ref} tabIndex={-1} layout="stack" gap={8} placement={sub.status === "inactive" && !blocked ? "sub-house-inactive" : "sub-house"} mark={target ? "target" : undefined} data-house={house.publicId}>
       <div className="row between baseline gap-8">
-        <h3 className="sub-house-title">{house.title || "Casa sin título"}</h3>
+        <h3 className="sub-house-title">{house.title || SUB_COPY.untitled}</h3>
         <StatusTag label={label} />
       </div>
       {line && line !== label.text ? (
@@ -180,9 +181,9 @@ function HouseCard({ hb, today, userId, hasMethod, target, onAction }: { hb: Hou
           {line}
         </span>
       ) : null}
-      <p className="sub-price num" data-testid="sub-price"><b>{formatCRC(free ? 0 : sub.monthlyPriceCrc)}</b><span>/ mes{sub.status === "inactive" && !blocked ? " al activarla" : ""}</span></p>
-      {free ? <span className="small muted num">Después de su oferta: {formatCRC(sub.monthlyPriceCrc)} al mes.</span> : null}
-      {sub.status === "inactive" && !blocked ? <span className="small muted">Ahora no se cobra.</span> : null}
+      <p className="sub-price num" data-testid="sub-price"><b>{formatCRC(free ? 0 : sub.monthlyPriceCrc)}</b><span>{SUB_COPY.perMonth({ inactive: sub.status === "inactive" && !blocked })}</span></p>
+      {free ? <span className="small muted num">{SUB_COPY.afterOffer({ fee: formatCRC(sub.monthlyPriceCrc) })}</span> : null}
+      {sub.status === "inactive" && !blocked ? <span className="small muted">{SUB_COPY.noChargeNow}</span> : null}
       {/* Lo que la casa le ha dado (visitas y consultas): lo que retiene, no el botón para irse (revisión UX 2026-10-29, A2). */}
       {sub.status === "active" ? <HouseFigures userId={userId} listingId={house.listingId} /> : null}
       {pay ? <PayNotice hb={hb} today={today} /> : null}
@@ -193,10 +194,10 @@ function HouseCard({ hb, today, userId, hasMethod, target, onAction }: { hb: Hou
               onAction();
               change.mutate("resume");
             }}>
-            Activar suscripción
+            {SUB_COPY.activate}
           </Button>
           {sub.plan === "promo" && sub.promoEndsOn && today <= sub.promoEndsOn ? (
-            <span className="xs muted num">Mantiene su plaza de la oferta: gratis hasta el {shortDate(sub.promoEndsOn, today)}.</span>
+            <span className="xs muted num">{SUB_COPY.keepsPlace({ until: shortDate(sub.promoEndsOn, today) })}</span>
           ) : null}
         </>
       ) : null}
@@ -207,21 +208,21 @@ function HouseCard({ hb, today, userId, hasMethod, target, onAction }: { hb: Hou
       ) : null}
       {house.plan === "promo" && house.promoEndsOn && !blocked ? (
         <span className="xs muted">
-          Avisos por WhatsApp: 90, 30 y 7 días antes y el último día.
-          {sent.map((r) => ` Aviso ${REMINDER_LABEL[r.daysBefore]} enviado el ${shortDate(r.sentAt!.slice(0, 10), today)}.`).join("")}
+          {SUB_COPY.reminders}
+          {sent.map((r) => SUB_COPY.reminderSent({ label: REMINDER_LABEL[r.daysBefore] ?? "", date: shortDate(r.sentAt!.slice(0, 10), today) })).join("")}
         </span>
       ) : null}
       {/* «Parar suscripción» como texto, centrado y al final; la confirmación sigue igual (A2). */}
       {!blocked && (sub.status === "active" || sub.status === "payment_due") ? (
         <TextButton tone="quiet" placement="sub-stop" disabled={change.isPending} onClick={() => setConfirming(true)}>
-          Parar suscripción
+          {SUB_COPY.stop}
         </TextButton>
       ) : null}
       {confirming ? (
         <ConfirmSheet
-          title="Parar suscripción"
-          body={`¿Parar la suscripción de ${house.title || "esta casa"}? La casa deja de verse y no se cobra. Puede reactivarla cuando quiera.`}
-          confirmLabel="Parar suscripción"
+          title={SUB_COPY.stop}
+          body={SUB_COPY.stopBody({ title: house.title })}
+          confirmLabel={SUB_COPY.stop}
           tone={desktop ? "keep" : "destructive"}
           cancelLabel={desktop ? "Mantener suscripción" : "Cancelar"}
           cancelFirst={desktop}
@@ -247,7 +248,7 @@ function HouseFigures({ userId, listingId }: { userId: string; listingId: string
   const inquiries = a?.inquiries ?? 0;
   return (
     <span className="small strong num" data-testid="sub-figures">
-      {views} {views === 1 ? "visita" : "visitas"} · {inquiries} {inquiries === 1 ? "consulta" : "consultas"} en 30 días
+      {SUB_COPY.figures({ views, inquiries })}
     </span>
   );
 }
@@ -341,51 +342,49 @@ function SubscriptionContent({ search, panelBack, inAccount = false }: { search:
     <section className="stack gap-12 subscription-list">{card(scoped)}</section>
   ) : indexed ? (
     <section className="stack gap-12 subscription-list">
-      <h2 className="card-title">Sus casas</h2>
-      {ordered.length ? ordered.map(card) : <p className="small muted">Cuando aprobemos su primera casa, aquí verá su oferta y su suscripción.</p>}
+      <h2 className="card-title">{SUB_COPY.yourHouses}</h2>
+      {ordered.length ? ordered.map(card) : <p className="small muted">{SUB_COPY.firstHouse}</p>}
     </section>
   ) : null;
   const methodCard = (
     <Card layout="stack" gap={8} data-testid="method-card">
-      <h2 className="card-title">Método de pago</h2>
+      <h2 className="card-title">{SUB_COPY.method}</h2>
       {method ? (
         <div className="row between baseline gap-8">
           <span className="row gap-8 num">
-            <CardIcon /> {methodName(method)} · vence {expiry(method)}
+            <CardIcon /> {SUB_COPY.methodLine({ name: methodName(method), expiry: expiry(method) })}
           </span>
-          <PayButton label="Cambiar" ghost publicId={scoped?.house.publicId} />
+          <PayButton label={SUB_COPY.change} ghost publicId={scoped?.house.publicId} />
         </div>
       ) : (
         <>
           <span className="row gap-8">
-            <CardIcon /> Ninguno todavía
+            <CardIcon /> {SUB_COPY.noMethod}
           </span>
-          {due ? <PayButton publicId={scoped?.house.publicId} /> : <span className="small muted">Puede añadirlo cuando le avisemos.</span>}
+          {due ? <PayButton publicId={scoped?.house.publicId} /> : <span className="small muted">{SUB_COPY.addLater}</span>}
         </>
       )}
-      <span className="xs muted">Se guarda en la página segura de la pasarela de pago; en 3bstays nunca se escribe el número de la tarjeta. Ahora no se cobra nada.</span>
+      <span className="xs muted">{SUB_COPY.methodNote}</span>
     </Card>
   );
   // «Cómo funciona», plegado y en blanco (A2, A6).
   const howItWorks = (
     <Card as="details" placement="how-it-works" data-testid="how-it-works">
-      <summary className="strong">¿Cómo funciona el cobro?</summary>
+      <summary className="strong">{SUB_COPY.howTitle}</summary>
       <span>
-        Cuando aprobamos su casa, empieza su oferta gratuita (si le tocó plaza). Le avisamos por WhatsApp y aquí a los 90, 30 y 7 días y el último día. Si al terminar tiene
-        un método de pago, la casa sigue activa por {fee()} al mes; si no, queda pendiente de pago y deja de mostrarse hasta que lo añada. Puede parar la suscripción
-        de una casa cuando quiera (queda inactiva y no se cobra) y reactivarla después con el mismo enlace. Sin permanencia y sin comisiones por alquiler.
+        {SUB_COPY.howText({ fee: fee() })}
       </span>
     </Card>
   );
 
   return (
     <>
-      {inAccount ? <h2>Promoción y suscripción</h2> : (
-        <ScreenHeader kind="flow" title={single ? "Suscripción" : "Promoción y suscripción"} back={{ to: panelBack ?? "/cuenta", historyBack: !panelBack }} />
+      {inAccount ? <h2>{SUB_COPY.titleInAccount}</h2> : (
+        <ScreenHeader kind="flow" title={SUB_COPY.title({ single: !!single })} back={{ to: panelBack ?? "/cuenta", historyBack: !panelBack }} />
       )}
       {scoped ? (
         <p className="small muted sub-scope" data-testid="sub-scope">
-          {scoped.house.title || "Casa sin título"}
+          {scoped.house.title || SUB_COPY.untitled}
         </p>
       ) : null}
       {saving ? (
@@ -405,15 +404,15 @@ function SubscriptionContent({ search, panelBack, inAccount = false }: { search:
           {message(billing.error)}
         </LoadError>
       ) : panelBack && settled ? (
-        <Notice>La suscripción de esta casa no está disponible.</Notice>
+        <Notice>{SUB_COPY.unavailable}</Notice>
       ) : userId && (billing.isPending || single) ? (
-        <Skeleton shape="subscription" label="Cargando su suscripción" />
+        <Skeleton shape="subscription" label={SUB_COPY.loading} />
       ) : (
         howItWorks
       )}
       {!panelBack && scoped && indexed && indexed.all.length >= 2 ? (
         <Link to="/propietario/suscripcion" className="link small center">
-          Ver todas sus casas
+          {SUB_COPY.allHouses}
         </Link>
       ) : null}
     </>
@@ -426,12 +425,12 @@ function TiersCard() {
   return (
     <Card layout="stack" gap={8} placement="subscription-offer" data-testid="tiers-card">
       <div className="row between baseline">
-        <b className="display offer-title">Oferta de lanzamiento</b>
-        <span className={`xs num offer-left${offer === undefined ? " is-hidden" : ""}`}>{offer ? `Quedan ${offer.remaining} de ${offer.size}` : offer === null ? "Terminada" : "Quedan …"}</span>
+        <b className="display offer-title">{SUB_COPY.offerTitle}</b>
+        <span className={`xs num offer-left${offer === undefined ? " is-hidden" : ""}`}>{offer ? SUB_COPY.offerLeft({ remaining: offer.remaining, size: offer.size }) : offer === null ? SUB_COPY.offerOver : SUB_COPY.offerLoading}</span>
       </div>
-      <span className="small ink">Primeras 50 casas: 12 meses gratis. Siguientes 50: 6 meses. Siguientes 100: 3 meses.</span>
+      <span className="small ink">{SUB_COPY.tiers}</span>
       <span className="xs">
-        Después, {fee()} al mes por casa, sin permanencia. Cada casa toma su plaza cuando la aprobamos y la conserva aunque la edite o la pare.
+        {SUB_COPY.tiersNote({ fee: fee() })}
       </span>
     </Card>
   );
@@ -458,7 +457,7 @@ export function CuentaSubscriptionCard({ fallback }: { fallback: ReactNode }) {
   return (
     <Card layout="stack" gap={10} data-testid="subscription-card">
       <div className="row between baseline">
-        <b>Suscripciones</b>
+        <b>{SUB_COPY.subscriptions}</b>
       </div>
       {visible.length ? (
         <div className="stack gap-8 small">
@@ -467,7 +466,7 @@ export function CuentaSubscriptionCard({ fallback }: { fallback: ReactNode }) {
             const ocre = !r.blocked && (r.status === "payment_due" || r.status === "inactive");
             const inner = (
               <>
-                <span className={ocre ? "sun-ink strong" : undefined}>{r.title || "Casa sin título"}</span>
+                <span className={ocre ? "sun-ink strong" : undefined}>{r.title || SUB_COPY.untitled}</span>
                 {r.blocked ? <StatusTag label={holdLabel("blocked", "row")} /> : ocre ? <StatusTag label={{ text: statusLabel(r.status).text, tone: "pay" }} /> : <span className={`num align-end ${r.promo ? "primary strong" : (LINE_CLASS[r.status] ?? "")}`}>{r.line}</span>}
                 {r.blocked || (ocre && r.status === "inactive") ? <span className="sub-row-detail xs muted num">{r.line}</span> : null}
               </>
@@ -484,16 +483,16 @@ export function CuentaSubscriptionCard({ fallback }: { fallback: ReactNode }) {
           })}
         </div>
       ) : summary.total === 0 ? (
-        <p className="small muted">Cuando aprobemos su primera casa, aquí verá su suscripción.</p>
+        <p className="small muted">{SUB_COPY.firstHouseShort}</p>
       ) : null}
       <Link to="/propietario/suscripcion" className="sub-summary-link" data-testid="subscriptions-link">
         <CardIcon />
-        <span className="stack gap-4"><span>Ver suscripciones</span><span className="small muted num" data-testid="subscription-counts">{summary.total} {summary.total === 1 ? "casa" : "casas"}{summary.inactive ? ` · ${summary.inactive} ${summary.inactive === 1 ? "inactiva" : "inactivas"}` : ""}{summary.blocked ? ` · ${summary.blocked} ${summary.blocked === 1 ? "bloqueada" : "bloqueadas"}` : ""}</span></span>
+        <span className="stack gap-4"><span>{SUB_COPY.seeSubscriptions}</span><span className="small muted num" data-testid="subscription-counts">{SUB_COPY.counts({ total: summary.total, inactive: summary.inactive, blocked: summary.blocked })}</span></span>
         <I.chevron />
       </Link>
       <hr className="divider" />
       <div className="row between baseline">
-        <span className="small muted">Próximo cobro</span>
+        <span className="small muted">{SUB_COPY.nextCharge}</span>
         {/* «Nada hasta el …» sin negrita: en plena oferta no hay nada que pagar (C5). */}
         {(() => {
           const line = nextCharge(
@@ -508,7 +507,7 @@ export function CuentaSubscriptionCard({ fallback }: { fallback: ReactNode }) {
           );
         })()}
       </div>
-      <span className="xs muted">{fee()} al mes por casa activa, sin permanencia. Sin comisiones por alquiler, nunca.</span>
+      <span className="xs muted">{SUB_COPY.feeNote({ fee: fee() })}</span>
     </Card>
   );
 }
@@ -528,7 +527,7 @@ export function CuentaPaymentRow() {
         <CardIcon />
       </span>
       <span className="body">
-        Añadir método de pago<small className="num">Falta · añádalo antes de que termine su oferta</small>
+        {SUB_COPY.addMethod}<small className="num">{SUB_COPY.methodRowHint}</small>
       </span>
       <span className="chev">
         <I.chevron />

@@ -283,7 +283,7 @@ describe("restos retirados", () => {
 // sueltos en el JSX. Se aplica a los archivos que ya se pasaron; cada área que se pase se añade a TEXT_SCOPE.
 
 /** Carpetas o archivos (relativos a src/) ya pasados: ningún TSX dentro escribe texto suelto. */
-const TEXT_SCOPE = ["shared/", "client/explorar/", "client/comun/", "client/app/", "client/cuenta/", "client/admin/", "client/propietario/calendario/", "client/propietario/publicar/"];
+const TEXT_SCOPE = ["shared/", "client/explorar/", "client/comun/", "client/app/", "client/cuenta/", "client/admin/", "client/propietario/calendario/", "client/propietario/publicar/", "client/propietario/suscripcion/"];
 const TEXT_FILES = files(SRC, /\.tsx$/).map((f) => relative(SRC, f)).filter((f) => TEXT_SCOPE.some((s) => f === s || (s.endsWith("/") && f.startsWith(s))));
 /** Atributos que el usuario lee o escucha. */
 const TEXT_ATTRS = new Set(["label", "title", "aria-label", "placeholder", "alt", "text", "hint", "body", "confirmLabel"]);
