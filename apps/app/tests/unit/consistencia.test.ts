@@ -172,8 +172,8 @@ const COMPONENTS: { name: string; use: string; owners: string[]; classes: RegExp
 /** archivo → clase → motivo. */
 const CLASS_EXCEPTIONS: Record<string, Record<string, string>> = {
   "client/screens/explorar.tsx": { chip: "el botón Filtros flotante de Explorar (chip de navegación, no de elección)" },
-  "client/screens/admin-casas.tsx": { chip: "chips de filtro de Casas: enlaces, no elección", "chip-sm": "chips de filtro de Casas, pequeños" },
-  "client/screens/admin-anuncios.tsx": { chip: "pestañas de la cola en chip: enlaces, no elección", "chip-sm": "pestañas de la cola, pequeñas" },
+  "client/admin/admin-casas.tsx": { chip: "chips de filtro de Casas: enlaces, no elección", "chip-sm": "chips de filtro de Casas, pequeños" },
+  "client/admin/admin-anuncios.tsx": { chip: "pestañas de la cola en chip: enlaces, no elección", "chip-sm": "pestañas de la cola, pequeñas" },
   "client/screens/actividad.tsx": { "btn-link": "«Abrir WhatsApp» de una consulta: texto propio (inquiry-wa)" },
   "client/card-whatsapp.tsx": { "sheet-backdrop": "fondo atenuado mientras llega el trozo de la hoja de contacto" },
   "client/screens/calendario.tsx": { "sheet-backdrop": "fondo atenuado mientras llega el trozo de «Pausar la casa» y «Marcar una reserva»" },

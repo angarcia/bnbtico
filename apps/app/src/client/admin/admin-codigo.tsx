@@ -2,7 +2,7 @@ import { Navigate, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import type { MfaFactor } from "../../domain/api";
 import { I } from "../../shared/ui/icons";
-import { loadSecondFactor, verifySecondCode } from "../admin";
+import { loadSecondFactor, verifySecondCode } from "./admin-queries";
 import { ScreenHeader } from "../comun/screen-header";
 import { useSession } from "../comun/session";
 import { NotAdmin, message, useIsAdmin } from "./admin-shared";

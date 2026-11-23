@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import * as screens from "../../src/client/screens/admin";
+import * as screens from "../../src/client/admin/admin";
 import type { QueueItem } from "../../src/domain/review";
 import { activeListing } from "./fixtures";
 
@@ -42,7 +42,7 @@ vi.mock("../../src/client/comun/screen-header", () => ({
 }));
 vi.mock("../../src/client/comun/session", () => ({ useSession: () => ({ session: state.session }) }));
 vi.mock("../../src/client/comun/account", () => ({ accountQuery: (id: string) => ({ queryKey: ["account", id] }) }));
-vi.mock("../../src/client/admin", () => ({
+vi.mock("../../src/client/admin/admin-queries", () => ({
   adminQueueQuery: (id: string) => ({ queryKey: ["queue", id] }),
   adminEditsQuery: (id: string) => ({ queryKey: ["edits", id] }),
   adminHousesQuery: (id: string) => ({ queryKey: ["houses", id] }),

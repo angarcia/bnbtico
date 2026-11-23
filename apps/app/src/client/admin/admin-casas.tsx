@@ -9,7 +9,7 @@ import { variantUrl } from "../../domain/image";
 import { I } from "../../shared/ui/icons";
 import { toast } from "../../shared/toast";
 import { firstName, ownerNoticeUrl } from "../../domain/owner-notice";
-import { adminHousesQuery, HOUSE_ACTION_DONE, useHouseAction } from "../admin";
+import { adminHousesQuery, HOUSE_ACTION_DONE, useHouseAction } from "./admin-queries";
 import { ScreenHeader } from "../comun/screen-header";
 import { Sheet } from "../../shared/ui/overlay";
 import { AdminBadge, NotAdmin, NoticeLink, message, useIsAdmin, useUserId } from "./admin-shared";

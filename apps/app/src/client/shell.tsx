@@ -171,7 +171,7 @@ const PHOTOS_STEP = 7;
 const publicarLocalPending = wizardPending("/explorar", "Cerrar", "Cargando");
 
 // La zona del admin se descarga al abrirla: no entra en el JS inicial.
-const adminScreen = (name: "AnunciosScreen" | "CasasAdminScreen" | "RevisarScreen" | "RevisarEdicionScreen" | "SegundoCodigoScreen") => lazyRouteComponent(() => import("./screens/admin"), name);
+const adminScreen = (name: "AnunciosScreen" | "CasasAdminScreen" | "RevisarScreen" | "RevisarEdicionScreen" | "SegundoCodigoScreen") => lazyRouteComponent(() => import("./admin/admin"), name);
 const adminSearch = (params: Record<string, unknown>): { ver?: "changes" | "rejected" } =>
   params.ver === "changes" || params.ver === "rejected" ? { ver: params.ver } : {};
 // El filtro se valida en la pantalla (HOUSE_CHIPS, que vive en el trozo del admin): aquí solo se deja pasar un texto.

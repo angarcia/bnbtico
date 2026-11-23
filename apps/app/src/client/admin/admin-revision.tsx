@@ -8,7 +8,7 @@ import { statusLabel } from "../../domain/status-label";
 import { decidedNoticeKind, firstName, ownerNoticeUrl, type OwnerNoticeInput } from "../../domain/owner-notice";
 import { NO_PHOTOS_NOTE, REVIEW_NOTE_MAX, reviewNoteRefusal, type QueueItem, type ReviewDecision } from "../../domain/review";
 import { I } from "../../shared/ui/icons";
-import { adminListingQuery, useReview } from "../admin";
+import { adminListingQuery, useReview } from "./admin-queries";
 import { ScreenHeader } from "../comun/screen-header";
 import { Checklist, FeatureBadges, OwnerCard, PriceLine, factsLine } from "./admin-review-details";
 import { NotAdmin, NoticeLink, message, titleOf, useIsAdmin, useUserId } from "./admin-shared";

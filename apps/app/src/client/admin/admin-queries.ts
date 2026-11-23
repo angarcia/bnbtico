@@ -3,20 +3,20 @@
 // si la base se niega, vuelve con su mensaje. La purga de la ficha pública la encola la base (trigger con pg_net).
 import { queryOptions, useMutation, useMutationState, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { useSyncExternalStore } from "react";
-import type { AdminListingsApi, MfaFactor } from "../domain/api";
-import type { ListingEdit } from "../domain/edit";
-import { editOverview } from "../domain/edit-label";
-import type { ReviewedField } from "../domain/edit-summary";
-import { toDomainError } from "../domain/errors";
-import { DECISION_STATUS, EDIT_REVIEW_SAVED, applyDecision, type AdminQueue, type EditDecision, type QueueItem, type ReviewDecision } from "../domain/review";
-import { ownerNoticeUrl, firstName } from "../domain/owner-notice";
-import { authApi } from "./comun/session";
-import { refreshAdminEdit, refreshAdminHouse, refreshAdminReview } from "./comun/listing-cache";
-import { adminEditKey, adminEditReviewKey, adminEditsKey, adminHousesKey, adminListingKey, adminQueueKey, adminReviewKey } from "./comun/listing-keys";
+import type { AdminListingsApi, MfaFactor } from "../../domain/api";
+import type { ListingEdit } from "../../domain/edit";
+import { editOverview } from "../../domain/edit-label";
+import type { ReviewedField } from "../../domain/edit-summary";
+import { toDomainError } from "../../domain/errors";
+import { DECISION_STATUS, EDIT_REVIEW_SAVED, applyDecision, type AdminQueue, type EditDecision, type QueueItem, type ReviewDecision } from "../../domain/review";
+import { ownerNoticeUrl, firstName } from "../../domain/owner-notice";
+import { authApi } from "../comun/session";
+import { refreshAdminEdit, refreshAdminHouse, refreshAdminReview } from "../comun/listing-cache";
+import { adminEditKey, adminEditReviewKey, adminEditsKey, adminHousesKey, adminListingKey, adminQueueKey, adminReviewKey } from "../comun/listing-keys";
 
 export const adminApi = async (): Promise<AdminListingsApi> => {
   await authApi();
-  return (await import("../shared/supabase-data")).adminApi();
+  return (await import("../../shared/supabase-data")).adminApi();
 };
 
 export const adminQueueQuery = (userId: string) =>

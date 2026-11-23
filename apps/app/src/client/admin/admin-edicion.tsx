@@ -8,7 +8,7 @@ import { variantUrl } from "../../domain/image";
 import { KIND_LABELS, type Listing } from "../../domain/listing";
 import { REVIEW_NOTE_MAX, editNoteRefusal, type EditDecision, type QueueItem } from "../../domain/review";
 import { I } from "../../shared/ui/icons";
-import { adminEditQuery, lastInReview, useReviewEdit, type EditTarget } from "../admin";
+import { adminEditQuery, lastInReview, useReviewEdit, type EditTarget } from "./admin-queries";
 import { ScreenHeader } from "../comun/screen-header";
 import { Checklist, FeatureBadges, OwnerCard, PriceLine, bathText, factsLine } from "./admin-review-details";
 import { NotAdmin, message, titleOf, useIsAdmin, useUserId } from "./admin-shared";
@@ -178,7 +178,7 @@ function TwoPointsMap({ before, beforeZone, after }: { before: MapPoint | null; 
     let dispose: (() => void) | null = null;
     let cancelled = false;
     if (!before) return;
-    import("../edit-map-leaflet").then(
+    import("./edit-map-leaflet").then(
       ({ drawTwoPoints }) => {
         if (!cancelled && box.current) dispose = drawTwoPoints(box.current, before, after);
       },

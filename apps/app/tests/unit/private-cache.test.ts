@@ -3,7 +3,7 @@ import { isCancelledError, type QueryClient } from "@tanstack/react-query";
 import { persistQueryClientRestore, persistQueryClientSave, persistQueryClientSubscribe } from "@tanstack/react-query-persist-client";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { accountQuery } from "../../src/client/comun/account";
-import { adminEditQuery, adminEditsQuery, adminHousesQuery, adminListingQuery, adminQueueQuery } from "../../src/client/admin";
+import { adminEditQuery, adminEditsQuery, adminHousesQuery, adminListingQuery, adminQueueQuery } from "../../src/client/admin/admin-queries";
 import { memoryStore } from "../../src/data/storage";
 import type { Session } from "../../src/domain/api";
 
