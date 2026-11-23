@@ -1,5 +1,5 @@
 import { FEATURE_LABEL, FEATURE_SHORT, type Feature } from "../domain/listing";
-import { FEATURE_ICON, I } from "./icons";
+import { FEATURE_ICON, I } from "./ui/icons";
 
 export const FEATURE_CHOICE_ORDER = ["wifi", "ac", "parking", "ev", "pets", "pool", "beachfront", "bbq"] as const satisfies readonly Feature[];
 const FEATURE_CHOICE_LABEL = { ...FEATURE_SHORT, ev: "Cargador EV" };

@@ -2,7 +2,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { describe, expect, it, vi } from "vitest";
 import { DomainError } from "../../src/domain/errors";
 import type { Listing } from "../../src/domain/listing";
-import { photoReorderCallbacks, photosErrorMessage } from "../../src/client/publish/photo-reorder";
+import { photoReorderCallbacks, photosErrorMessage } from "../../src/client/propietario/publicar/photo-reorder";
 
 const key = ["own-listing", "u1", "l1"] as const;
 const listing = (order: string[]) => ({ id: "l1", photos: order.map((id, position) => ({ id, position, path: `l1/${id}`, url: id })) }) as unknown as Listing;

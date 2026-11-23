@@ -34,7 +34,7 @@ export interface ContactContext {
   created?: (publicId: string) => void;
 }
 
-const createInquiry = async (publicId: string, details: InquiryDetails) => (await import("../client/supabase-data")).inquiriesApi().create(publicId, details);
+const createInquiry = async (publicId: string, details: InquiryDetails) => (await import("./supabase-data")).inquiriesApi().create(publicId, details);
 
 export async function proceedToWhatsApp(ctx: ContactContext): Promise<ContactOutcome> {
   const { publicId, draft } = ctx;

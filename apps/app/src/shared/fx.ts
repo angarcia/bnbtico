@@ -5,7 +5,7 @@ import { FX_INITIAL, type FxRate } from "../domain/fx";
 
 export const FX_STALE_MS = 6 * 3_600_000;
 
-const api = async () => (await import("../client/supabase-data")).publicListings();
+const api = async () => (await import("./supabase-data")).publicListings();
 
 export const fxQuery = queryOptions({
   queryKey: ["fx"] as const,

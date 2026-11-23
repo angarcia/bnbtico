@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { enterKeyHintFor, nextFieldIndex } from "../../src/client/publish/enter-next";
+import { enterKeyHintFor, nextFieldIndex } from "../../src/client/propietario/publicar/enter-next";
 
 describe("«Siguiente» y «Listo» en el teclado", () => {
   it("Enter pasa al siguiente campo; en el último envía", () => {

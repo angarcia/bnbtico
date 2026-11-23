@@ -79,10 +79,29 @@ El trigger de Airbnb del Worker, `17 */3 * * *` por defecto y configurable con l
 ## Interfaz: componentes y tokens
 
 Las pantallas se componen con piezas comunes de props cerradas (historia 07, 2026-11-19/20; guía en `docs/componentes.md`): las
-que no usan el router ni consultas viven en `src/shared/` y las usa también la ficha SSR; `ScreenHeader` y las variantes sobre
-`Link` viven en `src/client/`. Los tokens salen de `design/tokens/tokens.json` y viven como variables en `:root` de
+que no usan el router ni consultas viven en `src/shared/ui/` y las usa también la ficha SSR; `ScreenHeader` y las variantes sobre
+`Link` viven en `src/client/comun/`. Los tokens salen de `design/tokens/tokens.json` y viven como variables en `:root` de
 `styles/01-base.css`. `tests/unit/consistencia.test.ts` falla si una pantalla escribe a mano la clase de un componente o usa un
 color, radio, capa, tamaño de letra o sombra suelto (con su lista de excepciones).
+
+## Carpetas del frontend
+
+Por área, con dependencias en un solo sentido (decisión 2026-11-22; mapa en `.scratch/estructura-frontend/paso-1-mapa.md`):
+
+| Carpeta | Qué hay |
+|---|---|
+| `src/shared/ui/` | Componentes comunes (botones, campos, hojas y ventanas, tarjetas, avisos, etiquetas). Solo importan React, `domain/` y entre ellos. |
+| `src/shared/` | Lo demás que pinta la ficha SSR sin router (ficha, mapa, calendario de la ficha, contacto, moneda), `desktop.ts` y el cliente de datos del navegador (`supabase-data.ts`). No importa `src/client/`. |
+| `src/client/app/` | Arranque, rutas (`shell.tsx`), marcos de pestañas y de flujo (`chrome.tsx`), persistencia, service worker y Web Vitals. Puede importar todas las áreas. |
+| `src/client/explorar/` | Catálogo público: Explorar, Buscar, Filtros, Favoritos, la ficha en el cliente y «Qué es 3bstays». |
+| `src/client/propietario/` | Todo lo del anfitrión: Mis casas, la casa, Actividad y la edición asistida; `publicar/` (asistente y editar), `calendario/` (con Airbnb) y `suscripcion/`. |
+| `src/client/cuenta/` | Cuenta, Ingresar, código y ayuda. |
+| `src/client/admin/` | Cola, revisión, casas y segundo código. |
+| `src/client/comun/` | Lo que usan dos o más áreas: sesión, cuenta, casas propias, claves y caché de consultas, ingreso por WhatsApp, `ScreenHeader`, confirmaciones y enlaces del router. |
+
+Un área importa su carpeta, `comun/`, `shared/`, `domain/` y `data/`, nunca otra área ni `app/`; `comun/` no importa áreas. Lo
+vigila `tests/unit/architecture.test.ts`, con una lista de excepciones con su motivo que falla si una deja de hacer falta. Sin
+archivos barril (`index.ts` que reexportan). Las URL y las rutas, definidas en código en `app/shell.tsx`, no dependen de las carpetas.
 
 ## Módulo de dominio
 

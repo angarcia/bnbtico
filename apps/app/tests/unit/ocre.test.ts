@@ -10,18 +10,18 @@ const SRC = new URL("../../src/", import.meta.url).pathname;
 const OCRE = /\b(?:btn|card|note|tile|badge|list-item)-sun\b|variant=(?:"pay"|\{[^}]*"pay")|tone=(?:"sun"|\{[^}]*"sun")|tone: "pay"/g;
 // archivo (relativo a src/) + "#" + la `function Nombre` más cercana declarada antes de la coincidencia; "#*" = todo el archivo.
 const ALLOW = new Set([
-  "shared/button.tsx#*", // la variante «pay» del botón común
-  "shared/structure.tsx#*", // los tonos ocres de Notice y StatusTag
-  "shared/card.tsx#*", // los tonos ocres de Card y ListRow
-  "client/owner-ui.tsx#PayButton",
-  "client/owner-ui.tsx#PayNotice",
-  "client/screens/casa-editable.tsx#PaymentDueNote",
-  "client/owner-ui.tsx#ActivateButton",
-  "client/screens/propietario.tsx#CasasScreen", // casilla «por pagar»
-  "client/screens/casa-editable.tsx#StoppedNotice", // «Suscripción parada» en la ficha editable
-  "client/screens/suscripcion.tsx#*", // Promoción y suscripción, tarjeta y fila de Cuenta
+  "shared/ui/button.tsx#*", // la variante «pay» del botón común
+  "shared/ui/structure.tsx#*", // los tonos ocres de Notice y StatusTag
+  "shared/ui/card.tsx#*", // los tonos ocres de Card y ListRow
+  "client/propietario/owner-ui.tsx#PayButton",
+  "client/propietario/owner-ui.tsx#PayNotice",
+  "client/propietario/casa-editable.tsx#PaymentDueNote",
+  "client/propietario/owner-ui.tsx#ActivateButton",
+  "client/propietario/propietario.tsx#CasasScreen", // casilla «por pagar»
+  "client/propietario/casa-editable.tsx#StoppedNotice", // «Suscripción parada» en la ficha editable
+  "client/propietario/suscripcion/suscripcion.tsx#*", // Promoción y suscripción, tarjeta y fila de Cuenta
   "shared/contact-sheet.tsx#*", // «no pague por adelantado»
-  "client/publish-promo.tsx#*", // la oferta de lanzamiento: publicar gratis (revisión UX 2026-10-29, A8)
+  "client/comun/publish-promo.tsx#*", // la oferta de lanzamiento: publicar gratis (revisión UX 2026-10-29, A8)
 ]);
 
 function files(dir: string): string[] {
@@ -54,12 +54,12 @@ describe("ocre solo para dinero y avisos de pago", () => {
 
   it("también la fila ocre de una lista (list-item-sun) fuera de la lista de permitidos", () => {
     const fixture = 'function Fila() {\n  return <Link className="list-item list-item-sun" />;\n}';
-    expect(offending(scan(fixture, "client/screens/cuenta.tsx"))).toEqual(["client/screens/cuenta.tsx#Fila"]);
-    expect(offending(scan(fixture, "client/screens/suscripcion.tsx"))).toEqual([]);
+    expect(offending(scan(fixture, "client/cuenta/cuenta.tsx"))).toEqual(["client/cuenta/cuenta.tsx#Fila"]);
+    expect(offending(scan(fixture, "client/propietario/suscripcion/suscripcion.tsx"))).toEqual([]);
   });
 
   it("también el botón común en ocre (variant=\"pay\") fuera de la lista de permitidos", () => {
     const fixture = 'function Pie() {\n  return <Button variant="pay">Pagar</Button>;\n}\nfunction Otro() {\n  return <Button variant={x ? "secondary" : "pay"} />;\n}';
-    expect(offending(scan(fixture, "client/screens/cuenta.tsx"))).toEqual(["client/screens/cuenta.tsx#Pie", "client/screens/cuenta.tsx#Otro"]);
+    expect(offending(scan(fixture, "client/cuenta/cuenta.tsx"))).toEqual(["client/cuenta/cuenta.tsx#Pie", "client/cuenta/cuenta.tsx#Otro"]);
   });
 });

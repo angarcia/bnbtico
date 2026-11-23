@@ -1,7 +1,7 @@
 // Fotos deslizables de la tarjeta de Explorar (ticket 09 de la ronda del 2 nov, alcance del 2026-11-04): qué foto marca el
 // contador y hasta cuál se monta mientras se desliza la tira.
 import { describe, expect, it } from "vitest";
-import { stripStep } from "../../src/client/card-strip";
+import { stripStep } from "../../src/client/explorar/card-strip";
 import { stripDots } from "../../src/shared/photo-dots";
 
 describe("stripStep", () => {

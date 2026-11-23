@@ -1,7 +1,7 @@
 // Movimiento (client/motion.ts): qué transición toca en cada navegación, a qué tarjeta va la foto que vuela, dirección de
 // los pasos del asistente y cómo aparecen las tarjetas de Explorar.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { afterRender, revealClass, stepEnter, transitionTypes, viewTransitions } from "../../src/client/motion";
+import { afterRender, revealClass, stepEnter, transitionTypes, viewTransitions } from "../../src/client/comun/motion";
 
 const at = (pathname: string, search = "") => ({ pathname, search });
 

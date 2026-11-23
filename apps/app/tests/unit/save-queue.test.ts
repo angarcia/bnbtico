@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allSavesSettled, enqueueSave, flushOnHide, flushSaves, savesPending, savesSettled } from "../../src/client/save-queue";
+import { allSavesSettled, enqueueSave, flushOnHide, flushSaves, savesPending, savesSettled } from "../../src/client/propietario/save-queue";
 
 const deferred = () => {
   let resolve!: () => void;

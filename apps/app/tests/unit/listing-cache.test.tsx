@@ -3,10 +3,10 @@ import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persi
 import { persistQueryClientRestore, persistQueryClientSave } from "@tanstack/react-query-persist-client";
 import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { addOwnCached, ownListingQuery, ownListingsQuery, patchCached, refresh, useDeleteDraft, useSetAvailable } from "../../src/client/owner";
-import { useDiscardEditField, useSaveEdit, useUpdateLive } from "../../src/client/edit";
-import { adminEditQuery, adminListingQuery, useEditsWithPending, useHouseAction, useQueueWithPending, useReview, useReviewEdit } from "../../src/client/admin";
-import { EditorContext, ownerPort, type EditorPort } from "../../src/client/editor-port";
+import { addOwnCached, ownListingQuery, ownListingsQuery, patchCached, refresh, useDeleteDraft, useSetAvailable } from "../../src/client/propietario/owner";
+import { useDiscardEditField, useSaveEdit, useUpdateLive } from "../../src/client/propietario/edit";
+import { adminEditQuery, adminListingQuery, useEditsWithPending, useHouseAction, useQueueWithPending, useReview, useReviewEdit } from "../../src/client/admin/admin-queries";
+import { EditorContext, ownerPort, type EditorPort } from "../../src/client/propietario/editor-port";
 import { memoryStore } from "../../src/data/storage";
 import type { Listing } from "../../src/domain/listing";
 import { emptyQueue, type AdminQueue, type QueueItem } from "../../src/domain/review";
@@ -16,11 +16,11 @@ const transport = vi.hoisted(() => ({
   updateLive: vi.fn(), setAvailable: vi.fn(), deleteDraft: vi.fn(), saveEdit: vi.fn(), discardEditField: vi.fn(),
   review: vi.fn(), pauseListing: vi.fn(), reviewEditField: vi.fn(), reviewEditPhoto: vi.fn(),
 }));
-vi.mock("../../src/client/session", () => ({
+vi.mock("../../src/client/comun/session", () => ({
   authApi: async () => ({}),
   sessionState: () => ({ status: "signed-in" }),
 }));
-vi.mock("../../src/client/supabase-data", () => ({ ownerListings: () => transport, adminApi: () => transport }));
+vi.mock("../../src/shared/supabase-data", () => ({ ownerListings: () => transport, adminApi: () => transport }));
 vi.mock("../../src/shared/toast", () => ({ toast: vi.fn() }));
 
 const userId = "u1";
@@ -338,7 +338,7 @@ describe("contrato de caché de casas", () => {
   });
 
   it("guarda y restaura tuplas y datos con el persister y Storage reales sin ampliar lo persistido", async () => {
-    const { persistOptions } = await import("../../src/client/persist");
+    const { persistOptions } = await import("../../src/client/app/persist");
     seed();
     const storage = memoryStore();
     const persister = createAsyncStoragePersister({ storage, key: "3bstays-query", throttleTime: 0 });

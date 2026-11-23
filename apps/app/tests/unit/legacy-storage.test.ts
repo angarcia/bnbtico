@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { clearLegacyStorage } from "../../src/client/legacy-storage";
+import { clearLegacyStorage } from "../../src/client/app/legacy-storage";
 
 function memoryStorage(entries: Record<string, string>): Storage {
   const data = new Map(Object.entries(entries));

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { BEDS_OPTIONS, KIND_FILTERS, colonesToPriceInput, priceInputToColones, priceRangeInvalid, extrasCount, normalizeSearch, parseFilters, searchFor, searchFromString, searchToString, stayRange, toSearchParams } from "../../src/domain/filters";
-import { listingsQuery } from "../../src/client/queries";
+import { listingsQuery } from "../../src/client/explorar/queries";
 
 // Portado de tests/prototype/explorar-filtros.cjs y zona-caribe.cjs.
 

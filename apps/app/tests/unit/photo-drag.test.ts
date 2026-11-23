@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { edgeSpeed, shiftBetween, slotAt, type Slot } from "../../src/client/publish/photo-drag";
+import { edgeSpeed, shiftBetween, slotAt, type Slot } from "../../src/client/propietario/publicar/photo-drag";
 
 const slots: Slot[] = [
   { left: 0, top: 0, width: 220, height: 224 },

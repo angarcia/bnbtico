@@ -2,8 +2,8 @@ import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persi
 import { isCancelledError, type QueryClient } from "@tanstack/react-query";
 import { persistQueryClientRestore, persistQueryClientSave, persistQueryClientSubscribe } from "@tanstack/react-query-persist-client";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { accountQuery } from "../../src/client/account";
-import { adminEditQuery, adminEditsQuery, adminHousesQuery, adminListingQuery, adminQueueQuery } from "../../src/client/admin";
+import { accountQuery } from "../../src/client/comun/account";
+import { adminEditQuery, adminEditsQuery, adminHousesQuery, adminListingQuery, adminQueueQuery } from "../../src/client/admin/admin-queries";
 import { memoryStore } from "../../src/data/storage";
 import type { Session } from "../../src/domain/api";
 
@@ -12,7 +12,7 @@ const auth = vi.hoisted(() => ({
   session: { userId: "admin-a", aal: "aal2" } as Session,
 }));
 
-vi.mock("../../src/client/supabase-data", () => ({
+vi.mock("../../src/shared/supabase-data", () => ({
   authApi: () => ({
     session: async () => auth.session,
     onSessionChange: (change: (session: Session | null) => void) => { auth.change = change; },
@@ -21,7 +21,7 @@ vi.mock("../../src/client/supabase-data", () => ({
 
 let client: QueryClient;
 let refreshRestored: () => void;
-let persistOptions: typeof import("../../src/client/persist").persistOptions;
+let persistOptions: typeof import("../../src/client/app/persist").persistOptions;
 
 const privatePersisted = ["account", "inquiries", "own-listings", "own-listing", "own-resumable", "own-stats", "own-activity", "calendar", "billing", "admin-queue", "admin-listing"];
 const privateMemoryOnly = ["admin-houses", "admin-edits", "admin-edit", "admin-drafts"];
@@ -36,11 +36,11 @@ function storageOptions() {
 
 beforeAll(async () => {
   vi.stubGlobal("__BUILD_ID__", "private-cache-test");
-  const { Shell } = await import("../../src/client/shell");
+  const { Shell } = await import("../../src/client/app/shell");
   client = Shell().props.client;
   refreshRestored = Shell().props.onSuccess;
   persistOptions = Shell().props.persistOptions;
-  await (await import("../../src/client/session")).authApi();
+  await (await import("../../src/client/comun/session")).authApi();
 });
 
 beforeEach(() => {

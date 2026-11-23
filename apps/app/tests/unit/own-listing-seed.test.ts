@@ -1,6 +1,6 @@
 import { QueryClient, QueryObserver } from "@tanstack/react-query";
 import { describe, expect, it } from "vitest";
-import { ownListingQuery, ownListingsQuery } from "../../src/client/owner";
+import { ownListingQuery, ownListingsQuery } from "../../src/client/propietario/owner";
 import { activeListing } from "./fixtures";
 
 // El detalle de una casa se siembra con la fila de Mis casas. Si esa lista está invalidada (p. ej. restaurada del

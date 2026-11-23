@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createPlaceLookup, type LookupState } from "../../src/client/publish/place-lookup";
+import { createPlaceLookup, type LookupState } from "../../src/client/propietario/publicar/place-lookup";
 import type { NearZone, Place } from "../../src/domain/zones";
 
 const A = { lat: 9.64, lng: -82.73 };

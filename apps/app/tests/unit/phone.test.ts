@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { waLink } from "../../src/client/support";
+import { waLink } from "../../src/client/cuenta/support";
 import { composePhone, DEFAULT_COUNTRY, formatPhone, normalizePhone, OTHER_COUNTRY, PHONE_COUNTRIES } from "../../src/domain/phone";
 
 describe("teléfono de WhatsApp", () => {

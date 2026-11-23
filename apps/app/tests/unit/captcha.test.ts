@@ -1,7 +1,7 @@
 // Turnstile en el inicio del código (ticket 11): la ficha del token y su paso a Supabase Auth.
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { describe, expect, it, vi } from "vitest";
-import { CAPTCHA_FAILED, createTokenGate } from "../../src/client/token-gate";
+import { CAPTCHA_FAILED, createTokenGate } from "../../src/client/comun/token-gate";
 import { createPostgrestAuth } from "../../src/data/postgrest/auth";
 import { memoryStore } from "../../src/data/storage";
 import type { Database } from "../../src/domain/database.types";

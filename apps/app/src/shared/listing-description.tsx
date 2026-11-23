@@ -3,7 +3,7 @@
 // donde estaba. Antes de hidratar, «Ver más» es una caja del mismo tamaño que aún no responde.
 import { lazy, Suspense, useEffect, useState } from "react";
 import { descriptionParagraphs, isLongDescription } from "../domain/description";
-import { Button, ButtonPlaceholder } from "./button";
+import { Button, ButtonPlaceholder } from "./ui/button";
 import { whenIdle } from "./idle";
 
 // La pantalla completa es un trozo aparte: se pide en reposo tras hidratar y al apuntar o tocar «Ver más».

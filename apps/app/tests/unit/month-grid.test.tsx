@@ -4,8 +4,8 @@ import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import type { CalendarDay } from "../../src/domain/calendar";
 import { MonthGrid, MonthLegend, WeekdayRow } from "../../src/shared/month-grid";
-import { I } from "../../src/shared/icons";
-import { AirbnbLegend, countCalendarOrigins } from "../../src/client/airbnb-calendar-row";
+import { I } from "../../src/shared/ui/icons";
+import { AirbnbLegend, countCalendarOrigins } from "../../src/client/propietario/calendario/airbnb-calendar-row";
 
 const TODAY = "2026-12-10";
 const days = (rows: CalendarDay[]) => new Map(rows.map((r) => [r.day, r]));

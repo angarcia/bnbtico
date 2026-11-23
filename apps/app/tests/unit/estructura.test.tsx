@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import type { ListingStatus } from "../../src/domain/listing";
 import { houseLabel } from "../../src/domain/admin-houses";
 import { STATUS_TEXTS, editStatusLabel, holdLabel, statusLabel } from "../../src/domain/status-label";
-import { CountBadge, EmptyState, LoadError, Notice, Skeleton, StatusTag } from "../../src/shared/structure";
+import { CountBadge, EmptyState, LoadError, Notice, Skeleton, StatusTag } from "../../src/shared/ui/structure";
 
 const STATUSES: ListingStatus[] = ["draft", "review", "changes", "rejected", "payment_due", "active", "inactive"];
 const classOf = (html: string) => /class="([^"]*)"/.exec(html)?.[1]?.split(" ") ?? [];

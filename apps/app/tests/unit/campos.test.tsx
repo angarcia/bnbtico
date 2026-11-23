@@ -5,9 +5,9 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join, relative } from "node:path";
 import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { ChoiceChips, Segmented } from "../../src/shared/choice";
-import { AffixInput, Checkbox, Field, TextInput } from "../../src/shared/field";
-import { CounterRow, Stepper } from "../../src/shared/stepper";
+import { ChoiceChips, Segmented } from "../../src/shared/ui/choice";
+import { AffixInput, Checkbox, Field, TextInput } from "../../src/shared/ui/field";
+import { CounterRow, Stepper } from "../../src/shared/ui/stepper";
 import { listingFieldError } from "../../src/domain/field-errors";
 import { CAPACITY_ERROR, KIND_ERROR, LOCATION_MESSAGES, MONTHLY_PRICE_ERROR, NIGHTLY_PRICE_ERROR, PARKING_ERROR, TITLE_EMPTY_ERROR, TITLE_LENGTH_ERROR } from "../../src/domain/listing-rules";
 import { readCss } from "../read-css";
@@ -217,7 +217,7 @@ describe("El error de una casa va a su campo", () => {
 describe("Ninguna pantalla vuelve a escribir las piezas de antes", () => {
   const files = (dir: string): string[] =>
     readdirSync(dir, { withFileTypes: true }).flatMap((d) => (d.isDirectory() ? files(join(dir, d.name)) : /\.tsx?$/.test(d.name) ? [join(dir, d.name)] : []));
-  const OWN = new Set(["shared/field.tsx", "shared/choice.tsx", "shared/stepper.tsx", "client/code-input.tsx"]);
+  const OWN = new Set(["shared/ui/field.tsx", "shared/ui/choice.tsx", "shared/ui/stepper.tsx", "client/comun/code-input.tsx"]);
   const sources = [...files(join(SRC, "client")), ...files(join(SRC, "shared"))].filter((f) => !OWN.has(relative(SRC, f)));
 
   // Las clases de los campos, contadores, segmentos y chips escritas a mano las vigila tests/unit/consistencia.test.ts.

@@ -2,8 +2,8 @@
 // «¿Quiénes?», de 1 a 90, y los atajos «Fin de semana», «1 semana», «2 semanas» y «1 mes». Lo comparten la búsqueda del
 // teléfono («¿Cuántas noches?») y el panel «Noches» de la búsqueda de escritorio.
 import { NIGHTS_MAX } from "../domain/filters";
-import { ChoiceChips } from "./choice";
-import { Stepper } from "./stepper";
+import { ChoiceChips } from "./ui/choice";
+import { Stepper } from "./ui/stepper";
 
 const QUICK: readonly { label: string; nights: number }[] = [
   { label: "Fin de semana", nights: 2 },

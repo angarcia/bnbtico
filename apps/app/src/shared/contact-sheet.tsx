@@ -40,18 +40,18 @@ import { proceedToWhatsApp } from "./contact-flow";
 import { track } from "./beacon";
 import { useCurrency } from "./currency";
 import { useFx } from "./fx";
-import { I } from "./icons";
-import { Sheet } from "./overlay";
-import { leavingPage } from "./overlay-stack";
+import { I } from "./ui/icons";
+import { Sheet } from "./ui/overlay";
+import { leavingPage } from "./ui/overlay-stack";
 import { NightsPicker } from "./nights-picker";
 import { RangeCalendar } from "./range-calendar";
 import { stayDates } from "./stay-dates";
-import { Button, TextButton } from "./button";
-import { Segmented } from "./choice";
-import { Field } from "./field";
-import { Stepper } from "./stepper";
-import { Notice } from "./structure";
-import { ClosedField } from "./closed-field";
+import { Button, TextButton } from "./ui/button";
+import { Segmented } from "./ui/choice";
+import { Field } from "./ui/field";
+import { Stepper } from "./ui/stepper";
+import { Notice } from "./ui/structure";
+import { ClosedField } from "./ui/closed-field";
 
 const STAY_OPTIONS = [
   { value: "dates", label: "Fechas" },

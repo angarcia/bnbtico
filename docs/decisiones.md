@@ -1,3 +1,15 @@
+## 2026-11-22 · Estructura del frontend por áreas y textos fuera del código
+
+Ana aprobó la propuesta de `.scratch/estructura-frontend/propuesta.md`, contrastada con guías (Bulletproof React, colocación de Kent C. Dodds, TanStack Query y Router, React, MDN y W3C), con sus opciones por defecto:
+
+- **Carpetas por área** en `apps/app/src/client/` (`app/`, `explorar/`, `casa/`, `publicar/`, `propietario/`, `cuenta/`, `admin/`, `comun/`), cada una con su pantalla, consultas, hooks y piezas; `shared/ui/` para los componentes comunes de la historia 07. Dependencias en un solo sentido (`shared` → áreas → `app`): un área no importa otra; lo vigila `tests/unit/architecture.test.ts`. Sin archivos barril. Carpetas de área en español y archivos de código en inglés. Las URL no cambian y las rutas siguen definidas en código.
+- **CSS por área** junto a su carpeta, con su escritorio dentro del mismo archivo, ordenado con `@layer`; `13-escritorio.css` queda para el marco común. Sin cambio visual.
+- **Textos fuera del código**, preparados para traducir (sustituye a la recomendación de dejarlos en los componentes): mensajes completos con parámetros, plurales con `Intl.PluralRules`, cifras y fechas con `Intl`. Se acepta **Paraglide JS** como dependencia si una prueba acotada (Favoritos y la ficha SSR, con un segundo idioma de prueba) cumple el presupuesto de JS; si no, catálogos TypeScript a mano con la misma forma. No hay idioma ni fecha prevista para la primera traducción.
+- **Consultas** en una fábrica de `queryOptions` por recurso en cada área, y **hooks con propósito** en las pantallas grandes, al tocar cada área.
+- **Orden:** carpetas, CSS, prueba de Paraglide y textos, consultas y hooks, catálogo de componentes (`/_componentes`, solo en desarrollo y pruebas).
+
+Motivo: el código de `client/` (69 archivos sueltos y 33 pantallas juntas) y `13-escritorio.css` (819 de 2 212 líneas) se ordenan por tipo o por tanda de revisión, no por lo que cambia junto, y los textos dentro de los componentes impiden traducir y cuestan de cambiar.
+
 ## 2026-11-20 · Turnstile y la configuración de Twilio, con el rediseño del inicio de sesión (historia #73)
 
 De la remediación del acceso por código (`.scratch/seguridad-2026-11-17/06-auditoria-otp.md`) se hizo hoy el paso 1 en `bnbtico-pruebas` (60 s entre códigos al mismo número). Ana decidió dejar los pasos 2 (Turnstile de punta a punta: widget, sitekey y captcha exigido en Supabase Auth) y 3 (Twilio: Verify solo con WhatsApp, países permitidos, alerta de gasto) para el **rediseño del inicio de sesión**. Motivo: cambian cómo se pide el código y conviene hacerlos una sola vez, dentro de ese rediseño. Hoy no hay riesgo de gasto: las credenciales de Twilio en Supabase son marcadores y no se puede enviar ningún código real. **Condición:** los dos pasos van antes de poner credenciales reales de Twilio en cualquier entorno, y `3bstays-prod` nace con ellos.
