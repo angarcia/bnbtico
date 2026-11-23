@@ -9,7 +9,7 @@ import { I } from "../../shared/ui/icons";
 import { formatCRC } from "../../domain/money";
 import { MONTHLY_FEE_CRC } from "../../domain/offer";
 import { accountQuery } from "../comun/account";
-import { suscripcionScreen } from "../lazy-screens";
+import { suscripcionScreen } from "../app/lazy-screens";
 import { ScreenHeader } from "../comun/screen-header";
 import { isDesktop, useDesktop } from "../../shared/desktop";
 import { PublishPromoRow } from "../comun/publish-promo";

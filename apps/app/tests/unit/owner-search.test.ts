@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { actividadSearch, calendarioSearch, pasoSearch, suscripcionSearch } from "../../src/client/owner-search";
+import { actividadSearch, calendarioSearch, pasoSearch, suscripcionSearch } from "../../src/client/app/owner-search";
 
 const UUID = "6f1c2b9e-1d2a-4c3b-9a8e-0f1e2d3c4b5a";
 

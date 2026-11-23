@@ -2,7 +2,7 @@
 // con lo primero que se pinta ni cuenta en el JS inicial. Las métricas son de la página en la que se entró (la ruta de
 // aterrizaje), aunque INP y CLS se informen al salir tras navegar dentro de la SPA.
 import { onCLS, onINP, onLCP, type Metric } from "web-vitals";
-import { sendBeacon } from "../shared/beacon";
+import { sendBeacon } from "../../shared/beacon";
 
 export function startVitals(landingPath: string): void {
   const report = (m: Metric) =>

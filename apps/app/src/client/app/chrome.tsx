@@ -5,20 +5,20 @@
 import { skipToken, useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "@tanstack/react-router";
 import { lazy, Suspense, useState, type ReactNode } from "react";
-import { tabsFor } from "../domain/tabs";
-import { I } from "../shared/ui/icons";
-import { CurrencySwitch } from "../shared/currency-switch";
-import { useDesktop } from "../shared/desktop";
-import { useHidingChrome } from "./comun/hiding-chrome";
-import { countNew, inquiriesQuery } from "./propietario/inquiries";
-import { useListingsCount } from "./comun/own-listings-query";
-import { useSession } from "./comun/session";
-import { Button } from "../shared/ui/button";
-import { BrandLogo, NavBar, NavItemContent, type NavTab } from "../shared/ui/structure";
-import { UnderTopBar } from "./comun/screen-header";
+import { tabsFor } from "../../domain/tabs";
+import { I } from "../../shared/ui/icons";
+import { CurrencySwitch } from "../../shared/currency-switch";
+import { useDesktop } from "../../shared/desktop";
+import { useHidingChrome } from "../comun/hiding-chrome";
+import { countNew, inquiriesQuery } from "../propietario/inquiries";
+import { useListingsCount } from "../comun/own-listings-query";
+import { useSession } from "../comun/session";
+import { Button } from "../../shared/ui/button";
+import { BrandLogo, NavBar, NavItemContent, type NavTab } from "../../shared/ui/structure";
+import { UnderTopBar } from "../comun/screen-header";
 
-const WhatsAppDialog = lazy(() => import("./comun/whatsapp-dialog").then((m) => ({ default: m.WhatsAppDialog })));
-const InquiriesDialog = lazy(() => import("./propietario/actividad").then((m) => ({ default: m.InquiriesDialog })));
+const WhatsAppDialog = lazy(() => import("../comun/whatsapp-dialog").then((m) => ({ default: m.WhatsAppDialog })));
+const InquiriesDialog = lazy(() => import("../propietario/actividad").then((m) => ({ default: m.InquiriesDialog })));
 
 /** Contador terracota de Anuncios: lo que ya hay en la caché de la cola (no la pide; la pide la pantalla). `skipToken` en vez
  *  de `enabled: false` sin `queryFn`, que TanStack anotaba como error en cada pantalla (revisión UX 2026-10-29, N8). */

@@ -1,8 +1,8 @@
 // Entrada: un módulo pequeño que solo decide qué cargar. El CSS va aquí para que Vite lo enlace en el HTML (bloquea el
 // render, sin parpadeo sobre el HTML del servidor); React y las pantallas van en trozos que se importan después.
-import { installErrorBeacon, track } from "../shared/beacon";
-import { SSR_DATA_ID, type SsrData } from "../shared/ssr-data";
-import "../styles/global.css";
+import { installErrorBeacon, track } from "../../shared/beacon";
+import { SSR_DATA_ID, type SsrData } from "../../shared/ssr-data";
+import "../../styles/global.css";
 
 installErrorBeacon();
 const landingPath = location.pathname;
@@ -35,7 +35,7 @@ function afterHero(work: () => void) {
 if (embedded) {
   track("page_view");
   const data = JSON.parse(embedded) as SsrData;
-  afterHero(() => void import("./explorar/hydrate-listing").then((m) => m.hydrate(root, data)));
+  afterHero(() => void import("../explorar/hydrate-listing").then((m) => m.hydrate(root, data)));
 } else {
   import("./start-shell").then((m) => m.startShell(root));
 }

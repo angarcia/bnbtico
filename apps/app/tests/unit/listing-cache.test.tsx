@@ -338,7 +338,7 @@ describe("contrato de caché de casas", () => {
   });
 
   it("guarda y restaura tuplas y datos con el persister y Storage reales sin ampliar lo persistido", async () => {
-    const { persistOptions } = await import("../../src/client/persist");
+    const { persistOptions } = await import("../../src/client/app/persist");
     seed();
     const storage = memoryStore();
     const persister = createAsyncStoragePersister({ storage, key: "3bstays-query", throttleTime: 0 });

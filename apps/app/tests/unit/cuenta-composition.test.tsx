@@ -30,7 +30,7 @@ vi.mock("@tanstack/react-router", () => ({
     ({ to, search, replace, ...props }: { to: string; search?: unknown; replace?: boolean }) =>
       <Comp href={to} data-search={JSON.stringify(search)} data-replace={replace} {...props} />,
 }));
-vi.mock("../../src/client/chrome", () => ({
+vi.mock("../../src/client/app/chrome", () => ({
   FlowFrame: ({ children }: { children: ReactNode }) => <main data-frame="flow">{children}</main>,
   TabsFrame: ({ children }: { children: ReactNode }) => <main data-frame="tabs">{children}</main>,
 }));
@@ -57,7 +57,7 @@ vi.mock("../../src/client/comun/sign-in", () => ({
 vi.mock("../../src/client/comun/turnstile", () => ({ useTurnstile: () => ({ container: null, token: vi.fn() }) }));
 vi.mock("../../src/shared/favorites-store", () => ({ useFavorites: () => state.favorites }));
 vi.mock("../../src/client/comun/publish-promo", () => ({ PublishPromoRow: () => <a href="/publicar">Publicar mi casa</a> }));
-vi.mock("../../src/client/lazy-screens", () => ({ suscripcionScreen: () => new Promise(() => {}) }));
+vi.mock("../../src/client/app/lazy-screens", () => ({ suscripcionScreen: () => new Promise(() => {}) }));
 vi.mock("../../src/client/comun/support-numbers", () => ({ SUPPORT_NUMBERS: { owner: "50680000001", guest: "50680000002" } }));
 
 beforeEach(() => {

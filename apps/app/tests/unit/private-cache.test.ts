@@ -21,7 +21,7 @@ vi.mock("../../src/shared/supabase-data", () => ({
 
 let client: QueryClient;
 let refreshRestored: () => void;
-let persistOptions: typeof import("../../src/client/persist").persistOptions;
+let persistOptions: typeof import("../../src/client/app/persist").persistOptions;
 
 const privatePersisted = ["account", "inquiries", "own-listings", "own-listing", "own-resumable", "own-stats", "own-activity", "calendar", "billing", "admin-queue", "admin-listing"];
 const privateMemoryOnly = ["admin-houses", "admin-edits", "admin-edit", "admin-drafts"];
@@ -36,7 +36,7 @@ function storageOptions() {
 
 beforeAll(async () => {
   vi.stubGlobal("__BUILD_ID__", "private-cache-test");
-  const { Shell } = await import("../../src/client/shell");
+  const { Shell } = await import("../../src/client/app/shell");
   client = Shell().props.client;
   refreshRestored = Shell().props.onSuccess;
   persistOptions = Shell().props.persistOptions;

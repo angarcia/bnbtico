@@ -74,3 +74,12 @@ Primero se escribe la regla (falla con el árbol de hoy) y después se mueve has
 3. `comun/` (con `ScreenHeader` y la clave de `billing`).
 4. `admin/`, `cuenta/`, `explorar/`, `propietario/`, un commit cada una.
 5. `app/`, activar las reglas, guías actualizadas. Después, `size`, la hidratación de la ficha y la e2e completa una vez.
+
+## Resultado (2026-11-22, rama `estructura-por-areas`)
+
+Hecho tal como el mapa, salvo:
+
+- **Dos archivos renombrados** porque chocaban con una pantalla en la misma carpeta: `admin.ts` → `admin/admin-queries.ts` y `airbnb.ts` → `propietario/calendario/airbnb-queries.ts`. Sus trozos siguen dentro de los patrones de `.size-limit.json` (`admin-*`, `airbnb-*`).
+- `query-policy.ts` también va a `comun/`: lo usan `account` (común) y el arranque.
+- **Excepciones**, con su motivo en `AREA_EXCEPTIONS` de `architecture.test.ts`: las dos del mapa (`cuenta-profile` → `app/lazy-screens` y `cuenta` → `app/chrome`, porque elige el marco según la sesión) y dos importaciones dinámicas de `comun/` (`own-listings-query` → `propietario/owner` y `whatsapp-dialog` → `cuenta/cuenta-codigo`).
+- La regla vieja «las piezas de edición no dependen de pantallas» miraba `client/screens/`; ahora usa la lista de las 32 pantallas que había allí.

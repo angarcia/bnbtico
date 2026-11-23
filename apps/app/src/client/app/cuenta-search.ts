@@ -1,6 +1,6 @@
 // Parámetros de búsqueda de las rutas de cuenta. Viven aparte de las pantallas para que el router (JS inicial) los valide
 // sin arrastrar las pantallas, que se descargan al abrirlas.
-import { safeNext } from "../domain/account";
+import { safeNext } from "../../domain/account";
 
 export interface CuentaSearch {
   modo?: "entrar";

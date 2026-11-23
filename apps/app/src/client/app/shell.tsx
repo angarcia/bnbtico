@@ -2,40 +2,40 @@
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { Navigate, Outlet, RouterProvider, createRootRoute, createRoute, createRouter, lazyRouteComponent, redirect, useLocation } from "@tanstack/react-router";
-import { costaRicaToday } from "../domain/dates";
-import { normalizeSearch, searchFromString, searchToString, type ExploreSearch, type SearchParams } from "../domain/filters";
-import { track } from "../shared/beacon";
-import { ownerZoneRedirect } from "../domain/tabs";
-import { forgetOwnListings, ownListingsHint } from "../shared/own-listings";
-import { PERSISTED_PRIVATE_KEYS, PRIVATE_QUERY_KEYS } from "./comun/query-policy";
+import { costaRicaToday } from "../../domain/dates";
+import { normalizeSearch, searchFromString, searchToString, type ExploreSearch, type SearchParams } from "../../domain/filters";
+import { track } from "../../shared/beacon";
+import { ownerZoneRedirect } from "../../domain/tabs";
+import { forgetOwnListings, ownListingsHint } from "../../shared/own-listings";
+import { PERSISTED_PRIVATE_KEYS, PRIVATE_QUERY_KEYS } from "../comun/query-policy";
 import { FlowFrame, TabsFrame } from "./chrome";
-import { Placeholder, ScreenHeader } from "./comun/screen-header";
-import { Skeleton } from "../shared/ui/structure";
-import { isDesktop } from "../shared/desktop";
-import { afterRender, viewTransitions } from "./comun/motion";
+import { Placeholder, ScreenHeader } from "../comun/screen-header";
+import { Skeleton } from "../../shared/ui/structure";
+import { isDesktop } from "../../shared/desktop";
+import { afterRender, viewTransitions } from "../comun/motion";
 import { PERSIST_MAX_AGE, persistOptions } from "./persist";
-import { whenIdle } from "../shared/idle";
+import { whenIdle } from "../../shared/idle";
 import { cuentaSearch, nextSearch } from "./cuenta-search";
 import { actividadSearch, calendarioSearch, pasoSearch, suscripcionSearch } from "./owner-search";
 import { suscripcionScreen } from "./lazy-screens";
-import { useListingsCount } from "./comun/own-listings-query";
-import { CasaScreen } from "./explorar/casa";
-import { ExplorarScreen } from "./explorar/explorar";
-import { currentSession, onSignedOut, useSession } from "./comun/session";
+import { useListingsCount } from "../comun/own-listings-query";
+import { CasaScreen } from "../explorar/casa";
+import { ExplorarScreen } from "../explorar/explorar";
+import { currentSession, onSignedOut, useSession } from "../comun/session";
 import { UpdateBanner } from "./update-banner";
-import { FLAGS, SEARCH_MODE } from "../shared/flags";
-import { RouterButtonLink } from "./comun/router-buttons";
+import { FLAGS, SEARCH_MODE } from "../../shared/flags";
+import { RouterButtonLink } from "../comun/router-buttons";
 
 // En el JS inicial solo van Explorar y la ficha. Las demás pantallas se descargan al abrirlas, al apuntar o tocar
 // su enlace (defaultPreload "intent": en el móvil, touchstart) y, en reposo tras el primer pintado, las de las pestañas.
-const ownerScreens = () => import("./propietario/propietario");
-const cuentaScreens = () => import("./cuenta/cuenta");
-const favoritosScreen = () => import("./explorar/favoritos");
-const actividadScreen = () => import("./propietario/actividad");
-const calendarioScreen = () => import("./propietario/calendario/calendario");
-const casaEditable = () => import("./propietario/casa-editable");
+const ownerScreens = () => import("../propietario/propietario");
+const cuentaScreens = () => import("../cuenta/cuenta");
+const favoritosScreen = () => import("../explorar/favoritos");
+const actividadScreen = () => import("../propietario/actividad");
+const calendarioScreen = () => import("../propietario/calendario/calendario");
+const casaEditable = () => import("../propietario/casa-editable");
 // Publicar sin cuenta (§E): el paso 1, la verificación y la vuelta tras el código, en su propio trozo.
-const publicarEntrada = () => import("./propietario/publicar/publicar-entrada");
+const publicarEntrada = () => import("../propietario/publicar/publicar-entrada");
 type OwnerScreen = "CasasScreen" | "CasaPropietarioScreen" | "EnviadaScreen";
 type CuentaScreenName = "CuentaScreen" | "CodigoScreen" | "ListaScreen" | "RecuperarScreen" | "AyudaScreen";
 /** La búsqueda de Explorar y Filtros, con la ventana de fechas de hoy en Costa Rica y la estancia del modo de este build
@@ -171,14 +171,14 @@ const PHOTOS_STEP = 7;
 const publicarLocalPending = wizardPending("/explorar", "Cerrar", "Cargando");
 
 // La zona del admin se descarga al abrirla: no entra en el JS inicial.
-const adminScreen = (name: "AnunciosScreen" | "CasasAdminScreen" | "RevisarScreen" | "RevisarEdicionScreen" | "SegundoCodigoScreen") => lazyRouteComponent(() => import("./admin/admin"), name);
+const adminScreen = (name: "AnunciosScreen" | "CasasAdminScreen" | "RevisarScreen" | "RevisarEdicionScreen" | "SegundoCodigoScreen") => lazyRouteComponent(() => import("../admin/admin"), name);
 const adminSearch = (params: Record<string, unknown>): { ver?: "changes" | "rejected" } =>
   params.ver === "changes" || params.ver === "rejected" ? { ver: params.ver } : {};
 // El filtro se valida en la pantalla (HOUSE_CHIPS, que vive en el trozo del admin): aquí solo se deja pasar un texto.
 const casasSearch = (params: Record<string, unknown>): { ver?: string } => (typeof params.ver === "string" ? { ver: params.ver } : {});
 // Editar casas (ronda de Ana del 2 nov, ticket 10): las pantallas del anfitrión con el puerto del admin, en su propio trozo.
 const asistir = (name: "AsistirCasaScreen" | "AsistirPasoScreen" | "AsistirCampoScreen" | "AsistirCalendarioScreen" | "BorradoresScreen") =>
-  lazyRouteComponent(() => import("./propietario/asistir"), name);
+  lazyRouteComponent(() => import("../propietario/asistir"), name);
 const adminSoon = (title: string) => () => <Placeholder title={title} home="/admin" text="Muy pronto: esta sección de la zona del admin llega en otra entrega." />;
 
 /** La ficha de la SPA solo entiende `contacto=1`: reabrir la hoja al volver de Ingresar. */
@@ -203,10 +203,10 @@ const routeTree = rootRoute.addChildren([
     createRoute({
       getParentRoute: () => tabs,
       path: "/que-es-3bstays",
-      component: lazyRouteComponent(() => import("./explorar/que-es-3bstays"), "QueEs3bstaysScreen"),
+      component: lazyRouteComponent(() => import("../explorar/que-es-3bstays"), "QueEs3bstaysScreen"),
     }),
     createRoute({ getParentRoute: () => tabs, path: "/explorar", validateSearch: exploreSearch, component: ExplorarScreen }),
-    createRoute({ getParentRoute: () => tabs, path: "/explorar/filtros", validateSearch: exploreSearch, component: lazyRouteComponent(() => import("./explorar/filtros"), "FiltrosScreen") }),
+    createRoute({ getParentRoute: () => tabs, path: "/explorar/filtros", validateSearch: exploreSearch, component: lazyRouteComponent(() => import("../explorar/filtros"), "FiltrosScreen") }),
     createRoute({ getParentRoute: () => tabs, path: "/favoritos", component: lazyRouteComponent(favoritosScreen, "FavoritosScreen") }),
     privateRoutes.addChildren([
       ownerRoutes.addChildren([
@@ -251,7 +251,7 @@ const routeTree = rootRoute.addChildren([
         if (step >= PHOTOS_STEP) throw redirect({ to: "/publicar/verificar", replace: true });
       },
       ...publicarLocalPending,
-      component: lazyRouteComponent(() => import("./propietario/publicar/publicar"), "PasoLocalScreen"),
+      component: lazyRouteComponent(() => import("../propietario/publicar/publicar"), "PasoLocalScreen"),
     }),
     createRoute({
       getParentRoute: () => flow,
@@ -270,20 +270,20 @@ const routeTree = rootRoute.addChildren([
       beforeLoad: ({ search: { abrir: _abrir, ...search } }) => {
         if (isDesktop()) throw redirect({ to: "/explorar", search, replace: true });
       },
-      component: lazyRouteComponent(() => import("./explorar/buscar"), "BuscarScreen") }),
+      component: lazyRouteComponent(() => import("../explorar/buscar"), "BuscarScreen") }),
     privateFlow.addChildren([
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id", validateSearch: (p: Record<string, unknown>): { panel?: "suscripcion" } => p.panel === "suscripcion" ? { panel: "suscripcion" } : {}, component: ownerScreen("CasaPropietarioScreen") }),
-      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id/airbnb", validateSearch: calendarioSearch, component: lazyRouteComponent(() => import("./propietario/calendario/airbnb"), "AirbnbScreen") }),
+      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id/airbnb", validateSearch: calendarioSearch, component: lazyRouteComponent(() => import("../propietario/calendario/airbnb"), "AirbnbScreen") }),
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id/enviada", component: ownerScreen("EnviadaScreen") }),
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id/correo", component: lazyRouteComponent(publicarEntrada, "CorreoScreen") }),
       // Cada dato de una casa publicada, en su propio trozo (editar-*).
-      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id/editar/$campo", component: lazyRouteComponent(() => import("./propietario/publicar/editar"), "EditarCampoScreen") }),
+      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/casas/$id/editar/$campo", component: lazyRouteComponent(() => import("../propietario/publicar/editar"), "EditarCampoScreen") }),
       createRoute({ getParentRoute: () => privateFlow, path: "/propietario/suscripcion", validateSearch: suscripcionSearch, component: lazyRouteComponent(suscripcionScreen, "SuscripcionScreen") }),
       // Tras el código de /publicar/verificar: crea la casa con la respuesta del paso 1 guardada en el teléfono.
       createRoute({ getParentRoute: () => privateFlow, path: "/publicar/continuar", component: lazyRouteComponent(publicarEntrada, "ContinuarScreen") }),
       // El asistente de publicar se descarga al abrirlo (o al apuntar a un enlace hacia él): no entra en el JS inicial.
-      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/publicar", ...publicarPending, component: lazyRouteComponent(() => import("./propietario/publicar/publicar"), "PublicarScreen") }),
-      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/publicar/$id/$paso", validateSearch: pasoSearch, ...publicarPending, component: lazyRouteComponent(() => import("./propietario/publicar/publicar"), "PasoScreen") }),
+      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/publicar", ...publicarPending, component: lazyRouteComponent(() => import("../propietario/publicar/publicar"), "PublicarScreen") }),
+      createRoute({ getParentRoute: () => privateFlow, path: "/propietario/publicar/$id/$paso", validateSearch: pasoSearch, ...publicarPending, component: lazyRouteComponent(() => import("../propietario/publicar/publicar"), "PasoScreen") }),
       createRoute({ getParentRoute: () => privateFlow, path: "/admin/codigo", validateSearch: nextSearch, component: adminScreen("SegundoCodigoScreen") }),
     ]),
     adminFlow.addChildren([

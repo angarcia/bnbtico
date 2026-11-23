@@ -20,7 +20,7 @@ pantallas no escriben sus clases ni redefinen su aspecto, y no llevan `className
 
 ## Reglas generales
 
-- **Dónde vive cada pieza.** En `src/shared/` lo que no usa el router ni consultas (lo usa también la ficha SSR):
+- **Dónde vive cada pieza.** En `src/shared/ui/` lo que no usa el router ni consultas (lo usa también la ficha SSR):
   `button.tsx`, `overlay.tsx`, `field.tsx`, `choice.tsx`, `stepper.tsx`, `structure.tsx`, `card.tsx`, `closed-field.tsx`.
   Las variantes sobre `Link` de TanStack Router, en `client/comun/router-buttons.tsx` (`RouterButtonLink`, `RouterTextLink`,
   `RouterIconLink`) y `client/comun/router-rows.tsx` (`RouterCardLink`, `RouterListRow`). `ScreenHeader` está en `client/comun/screen-header.tsx`.
@@ -77,7 +77,7 @@ pequeña bajo el título, en la hoja y en la ventana (el nombre de la casa en la
 ventana encima; cerrar vuelve atrás en el historial. Atrás del navegador sale de la ruta, así que con cambios se para con
 `useBlocker` de TanStack Router y se pregunta con `DiscardConfirm` (el mismo «¿Descartar los cambios?» de `confirmDiscard`,
 exportado de `overlay.tsx`). Como la pantalla de debajo se vuelve a montar al cambiar de ruta, `returnFocus` busca el
-disparador por un atributo (`data-edit-field`). Ejemplo en `client/screens/editar.tsx` (`EditFieldForm` con `dialog`). `useDismiss` es para
+disparador por un atributo (`data-edit-field`). Ejemplo en `client/propietario/publicar/editar.tsx` (`EditFieldForm` con `dialog`). `useDismiss` es para
 desplegables no modales (selector de casa en escritorio, paneles de Explorar): Escape, clic fuera y perder el foco.
 
 ```tsx
@@ -97,7 +97,7 @@ de 18 px; nunca menos de 16).
 
 - `Field label error hint count size describedBy grow`: envuelve un control y le da `id`, `aria-describedby` y `aria-invalid`.
   **El error va debajo del campo que falla**, con `role="alert"`. Errores de una casa: `listingFieldError`
-  (`domain/field-errors.ts`) y `useFieldError(name)` (`client/publish/field-error.ts`).
+  (`domain/field-errors.ts`) y `useFieldError(name)` (`client/propietario/publicar/field-error.ts`).
 - `TextInput`, `TextArea`, `Select`: el control base. `AffixInput prefix size` (`lg`, `md`, `sm`): con «₡» o «$» delante.
   `SearchInput variant` (`field`, `combobox`, `float`) con `useCombobox` (`shared/ui/combobox.ts`). `Checkbox`: casilla de 44 px.
 - `StickyActions spacer layout`: la barra de pie fija. `CodeInput`: el código de 6 dígitos.
@@ -112,7 +112,7 @@ de 18 px; nunca menos de 16).
 
 ## Elegir y contar
 
-`shared/ui/choice.tsx`, `shared/ui/stepper.tsx`, `ChoiceCards` en `client/publish/wizard-parts.tsx`.
+`shared/ui/choice.tsx`, `shared/ui/stepper.tsx`, `ChoiceCards` en `client/propietario/publicar/wizard-parts.tsx`.
 
 - `ChoiceChips type="checkbox" | "radio" | as="button"`: chips de elección con el ✓ en un hueco fijo (`as="button"` con
   `aria-pressed` cuando el estado está en la URL). `ChoiceCards`: las tarjetas del paso 1.
@@ -221,17 +221,17 @@ hoja, la hoja de contacto en línea, la cabecera de las páginas de estado de la
 
 ## Crear una pantalla nueva
 
-Una pantalla se compone con estas piezas y no lleva CSS propio. Ejemplo (una pantalla de flujo con un dato que se guarda):
+Una pantalla se compone con estas piezas y no lleva CSS propio. Ejemplo (una pantalla de flujo en `client/<área>/`, con un dato que se guarda):
 
 ```tsx
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { ScreenHeader } from "../chrome";
+import { ScreenHeader } from "../comun/screen-header";
 import { Button } from "../../shared/ui/button";
 import { Card } from "../../shared/ui/card";
 import { Field, StickyActions, TextInput } from "../../shared/ui/field";
 import { EmptyState, LoadError, Notice, Skeleton, StatusTag } from "../../shared/ui/structure";
-import { RouterButtonLink } from "../router-buttons";
+import { RouterButtonLink } from "../comun/router-buttons";
 import { statusLabel } from "../../domain/status-label";
 
 export function NotaDeCasaScreen({ id }: { id: string }) {
