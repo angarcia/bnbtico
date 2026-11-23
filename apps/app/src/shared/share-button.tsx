@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { I } from "./ui/icons";
 import { useChanged } from "./use-changed";
 import { IconButton } from "./ui/button";
+import * as LISTING_PARTS_COPY from "./copy/listing-parts";
 
 export interface ShareTarget {
   url: string;
@@ -37,7 +38,7 @@ export function useShare(target: ShareTarget) {
 export function ShareButton(target: ShareTarget) {
   const { share, copied, swap } = useShare(target);
   return (
-    <IconButton label={copied ? "Enlace copiado" : "Compartir ficha"} tone="overlay" onClick={share}>
+    <IconButton label={LISTING_PARTS_COPY.share({ copied })} tone="overlay" onClick={share}>
       <span key={copied ? "copied" : "share"} className={swap}>
         {copied ? <I.check /> : <I.share />}
       </span>

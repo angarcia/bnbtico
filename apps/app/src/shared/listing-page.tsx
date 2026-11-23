@@ -28,7 +28,7 @@ import { ShareButton } from "./share-button";
 import { SiteTopBar } from "./site-top-bar";
 import { ListingDescription } from "./listing-description";
 import { track } from "./beacon";
-import { LISTING_COPY } from "./copy";
+import * as LISTING_COPY from "./copy/listing";
 import { BlockedPage } from "./status-pages";
 import type { BarStay } from "./listing-calendar";
 import { useDesktop } from "./desktop";

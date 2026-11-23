@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { PublicPhoto } from "../domain/listing";
 import { fadeIn } from "./picture";
 import { PhotoDots } from "./photo-dots";
+import * as LISTING_PARTS_COPY from "./copy/listing-parts";
 
 /** Hero de la ficha (pantalla 03): fotos deslizables con puntitos (los de las tarjetas de Explorar); los botones van encima como hijos.
  *  Del servidor solo llega la portada (el LCP); las demás fotos son cajas del mismo tamaño hasta que la página cargó o
@@ -27,7 +28,7 @@ export function HeroGallery({ photos, title, children }: { photos: PublicPhoto[]
   return (
     <div className="hero">
       {photos.length ? (
-        <div className="strip" ref={strip} onScroll={onScroll} aria-label={`Fotos de ${title}`}>
+        <div className="strip" ref={strip} onScroll={onScroll} aria-label={LISTING_PARTS_COPY.photos({ title })}>
           {photos.map((p, i) =>
             i > 0 && !allPhotos ? (
               <div key={p.path} className="slot" aria-hidden="true" />
@@ -37,7 +38,7 @@ export function HeroGallery({ photos, title, children }: { photos: PublicPhoto[]
                 src={p.url}
                 srcSet={p.srcSet ?? undefined}
                 sizes={p.srcSet ? "100vw" : undefined}
-                alt={i === 0 ? title : `${title}, foto ${i + 1}`}
+                alt={i === 0 ? title : LISTING_PARTS_COPY.photoAlt({ title, n: i + 1 })}
                 loading={i === 0 ? "eager" : "lazy"}
                 fetchPriority={i === 0 ? "high" : "auto"}
                 decoding={i === 0 ? "sync" : "async"}
@@ -51,7 +52,7 @@ export function HeroGallery({ photos, title, children }: { photos: PublicPhoto[]
       {/* Puntitos, como en las tarjetas de Explorar (2026-11-03); la posición, en texto para el lector de pantalla. */}
       <PhotoDots index={index} count={photos.length} />
       {photos.length > 1 ? (
-        <span className="sr-only" aria-live="polite">{`Foto ${index + 1} de ${photos.length}`}</span>
+        <span className="sr-only" aria-live="polite">{LISTING_PARTS_COPY.photoPosition({ n: index + 1, total: photos.length })}</span>
       ) : null}
     </div>
   );

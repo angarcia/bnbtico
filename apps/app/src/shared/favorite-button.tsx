@@ -1,5 +1,6 @@
 import { favoritesStore, useIsFavorite } from "./favorites-store";
 import { I } from "./ui/icons";
+import * as LISTING_PARTS_COPY from "./copy/listing-parts";
 
 /** Corazón de favoritos: cambia al momento (teléfono primero) y nunca navega aunque esté sobre una tarjeta. */
 export function FavoriteButton({ publicId, className, size = 22 }: { publicId: string; className: string; size?: number }) {
@@ -9,7 +10,7 @@ export function FavoriteButton({ publicId, className, size = 22 }: { publicId: s
       type="button"
       className={`heart ${className}`}
       aria-pressed={on}
-      aria-label={on ? "Quitar de favoritos" : "Guardar en favoritos"}
+      aria-label={LISTING_PARTS_COPY.favorite({ saved: on })}
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();

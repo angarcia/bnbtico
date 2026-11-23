@@ -11,6 +11,7 @@ import { createPortal } from "react-dom";
 import { openOverlay, type CloseReason } from "./overlay-stack";
 import { Button, IconButton } from "./button";
 import { I } from "./icons";
+import * as OVERLAY_COPY from "./copy/overlay";
 
 export type { CloseReason };
 export type Dismissible = { escape?: boolean; backdrop?: boolean; back?: boolean };
@@ -163,7 +164,7 @@ function Surface({ kind, cls, defaults, grabber = false, id, title, subtitle, cl
         </div>
       ) : title ? <h2 id={titleId}>{title}</h2> : null}
       {closeButton ? (
-        <IconButton label="Cerrar" disabled={options.busy} onClick={overlay.close}>
+        <IconButton label={OVERLAY_COPY.close} disabled={options.busy} onClick={overlay.close}>
           <I.x size={kind === "sheet" ? 22 : 20} />
         </IconButton>
       ) : null}
@@ -214,13 +215,13 @@ function Surface({ kind, cls, defaults, grabber = false, id, title, subtitle, cl
  *  Exportada para la salida de una ruta con cambios (Atrás sobre la ventana de un apartado, historia 06). */
 export function DiscardConfirm({ desktop, keep, discard }: { desktop: boolean; keep(): void; discard(): void }) {
   const size = desktop ? "md" : "lg";
-  const keepButton = <Button variant="secondary" size={size} onClick={keep}>Seguir editando</Button>;
-  const discardButton = <Button variant="danger" size={size} onClick={discard}>Descartar</Button>;
-  const text = <p>Los cambios que hizo no se guardarán.</p>;
+  const keepButton = <Button variant="secondary" size={size} onClick={keep}>{OVERLAY_COPY.keepEditing}</Button>;
+  const discardButton = <Button variant="danger" size={size} onClick={discard}>{OVERLAY_COPY.discard}</Button>;
+  const text = <p>{OVERLAY_COPY.discardText}</p>;
   // En escritorio, una ventana normal con el pie a la derecha (muestra 6); en el teléfono, la hoja de confirmación de siempre.
   return desktop ? (
-    <Dialog title="¿Descartar los cambios?" closeButton={false} onClose={keep} footer={<>{keepButton}{discardButton}</>}>{text}</Dialog>
+    <Dialog title={OVERLAY_COPY.discardTitle} closeButton={false} onClose={keep} footer={<>{keepButton}{discardButton}</>}>{text}</Dialog>
   ) : (
-    <Sheet title="¿Descartar los cambios?" closeButton={false} onClose={keep}>{text}{discardButton}{keepButton}</Sheet>
+    <Sheet title={OVERLAY_COPY.discardTitle} closeButton={false} onClose={keep}>{text}{discardButton}{keepButton}</Sheet>
   );
 }

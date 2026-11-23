@@ -9,6 +9,7 @@ import { ListingScreen } from "../shared/listing-page";
 import { seedListing } from "../shared/listing-query";
 import { SSR_DATA_ID, type SsrData } from "../shared/ssr-data";
 import { BlockedPage, ErrorPage, MissingPage } from "../shared/status-pages";
+import * as STATUS_COPY from "../shared/copy/status";
 
 const HEAD = /<!--app-head-->[\s\S]*?<!--\/app-head-->/;
 const ROOT = "<!--app-html-->";
@@ -60,9 +61,9 @@ function listingHead(l: PublicListing): string[] {
 }
 
 const STATUS_HEAD: Record<Exclude<SsrData["page"], "listing">, string> = {
-  missing: "Este enlace no existe",
-  blocked: "Este enlace ya no está activo",
-  error: "No pudimos cargar esta casa",
+  missing: STATUS_COPY.missingTitle,
+  blocked: STATUS_COPY.blockedTitle,
+  error: STATUS_COPY.errorTitle,
 };
 
 function body(data: SsrData): string {

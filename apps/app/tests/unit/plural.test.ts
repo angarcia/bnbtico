@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { plural } from "../../src/domain/plural";
-import { FAVORITES_COPY } from "../../src/client/explorar/copy";
+import * as FAVORITES_COPY from "../../src/client/explorar/copy/favorites";
 
 describe("plural (catálogos de textos)", () => {
   const casas = (n: number) => plural(n, { one: `${n} casa`, other: `${n} casas` });

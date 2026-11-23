@@ -11,7 +11,7 @@ import { ListingCard } from "./listing-card";
 import { useSession } from "../comun/session";
 import { RouterButtonLink } from "../comun/router-buttons";
 import { EmptyState, LoadError, Notice, Skeleton } from "../../shared/ui/structure";
-import { FAVORITES_COPY } from "./copy";
+import * as FAVORITES_COPY from "./copy/favorites";
 
 const favoriteListingsQuery = (ids: string[]) => ({
   queryKey: ["favorite-listings", ids] as const,

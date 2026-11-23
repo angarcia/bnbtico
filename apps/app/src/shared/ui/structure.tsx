@@ -8,6 +8,7 @@ import { createElement, type HTMLAttributes, type ReactNode } from "react";
 import type { StatusLabel, StatusTone } from "../../domain/status-label";
 import { TextButton } from "./button";
 import { I, type IconName } from "./icons";
+import * as UI_COPY from "./copy/ui";
 
 const join = (...parts: (string | false | undefined)[]) => parts.filter(Boolean).join(" ");
 
@@ -78,9 +79,9 @@ export function Notice({ tone = "info", as = "p", small = false, layout, announc
 }
 
 /** El error de carga, igual en todas las pantallas: aviso rojo con `role="alert"` y «Reintentar». */
-export function LoadError({ onRetry, children = "No pudimos cargar las casas. Revise su conexión e inténtelo de nuevo." }: { onRetry: () => void; children?: ReactNode }) {
+export function LoadError({ onRetry, children = UI_COPY.loadError }: { onRetry: () => void; children?: ReactNode }) {
   return (
-    <Notice tone="error" as="div" action={<TextButton tone="link" onClick={onRetry}>Reintentar</TextButton>}>
+    <Notice tone="error" as="div" action={<TextButton tone="link" onClick={onRetry}>{UI_COPY.retry}</TextButton>}>
       {children}
     </Notice>
   );
@@ -184,7 +185,7 @@ export function NavItemContent({ icon, label, count = 0, countTestId, iconSize =
 }
 
 /** El logo de la barra de escritorio (109 × 38). */
-export const BrandLogo = () => <img src="/logo-horizontal.png" alt="3bstays" width={109} height={38} />;
+export const BrandLogo = () => <img src="/logo-horizontal.png" alt={UI_COPY.logo} width={109} height={38} />;
 
 export function NavBar<T extends NavTab>({ desktop, three = false, tabs, renderLink, brand, end }: {
   desktop: boolean;
@@ -199,7 +200,7 @@ export function NavBar<T extends NavTab>({ desktop, three = false, tabs, renderL
   end?: ReactNode;
 }) {
   return (
-    <nav className={`tabbar ${desktop ? "desktop-nav" : "chrome-hide"}${three ? " three" : ""}`} aria-label="Navegación principal">
+    <nav className={`tabbar ${desktop ? "desktop-nav" : "chrome-hide"}${three ? " three" : ""}`} aria-label={UI_COPY.mainNav}>
       {brand}
       {tabs.map((tab) =>
         renderLink(tab, {

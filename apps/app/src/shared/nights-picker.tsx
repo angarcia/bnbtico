@@ -4,6 +4,7 @@
 import { NIGHTS_MAX } from "../domain/filters";
 import { ChoiceChips } from "./ui/choice";
 import { Stepper } from "./ui/stepper";
+import * as CALENDAR_COPY from "../domain/calendar-copy";
 
 const QUICK: readonly { label: string; nights: number }[] = [
   { label: "Fin de semana", nights: 2 },
@@ -17,8 +18,8 @@ export function NightsPicker({ nights, onChange }: { nights: number; onChange(ni
     <>
       <div className="row between">
         <span className="stack gap-0">
-          <b>Noches</b>
-          <span className="small muted">De 1 a {NIGHTS_MAX}</span>
+          <b>{CALENDAR_COPY.nights}</b>
+          <span className="small muted">{CALENDAR_COPY.nightsRange({ max: NIGHTS_MAX })}</span>
         </span>
         <Stepper unit="Una noche" value={nights} min={1} max={NIGHTS_MAX} empty={!nights} onChange={onChange} />
       </div>
@@ -26,7 +27,7 @@ export function NightsPicker({ nights, onChange }: { nights: number; onChange(ni
       <ChoiceChips
         as="button"
         placement="nights-quick"
-        label="Atajos de noches"
+        label={CALENDAR_COPY.nightsShortcuts}
         options={QUICK.map((q) => ({ value: String(q.nights), label: q.label }))}
         selected={[String(nights)]}
         onToggle={(v) => onChange(Number(v))}

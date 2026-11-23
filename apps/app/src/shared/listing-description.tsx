@@ -5,6 +5,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { descriptionParagraphs, isLongDescription } from "../domain/description";
 import { Button, ButtonPlaceholder } from "./ui/button";
 import { whenIdle } from "./idle";
+import * as LISTING_PARTS_COPY from "./copy/listing-parts";
 
 // La pantalla completa es un trozo aparte: se pide en reposo tras hidratar y al apuntar o tocar «Ver más».
 const loadScreen = () => import("./description-screen");
@@ -33,11 +34,11 @@ export function ListingDescription({ text, hydrated }: { text: string; hydrated:
       <Paragraphs paragraphs={paragraphs} className={`listing-description${long ? " is-clamped" : ""}`} testId="listing-description" />
       {!long ? null : hydrated ? (
         <Button variant="primary" block aria-haspopup="dialog" aria-expanded={open} onPointerDown={() => void loadScreen().catch(() => {})} onClick={() => setOpen(true)}>
-          Ver más
+          {LISTING_PARTS_COPY.seeMore}
         </Button>
       ) : (
         <ButtonPlaceholder variant="primary" block aria-hidden="true">
-          Ver más
+          {LISTING_PARTS_COPY.seeMore}
         </ButtonPlaceholder>
       )}
       {open ? (

@@ -5,7 +5,7 @@
 // 2. TSX: ninguna pantalla escribe a mano la clase de un componente común (botón, hoja, ventana, campo, chip, segmento,
 //    contador, tarjeta, aviso, etiqueta o cabecera): esa clase solo la pinta el archivo del componente.
 // 3. TSX: ningún `style={…}` con colores, fondos, bordes, radios o sombras.
-// 4. TSX: los archivos ya pasados a catálogo (TEXT_FILES) no escriben texto suelto en el JSX.
+// 4. TSX: los archivos ya pasados a catálogo (TEXT_SCOPE) no escriben texto suelto en el JSX.
 //
 // Cada fallo dice archivo:línea, qué encontró y qué usar. Para añadir una excepción: una entrada en CSS_EXCEPTIONS o en
 // CLASS_EXCEPTIONS, con su motivo en `why` (una línea). Ver docs/componentes.md, «Prueba de consistencia y sus excepciones».
@@ -279,11 +279,12 @@ describe("restos retirados", () => {
 });
 
 // ---------- 4. Textos ----------
-// Paso 3 de la estructura por áreas (decisión del 2026-11-23): los textos viven en el catálogo de su área (`textos.ts`), no
-// sueltos en el JSX. Se aplica a los archivos que ya se pasaron; cada área que se pase se añade a TEXT_FILES.
+// Paso 3 de la estructura por áreas (decisión del 2026-11-23): los textos viven en la carpeta `copy/` de su área, no
+// sueltos en el JSX. Se aplica a los archivos que ya se pasaron; cada área que se pase se añade a TEXT_SCOPE.
 
-/** Archivos (relativos a src/) sin texto suelto. */
-const TEXT_FILES = ["client/explorar/favoritos.tsx", "shared/listing-page.tsx"];
+/** Carpetas o archivos (relativos a src/) ya pasados: ningún TSX dentro escribe texto suelto. */
+const TEXT_SCOPE = ["shared/", "client/explorar/favoritos.tsx"];
+const TEXT_FILES = files(SRC, /\.tsx$/).map((f) => relative(SRC, f)).filter((f) => TEXT_SCOPE.some((s) => f === s || (s.endsWith("/") && f.startsWith(s))));
 /** Atributos que el usuario lee o escucha. */
 const TEXT_ATTRS = new Set(["label", "title", "aria-label", "placeholder", "alt", "text"]);
 const hasWords = (s: string) => /\p{L}{2,}/u.test(s);
@@ -322,7 +323,7 @@ function looseTexts(file: string): string[] {
 }
 
 describe("TSX: textos en el catálogo de su área", () => {
-  it("los archivos ya pasados no escriben texto suelto en el JSX (use el catálogo `textos.ts` del área)", () => {
+  it("los archivos ya pasados no escriben texto suelto en el JSX (use la carpeta `copy/` del área)", () => {
     expect(TEXT_FILES.flatMap(looseTexts)).toEqual([]);
   });
 });
