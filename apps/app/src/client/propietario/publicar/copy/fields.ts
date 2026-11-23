@@ -1,0 +1,50 @@
+// Los campos y el formulario de cada paso, que comparten publicar y editar (trozo diferido fields-*).
+// Catálogo de textos (estructura por áreas, paso 3, decisión del 2026-11-23): un export por mensaje, importado como espacio
+// de nombres (`import * as X_COPY`). Mensajes completos; los datos, como parámetros con nombre. Donde la frase lleva una
+// pieza con marcado en medio, la función la recibe y devuelve la frase entera en trozos.
+
+export const photos = "Fotos";
+export const photosFailed = ({ chunk }: { chunk: boolean }) => (chunk ? "No pudimos cargar las fotos. Revise su conexión." : "Algo falló al mostrar las fotos. Inténtelo de nuevo.");
+export const retry = "Reintentar";
+export const featuresHint = "Las mismas que usan los clientes para filtrar.";
+export const parkingKind = "Tipo de parqueo";
+export const chooseOption = "Seleccione una opción";
+export const parkingFree = "Gratuito";
+export const parkingPaid = "De pago";
+export const roomBath = "Baño de la habitación";
+export const acceptsMonthly = "¿Acepta alquiler por meses?";
+export const monthlyPrice = "Precio al mes (opcional)";
+export const monthlyHint = "Si lo deja vacío, en su ficha dirá «Precio a negociar con el anfitrión».";
+export const people = "Personas";
+export const onePerson = "Una persona";
+export const bedrooms = "Dormitorios";
+export const oneBedroom = "Un dormitorio";
+export const bathrooms = "Baños";
+export const oneBathroom = "Un baño";
+export const nightlyPrice = "Precio por noche";
+export const priceNote = "En colones; el cliente puede verlo en dólares. El precio final lo acuerda por WhatsApp.";
+export const title = "Nombre de la casa";
+export const titlePlaceholder = "Casa Manzanillo, a pie de playa";
+export const minimum = ({ min }: { min: number }) => `mínimo ${min}`;
+export const description = "Descripción (opcional)";
+export const descriptionPlaceholder = "¿Cómo es por dentro? ¿Qué hay cerca (playa, pulpería, parada de bus)? ¿Qué incluye o qué debe saber el cliente?";
+export const summary = "Lo que va a enviar";
+export const addDescription = "Añadir una descripción";
+export const preview = "Ver cómo queda su ficha";
+export const phoneNote = <T,>({ phone }: { phone: T }) => ["Los clientes le escriben al ", phone, " (verificado). No se muestra públicamente."] as const;
+export const feeNote = ({ fee }: { fee: string }) => `${fee} al mes desde que se apruebe, sin permanencia.`;
+export const offerNote = ({ places, fee }: { places: number; fee: string }) => `Si está entre las próximas ${places} casas. Después, ${fee} al mes. Sin tarjeta.`;
+export const fee = ({ fee }: { fee: string }) => `${fee} al mes`;
+export const free = ({ months }: { months: number }) => `₡0 · ${months} meses`;
+export const previewLabel = "Vista previa de su ficha";
+export const previewBar = "Vista previa · así la verán los clientes";
+export const close = "Cerrar";
+export const capacityTitle = "¿Cuántos caben?";
+export const ready = "Qué tener a mano";
+export const readyTitle = "Tenga a mano:";
+export const locationTitle = "¿Dónde está su casa?";
+export const featuresTitle = "Características";
+export const textTitle = "Nombre y descripción";
+export const textNote = "Sin enlaces, teléfonos ni publicidad. Se revisa antes de publicar.";
+export const photosNote = "Horizontales, sin teléfonos ni marcas de agua.";
+export const priceTitle = "Precio";

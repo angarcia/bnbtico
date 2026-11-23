@@ -7,6 +7,7 @@ import { KIND_HINTS, KIND_LABELS, LAST_STEP, STEPS, STEP_COUNT, stepPosition, wi
 import { I } from "../../../shared/ui/icons";
 import { IconButton } from "../../../shared/ui/button";
 import { ScreenHeader, type HeaderClose } from "../../comun/screen-header";
+import * as PARTS_COPY from "./copy/wizard-parts";
 
 /** Una cabecera para la entrada, los pasos y la verificación; conserva su sitio mientras carga el borrador. */
 export function WizardHeader({ title = "Publicar casa", step, lastInGroup, close, actions, missingSteps = [] }: { title?: string; step: Step | null; lastInGroup?: Step; close: HeaderClose; actions?: ReactNode; missingSteps?: readonly Step[] }) {
@@ -20,7 +21,7 @@ export function WizardHeader({ title = "Publicar casa", step, lastInGroup, close
             ))}
           </div>
           {lastInGroup ? (
-            <span className="right stage-label">Pasos {stepPosition(step)} a {stepPosition(lastInGroup)} de {STEP_COUNT}</span>
+            <span className="right stage-label">{PARTS_COPY.steps({ from: stepPosition(step), to: stepPosition(lastInGroup), total: STEP_COUNT })}</span>
           ) : <StageLabel step={step} />}
         </>
       ) : null} />
@@ -74,7 +75,7 @@ export function ChoiceCards({
           <div key={o.value} className="compact-kind-option">
             <div className="row">
               {choice}
-              <IconButton label={`Qué significa ${o.label}`} aria-expanded={expanded} aria-controls={id} onClick={() => setOpenHint(expanded ? null : o.value)}>
+              <IconButton label={PARTS_COPY.whatMeans({ label: o.label })} aria-expanded={expanded} aria-controls={id} onClick={() => setOpenHint(expanded ? null : o.value)}>
                 <I.help size={20} />
               </IconButton>
             </div>
@@ -102,7 +103,7 @@ export function KindChoice({ kind, onChange, compact, error }: { kind: Kind | nu
   if (!FLAGS.rooms) return <input type="hidden" name="kind" value="completo" />;
   return (
     <section className="stack publish-kind">
-      <h2>¿Qué es?</h2>
+      <h2>{PARTS_COPY.kindTitle}</h2>
       <ChoiceCards
         name="kind"
         type="radio"
@@ -123,9 +124,9 @@ export function KindChoice({ kind, onChange, compact, error }: { kind: Kind | nu
 export function ReadyList() {
   return (
     <ul className="ready-list small">
-      <li>Fotos horizontales, si ya las tiene</li>
-      <li>El precio por noche</li>
-      <li>Unos 10 minutos</li>
+      <li>{PARTS_COPY.readyPhotos}</li>
+      <li>{PARTS_COPY.readyPrice}</li>
+      <li>{PARTS_COPY.readyTime}</li>
     </ul>
   );
 }
@@ -136,16 +137,16 @@ export function StageLabel({ step }: { step: Step }) {
   // El último paso no es «Precio · 2 de 2» sino «Revisar y enviar» (revisión UX 2026-10-29, A9).
   if (step === LAST_STEP)
     return (
-      <div className="right stage-label stage-summary" aria-label={`Revisar y enviar, último paso. Paso ${stepPosition(step)} de ${STEP_COUNT}.`}>
-        <h2>Revisar y enviar</h2>
-        <span>último paso</span>
+      <div className="right stage-label stage-summary" aria-label={PARTS_COPY.lastStepLabel({ step: stepPosition(step), total: STEP_COUNT })}>
+        <h2>{PARTS_COPY.lastStep}</h2>
+        <span>{PARTS_COPY.lastStepNote}</span>
       </div>
     );
   return (
-    <span className="right stage-label" aria-label={`${stage.name}, ${stage.position} de ${stage.size}. Paso ${stepPosition(step)} de ${STEP_COUNT}.`}>
+    <span className="right stage-label" aria-label={PARTS_COPY.stageLabel({ name: stage.name, position: stage.position, size: stage.size, step: stepPosition(step), total: STEP_COUNT })}>
       {stage.index === 0 ? null : <b>{stage.name}</b>}
       <span>
-        {stage.position} de {stage.size}
+        {PARTS_COPY.stagePosition({ position: stage.position, size: stage.size })}
       </span>
     </span>
   );

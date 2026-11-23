@@ -41,6 +41,7 @@ import { StepReadyContext } from "./step-ready";
 import { Button, ButtonPlaceholder } from "../../../shared/ui/button";
 import { RouterButtonLink } from "../../comun/router-buttons";
 import { Notice } from "../../../shared/ui/structure";
+import * as STEP_COPY from "./copy/step-form";
 
 const GENERIC = "No pudimos guardar. Intente de nuevo.";
 const WhatsAppDialog = lazy(() => import("../../comun/whatsapp-dialog").then((m) => ({ default: m.WhatsAppDialog })));
@@ -272,23 +273,23 @@ export function StepForm({
     <>
         {/* «Atrás» como botón cuadrado con la flecha y «Continuar ›»; en el último paso, la acción sin flecha (A9). */}
         {step === 1 && !volver ? (
-          <ButtonPlaceholder variant="secondary" size={desktop ? "md" : "lg"} placement="back" aria-disabled="true" aria-label="Atrás">
+          <ButtonPlaceholder variant="secondary" size={desktop ? "md" : "lg"} placement="back" aria-disabled="true" aria-label={STEP_COPY.back}>
             <I.back size={22} />
           </ButtonPlaceholder>
         ) : (
-          <RouterButtonLink to={port.step} params={{ id: listing.id, paso: String(volver ? LAST_STEP : (back ?? previousStep(step) ?? 1)) }} variant="secondary" size={desktop ? "md" : "lg"} placement="back" aria-label="Atrás">
+          <RouterButtonLink to={port.step} params={{ id: listing.id, paso: String(volver ? LAST_STEP : (back ?? previousStep(step) ?? 1)) }} variant="secondary" size={desktop ? "md" : "lg"} placement="back" aria-label={STEP_COPY.back}>
             <I.back size={22} />
           </RouterButtonLink>
         )}
         <Button variant="primary" size={desktop ? "md" : "lg"} placement="grow" type="submit" form={desktop ? formId : undefined} disabled={sending || !ready}>
           {step < LAST_STEP ? (
             <>
-              Continuar <I.chevron size={20} />
+              {STEP_COPY.next} <I.chevron size={20} />
             </>
           ) : sending ? (
-            "Un momento…"
+            STEP_COPY.sending
           ) : (
-            "Enviar a revisión"
+            STEP_COPY.send
           )}
         </Button>
     </>

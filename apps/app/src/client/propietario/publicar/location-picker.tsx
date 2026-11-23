@@ -3,6 +3,7 @@ import { PROVINCE_CENTERS, roundPoint, type LatLng } from "../../../domain/geo";
 import { DEFAULT_PROVINCE } from "../../../domain/listing";
 import type { PickerMap } from "./location-leaflet";
 import { IconButton } from "../../../shared/ui/button";
+import * as PICKER_COPY from "./copy/location-picker";
 
 const Locate = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
@@ -48,9 +49,9 @@ export function LocationPicker({ lat, lng, onPick, readOnly = false, ref }: { la
 
   return (
     <div className="map-wrap">
-      <div ref={box} className="map-box" role="application" aria-label="Mapa para marcar la ubicación aproximada" />
+      <div ref={box} className="map-box" role="application" aria-label={PICKER_COPY.map} />
       {readOnly ? null : (
-        <IconButton label="Usar mi ubicación" tone="overlay" placement="map-locate" onClick={locate}>
+        <IconButton label={PICKER_COPY.locate} tone="overlay" placement="map-locate" onClick={locate}>
           <Locate />
         </IconButton>
       )}

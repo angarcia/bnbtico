@@ -14,6 +14,7 @@ import { fadeIn } from "../../../shared/picture";
 import { ConfirmSheet } from "../../comun/confirm-sheet";
 import { UPLOAD_STEPS, progressOf } from "./photo-queue";
 import { PHOTOS_HELP_DESKTOP, PhotoCounter, usePhotoGrid, type PhotoSource } from "./photo-grid";
+import * as VIEWER_COPY from "./copy/photo-viewer";
 
 const PHASE = { preparing: "Preparando…", uploading: "Subiendo…", saving: "Guardando…" } as const;
 const SAVED = { order: "Orden guardado", removed: "Foto quitada" } as const;
@@ -86,7 +87,7 @@ export function PhotoEditorDialog({ source, userId, notice, onClose, returnFocus
     <Dialog
       size="wide"
       layout="photos"
-      title="Fotos"
+      title={VIEWER_COPY.title}
       subtitle={<PhotoCounter counter={source.counter} />}
       busy={grid.busy}
       onClose={onClose}
@@ -97,66 +98,66 @@ export function PhotoEditorDialog({ source, userId, notice, onClose, returnFocus
           <span className="small primary photo-editor-saved" role="status">
             {status ? <>{grid.saved && !grid.busy ? <I.check size={16} /> : null}{status}</> : null}
           </span>
-          <Button variant="primary" onClick={onClose}>Listo</Button>
+          <Button variant="primary" onClick={onClose}>{VIEWER_COPY.done}</Button>
         </>
       }
     >
       <div className="photo-editor">
-        <section className="photo-view" aria-label="Foto elegida">
+        <section className="photo-view" aria-label={VIEWER_COPY.selected}>
           <div className="photo-view-stage" data-testid="photo-viewer">
             {selected ? (
               <div className="photo-view-pic" ref={picRef}>
                 <img
                   key={selected.photo.id}
                   src={variantUrl(selected.photo, 1600)}
-                  alt={`Foto ${selected.n}`}
+                  alt={VIEWER_COPY.photoAlt({ n: selected.n })}
                   decoding="async"
                   onLoad={(e) => learn(selected.photo.id, e.currentTarget)}
                 />
-                {index === 0 ? <span className="tag">Portada</span> : null}
+                {index === 0 ? <span className="tag">{VIEWER_COPY.cover}</span> : null}
                 {selected.pending ? <span className="tag tag-pending">{pendingLabel(selected.photo)}</span> : null}
                 {band && band.width * band.height < 0.999 ? (
                   <span className="photo-view-band" ref={bandRef}>
-                    <span className="xs">Lo que se ve en la ficha</span>
+                    <span className="xs">{VIEWER_COPY.band}</span>
                   </span>
                 ) : null}
               </div>
             ) : (
-              <span className="small muted">Añada fotos con «Añadir».</span>
+              <span className="small muted">{VIEWER_COPY.empty}</span>
             )}
           </div>
           {selected ? (
             <div className="photo-view-tools">
               <span className="small muted num">
-                {selected.pending ? `Foto nueva · ${pendingLabel(selected.photo)}` : `Foto ${selected.n} de ${photos.length}${index === 0 ? " · portada" : ""}`}
+                {VIEWER_COPY.position({ pending: selected.pending ? pendingLabel(selected.photo) : null, n: selected.n, total: photos.length, cover: index === 0 })}
               </span>
               {selected.pending ? (
                 pendingNote(selected.photo) ? <span className="small">{pendingNote(selected.photo)}</span> : null
               ) : (
                 <>
                   <Button variant="secondary" aria-disabled={grid.locked || index === 0 ? true : undefined} onClick={() => grid.move(selected.photo.id, index, "before")}>
-                    Mover antes
+                    {VIEWER_COPY.moveBefore}
                   </Button>
                   <Button variant="secondary" aria-disabled={grid.locked || index === photos.length - 1 ? true : undefined} onClick={() => grid.move(selected.photo.id, index, "after")}>
-                    Mover después
+                    {VIEWER_COPY.moveAfter}
                   </Button>
                   {index > 0 ? (
                     <Button variant="secondary" aria-disabled={grid.locked ? true : undefined} onClick={() => grid.makeCover(selected.photo.id)}>
-                      Hacer portada
+                      {VIEWER_COPY.makeCover}
                     </Button>
                   ) : null}
                 </>
               )}
               {selected.pending && !source.canAdd ? null : (
                 <TextButton tone="danger" disabled={grid.busy || grid.drag.dragging} onClick={quitar}>
-                  Quitar foto
+                  {VIEWER_COPY.remove}
                 </TextButton>
               )}
             </div>
           ) : null}
         </section>
 
-        <section className="photo-rail" aria-label="Todas las fotos">
+        <section className="photo-rail" aria-label={VIEWER_COPY.rail}>
           {photos.length >= 2 ? <p className="small muted photos-help">{PHOTOS_HELP_DESKTOP}</p> : null}
           <div className="photo-rail-scroll" ref={grid.scroller}>
             <div className={`photos-grid photo-rail-grid${grid.drag.dragging ? " is-dragging" : ""}`} ref={grid.drag.gridRef} aria-busy={grid.locked}>
@@ -166,7 +167,7 @@ export function PhotoEditorDialog({ source, userId, notice, onClose, returnFocus
                   type="button"
                   className={`photo photo-thumb${x.pending ? " is-pending" : ""}${grid.drag.liftedId === x.photo.id ? " is-lifted" : ""}`}
                   data-photo={x.pending ? undefined : x.photo.id}
-                  aria-label={`Foto ${x.n}${x.n === 1 && !x.pending ? ", portada" : ""}${x.pending ? `, ${pendingLabel(x.photo).toLowerCase()}` : ""}`}
+                  aria-label={VIEWER_COPY.thumb({ n: x.n, cover: x.n === 1 && !x.pending, pending: x.pending ? pendingLabel(x.photo) : null })}
                   aria-current={x.photo.id === selected?.photo.id ? "true" : undefined}
                   onPointerDown={x.pending ? undefined : (e) => grid.drag.onPointerDown(e, x.photo.id)}
                   onContextMenu={(e) => e.preventDefault()}
@@ -176,23 +177,23 @@ export function PhotoEditorDialog({ source, userId, notice, onClose, returnFocus
                     fadeIn.onLoad(e);
                     learn(x.photo.id, e.currentTarget);
                   }} />
-                  {x.n === 1 && !x.pending ? <span className="tag">Portada</span> : null}
+                  {x.n === 1 && !x.pending ? <span className="tag">{VIEWER_COPY.cover}</span> : null}
                   {x.pending ? <span className="tag tag-pending">{pendingLabel(x.photo)}</span> : null}
                 </button>
               ))}
               {grid.uploads.map((u) => (
                 <div key={`u${u.key}`} className="photo uploading">
                   <span className="xs strong">{PHASE[u.phase]}</span>
-                  <div className="upload-bar" role="progressbar" aria-label={`Subiendo ${u.name}`} aria-valuemin={0} aria-valuemax={UPLOAD_STEPS} aria-valuenow={progressOf(u)} data-step={progressOf(u)}>
+                  <div className="upload-bar" role="progressbar" aria-label={VIEWER_COPY.uploading({ name: u.name })} aria-valuemin={0} aria-valuemax={UPLOAD_STEPS} aria-valuenow={progressOf(u)} data-step={progressOf(u)}>
                     <span />
                   </div>
                 </div>
               ))}
               {grid.room ? (
                 <label className="add">
-                  <input type="file" accept="image/jpeg,image/png,image/webp" multiple className="sr-input" aria-label="Añadir fotos" onChange={grid.pick} />
+                  <input type="file" accept="image/jpeg,image/png,image/webp" multiple className="sr-input" aria-label={VIEWER_COPY.addPhotos} onChange={grid.pick} />
                   <I.plus />
-                  Añadir
+                  {VIEWER_COPY.add}
                 </label>
               ) : null}
             </div>
@@ -211,7 +212,7 @@ export function PhotoEditorDialog({ source, userId, notice, onClose, returnFocus
         <ConfirmSheet
           title={REMOVE_TITLE}
           body={REMOVE_BODY}
-          confirmLabel="Quitar"
+          confirmLabel={VIEWER_COPY.confirmRemove}
           tone="destructive"
           onClose={() => setAsking(null)}
           onConfirm={() => {
