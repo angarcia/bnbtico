@@ -8,7 +8,7 @@ import { createContext, lazy, Suspense, useContext, useState, type MouseEvent, t
 import { tabsFor } from "../domain/tabs";
 import { I } from "../shared/icons";
 import { CurrencySwitch } from "../shared/currency-switch";
-import { useDesktop } from "./desktop";
+import { useDesktop } from "../shared/desktop";
 import { useHidingChrome } from "./hiding-chrome";
 import { countNew, inquiriesQuery } from "./inquiries";
 import { useListingsCount } from "./own-listings-query";

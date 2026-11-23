@@ -5,7 +5,7 @@ import type { Listing } from "../domain/listing";
 import { I } from "../shared/icons";
 import { airbnbQuery, updateAirbnbCalendar, useAirbnbManualHint, useCalendarOnline } from "./airbnb";
 import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
-import { useDesktop } from "./desktop";
+import { useDesktop } from "../shared/desktop";
 import { sessionState } from "./session";
 import { setAvailability, type Selection, type CalendarDay } from "../domain/calendar";
 import { MonthLegend } from "../shared/month-grid";

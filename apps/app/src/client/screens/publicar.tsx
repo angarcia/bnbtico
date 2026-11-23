@@ -13,7 +13,7 @@ import { localPort } from "../publish/local-port";
 import type { Volver } from "../publish/step-form";
 import { requiredProblems, resumeStep } from "../../domain/publish-rules";
 import { ScreenHeader, type HeaderClose } from "../chrome";
-import { useDesktop } from "../desktop";
+import { useDesktop } from "../../shared/desktop";
 import { savesSettled } from "../save-queue";
 import { stepEnter } from "../motion";
 import { ownListingKey } from "../listing-keys";

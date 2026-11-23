@@ -13,7 +13,7 @@ import type { PublicListing } from "../domain/listing";
 import { canTapDay, RANGE_BUSY_MESSAGE, tapRangeFree, type RangeState } from "../domain/range";
 import { formatMoney } from "../domain/money";
 import { hasBusyNight, listingStay, MONTHLY_ESTIMATE_NIGHTS, stayLine } from "../domain/stay-price";
-import { useDesktop } from "../client/desktop";
+import { useDesktop } from "./desktop";
 import { FLAGS } from "./flags";
 import { I } from "./icons";
 import { listingDaysQuery } from "./listing-query";

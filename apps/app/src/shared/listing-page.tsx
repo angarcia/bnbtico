@@ -30,7 +30,7 @@ import { ListingDescription } from "./listing-description";
 import { track } from "./beacon";
 import { BlockedPage } from "./status-pages";
 import type { BarStay } from "./listing-calendar";
-import { useDesktop } from "../client/desktop";
+import { useDesktop } from "./desktop";
 import { FLAGS } from "./flags";
 import { Button, ButtonPlaceholder, IconButtonLink, IconButtonPlaceholder } from "./button";
 import { Notice, StatusTag } from "./structure";

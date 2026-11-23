@@ -8,7 +8,7 @@ import { authApi } from "./session";
 
 export const calendarApi = async (): Promise<OwnerCalendarApi> => {
   await authApi();
-  return (await import("./supabase-data")).calendarApi();
+  return (await import("../shared/supabase-data")).calendarApi();
 };
 
 /** `cal`: el calendario del anfitrión o, en las rutas del admin, el de Ana (client/editor-port.ts). */

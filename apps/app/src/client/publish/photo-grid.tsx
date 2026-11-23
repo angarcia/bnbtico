@@ -17,7 +17,7 @@ import { UPLOAD_STEPS, createUploadQueue, progressOf, type UploadItem, type Uplo
 import { photoReorderCallbacks, photosErrorMessage } from "./photo-reorder";
 import { usePhotoDrag } from "./use-photo-drag";
 import { IconButton } from "../../shared/button";
-import { useDesktop } from "../desktop";
+import { useDesktop } from "../../shared/desktop";
 
 export interface PhotoSource {
   listingId: string;

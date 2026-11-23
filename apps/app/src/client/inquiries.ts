@@ -9,7 +9,7 @@ import { authApi } from "./session";
 
 const api = async (): Promise<InquiriesApi> => {
   await authApi();
-  return (await import("./supabase-data")).inquiriesApi();
+  return (await import("../shared/supabase-data")).inquiriesApi();
 };
 
 export const inquiriesQuery = (userId: string) =>

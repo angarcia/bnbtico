@@ -33,7 +33,7 @@ import { I } from "../../shared/icons";
 import { billingQuery, useBilling, type HouseBilling } from "../billing";
 import { ScreenHeader } from "../chrome";
 import { ConfirmSheet } from "../confirm-sheet";
-import { useDesktop } from "../desktop";
+import { useDesktop } from "../../shared/desktop";
 import { activityQuery, offerTakenQuery, ownListingsQuery, patchCached, refresh } from "../owner";
 import { useSession } from "../session";
 import { Button, TextButton } from "../../shared/button";
@@ -60,7 +60,7 @@ const expiry = (m: PaymentMethodSummary) => `${String(m.expMonth).padStart(2, "0
 /** POST /api/pago/sesion con el JWT de la sesión → la página de la pasarela (Stripe; en local, la falsa del worker). */
 async function openPaymentPage(publicId?: string): Promise<void> {
   if (typeof navigator !== "undefined" && navigator.onLine === false) throw toDomainError(new TypeError("Failed to fetch"));
-  const token = await (await import("../supabase-data")).accessToken();
+  const token = await (await import("../../shared/supabase-data")).accessToken();
   if (!token) throw new DomainError(PAYMENT_MESSAGES.noSession, "session");
   let res: Response;
   try {
@@ -104,7 +104,7 @@ function useStopResume(userId: string, house: BillingHouse, hasMethod: boolean) 
   const key = billingQuery(userId).queryKey;
   return useMutation({
     mutationFn: async (event: "stop" | "resume"): Promise<ListingStatus> => {
-      const billing = (await import("../supabase-data")).ownerBilling();
+      const billing = (await import("../../shared/supabase-data")).ownerBilling();
       return event === "stop" ? billing.stop(house.listingId) : billing.resume(house.listingId);
     },
     onMutate: async (event) => {

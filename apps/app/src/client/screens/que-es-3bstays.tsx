@@ -1,7 +1,7 @@
 import { Link, Navigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { formatCRC } from "../../domain/money";
-import { useDesktop } from "../desktop";
+import { useDesktop } from "../../shared/desktop";
 import { MONTHLY_FEE_CRC } from "../../domain/offer";
 import { useListingsCount } from "../own-listings-query";
 import { PublishPromoButton, useOffer } from "../publish-promo";

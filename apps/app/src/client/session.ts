@@ -29,7 +29,7 @@ function update(session: Session | null) {
 
 /** La cuenta (carga supabase-js la primera vez). */
 export function authApi(): Promise<AuthApi & MfaApi> {
-  return (api ??= import("./supabase-data").then(async (m) => {
+  return (api ??= import("../shared/supabase-data").then(async (m) => {
     const a = m.authApi();
     a.onSessionChange(update);
     update(await a.session());

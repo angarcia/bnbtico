@@ -22,7 +22,7 @@ import { DeleteHouse } from "../delete-house";
 import { useState, type ReactNode } from "react";
 import { useBilling } from "../billing";
 import { ConfirmSheet } from "../confirm-sheet";
-import { useDesktop } from "../desktop";
+import { useDesktop } from "../../shared/desktop";
 import { useDiscardEditField } from "../edit";
 import { useEditor } from "../editor-port";
 import { activityQuery } from "../owner";

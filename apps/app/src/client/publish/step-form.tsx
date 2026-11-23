@@ -30,7 +30,7 @@ import { formInput, parseStep } from "../../domain/step-forms";
 import { accountQuery } from "../account";
 import { authApi } from "../session";
 import { useEditor, type EditorPort } from "../editor-port";
-import { useDesktop } from "../desktop";
+import { useDesktop } from "../../shared/desktop";
 import { patchCached, refresh } from "../owner";
 import { enqueueSave, savesSettled } from "../save-queue";
 import { isLostDraft } from "./lost-drafts";

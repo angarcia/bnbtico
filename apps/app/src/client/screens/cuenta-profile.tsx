@@ -11,7 +11,7 @@ import { MONTHLY_FEE_CRC } from "../../domain/offer";
 import { accountQuery } from "../account";
 import { suscripcionScreen } from "../lazy-screens";
 import { ScreenHeader } from "../chrome";
-import { isDesktop, useDesktop } from "../desktop";
+import { isDesktop, useDesktop } from "../../shared/desktop";
 import { PublishPromoRow } from "../publish-promo";
 import { useFavorites } from "../../shared/favorites-store";
 import { ConfirmSheet } from "../confirm-sheet";

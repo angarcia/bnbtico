@@ -33,7 +33,7 @@ import { LocationStep } from "../publish/location-step";
 import { PhotoCounter, PhotoGrid, type PhotoSource } from "../publish/photo-grid";
 import { useOwnListing } from "../editor-query";
 import { NotFoundCard } from "../editor-status";
-import { useDesktop } from "../desktop";
+import { useDesktop } from "../../shared/desktop";
 import { OwnerHouseDetail } from "./propietario";
 import { Button } from "../../shared/button";
 import { RouterButtonLink } from "../router-buttons";

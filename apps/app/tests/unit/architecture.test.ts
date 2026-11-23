@@ -39,6 +39,18 @@ describe("arquitectura", () => {
     expect(offenders).toEqual([]);
   });
 
+  // Dependencias en un solo sentido (decisión 2026-11-22, `.scratch/estructura-frontend/`): `shared/` lo usa también la ficha
+  // SSR y no conoce la app privada. Cuenta también las importaciones dinámicas.
+  it("src/shared no importa src/client", () => {
+    const offenders = files(join(SRC, "shared")).flatMap((f) =>
+      [...readFileSync(f, "utf8").matchAll(/(?:from|import)\s*\(?\s*["']([^"']+)["']/g)]
+        .map((m) => m[1]!)
+        .filter((spec) => spec.startsWith(".") && relative(SRC, join(f, "..", spec)).startsWith("client/"))
+        .map((spec) => `${relative(SRC, f)} → ${spec}`),
+    );
+    expect(offenders).toEqual([]);
+  });
+
   it("solo src/data/postgrest importa supabase-js", () => {
     const offenders = files(SRC)
       .filter((f) => !relative(SRC, f).startsWith("data/postgrest/"))

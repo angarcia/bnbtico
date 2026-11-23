@@ -30,7 +30,7 @@ import { inquiriesQuery } from "../inquiries";
 import { activityQuery, offerTakenQuery, ownListingsQuery, resumableQuery, useDeleteDraft } from "../owner";
 import { knownNoDraft } from "../own-listings-query";
 import { ConfirmSheet } from "../confirm-sheet";
-import { useDesktop } from "../desktop";
+import { useDesktop } from "../../shared/desktop";
 import { Button, TextButton } from "../../shared/button";
 import { RouterButtonLink, RouterTextLink } from "../router-buttons";
 import { CountBadge, LoadError, Notice, Skeleton, StatusTag } from "../../shared/structure";

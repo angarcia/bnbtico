@@ -93,7 +93,7 @@ export function favoriteErrorMessage(error: unknown): string {
 export const favoritesStore = createFavoritesStore({
   // Sin localStorage (el worker, modo privado estricto) cada llamada falla y el store sigue en memoria.
   storage: { getItem: (k) => localStorage.getItem(k), setItem: (k, v) => localStorage.setItem(k, v) },
-  remote: async () => (hasStoredSession() ? (await import("../client/supabase-data")).favoritesApi() : null),
+  remote: async () => (hasStoredSession() ? (await import("./supabase-data")).favoritesApi() : null),
   now: () => new Date().toISOString(),
   onError: (error) => toast(favoriteErrorMessage(error)),
 });

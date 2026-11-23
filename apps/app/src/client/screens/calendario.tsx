@@ -46,7 +46,7 @@ import { toast } from "../../shared/toast";
 import { calendarQuery, saveCalendar } from "../calendar-days";
 import { isChunkLoadError } from "../chunk-error";
 import { ScreenHeader } from "../chrome";
-import { useDesktop } from "../desktop";
+import { useDesktop } from "../../shared/desktop";
 import { useEditor } from "../editor-port";
 import { ownListingsQuery, useSetAvailable } from "../owner";
 import { useSession } from "../session";

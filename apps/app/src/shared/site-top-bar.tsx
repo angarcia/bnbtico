@@ -6,7 +6,7 @@
 import type { MouseEvent } from "react";
 import { hasStoredSession } from "../data/storage";
 import { tabsFor } from "../domain/tabs";
-import { useDesktop } from "../client/desktop";
+import { useDesktop } from "./desktop";
 import { CurrencySwitch } from "./currency-switch";
 import { useHydrated } from "./hydration";
 import { I } from "./icons";

@@ -5,7 +5,7 @@ import { queryOptions } from "@tanstack/react-query";
 export const offerTakenQuery = queryOptions({
   queryKey: ["offer-taken"] as const,
   queryFn: async () => {
-    const listings = (await import("./supabase-data")).publicListings();
+    const listings = (await import("../shared/supabase-data")).publicListings();
     return listings.offerTaken().catch(() => listings.countActive());
   },
   staleTime: 5 * 60_000,

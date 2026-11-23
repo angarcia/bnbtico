@@ -20,7 +20,7 @@ vi.mock("../../src/client/session", () => ({
   authApi: async () => ({}),
   sessionState: () => ({ status: "signed-in" }),
 }));
-vi.mock("../../src/client/supabase-data", () => ({ ownerListings: () => transport, adminApi: () => transport }));
+vi.mock("../../src/shared/supabase-data", () => ({ ownerListings: () => transport, adminApi: () => transport }));
 vi.mock("../../src/shared/toast", () => ({ toast: vi.fn() }));
 
 const userId = "u1";

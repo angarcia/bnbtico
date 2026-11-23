@@ -4,7 +4,7 @@ import { parseFilters, type Filters } from "../domain/filters";
 import type { PublicListing, SearchCursor, SearchListing, SearchPage } from "../domain/listing";
 import { DomainError } from "../domain/errors";
 
-const api = async () => (await import("./supabase-data")).publicListings();
+const api = async () => (await import("../shared/supabase-data")).publicListings();
 
 export const listingsQuery = (f: Filters) => {
   // «Más filtros» abierto no cambia los resultados (misma caché). Sin `monthly` ni `monthlyFrom` desde el fin del modo

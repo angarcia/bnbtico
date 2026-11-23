@@ -3,7 +3,7 @@
 import { favoritesStore, syncFavorites } from "../shared/favorites-store";
 import { onSignedIn, sessionState } from "./session";
 
-const sync = () => void import("./supabase-data").then((m) => syncFavorites(favoritesStore, m.favoritesApi())).catch(() => {});
+const sync = () => void import("../shared/supabase-data").then((m) => syncFavorites(favoritesStore, m.favoritesApi())).catch(() => {});
 
 export function startFavoritesSync(): void {
   onSignedIn(sync);

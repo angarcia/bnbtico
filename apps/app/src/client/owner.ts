@@ -19,7 +19,7 @@ export { patchCached, addOwnCached, refresh } from "./listing-cache";
 let loaded: OwnerListingsApi | null = null;
 export const api = async (): Promise<OwnerListingsApi> => {
   await authApi();
-  return (loaded = (await import("./supabase-data")).ownerListings());
+  return (loaded = (await import("../shared/supabase-data")).ownerListings());
 };
 /** El adaptador si ya está cargado (sin esperar): el asistente lo usa para que un guardado salga en el mismo tick. */
 export const loadedApi = (): OwnerListingsApi | null => loaded;
@@ -27,13 +27,13 @@ export const loadedApi = (): OwnerListingsApi | null => loaded;
 /** Fotos (subida directa a Storage y RPCs), con la misma sesión. */
 export const photosApi = async (): Promise<PhotosApi> => {
   await authApi();
-  return (await import("./supabase-data")).photosApi();
+  return (await import("../shared/supabase-data")).photosApi();
 };
 
 /** Lugar del pin y zonas (place_at, zones_near, zones), con la misma sesión. */
 export const places = async (): Promise<PlacesApi> => {
   await authApi();
-  return (await import("./supabase-data")).placesApi();
+  return (await import("../shared/supabase-data")).placesApi();
 };
 
 /** La lectura de Mis casas (la consulta está en own-listings-query.ts, que la carga al pedirla). */

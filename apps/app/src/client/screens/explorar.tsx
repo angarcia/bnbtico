@@ -17,7 +17,7 @@ import { useFx } from "../../shared/fx";
 import { FLAGS, SEARCH_MODE } from "../../shared/flags";
 import { I } from "../../shared/icons";
 import { revealClass } from "../motion";
-import { useDesktop } from "../desktop";
+import { useDesktop } from "../../shared/desktop";
 import { ListingCard } from "../listing-card";
 import { SearchHelp } from "../search-help";
 import { useListingsCount } from "../own-listings-query";

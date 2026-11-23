@@ -13,7 +13,7 @@ import { variantUrl } from "../../domain/image";
 import { missingLine, missingParts, resumeStep } from "../../domain/publish-rules";
 import { I } from "../../shared/icons";
 import { ScreenHeader } from "../chrome";
-import { useDesktop } from "../desktop";
+import { useDesktop } from "../../shared/desktop";
 import { EditorContext, type EditorListings, type EditorPhotos, type EditorPort } from "../editor-port";
 import { authApi, useSession } from "../session";
 import { EditableFicha } from "./casa-editable";
@@ -30,7 +30,7 @@ import { RouterListRow } from "../router-rows";
 let edit: AdminEditApi | null = null;
 const adminEdit = async (): Promise<AdminEditApi> => {
   await authApi();
-  return (edit ??= (await import("../supabase-data")).adminEditApi());
+  return (edit ??= (await import("../../shared/supabase-data")).adminEditApi());
 };
 /** Lo pendiente del anfitrión no lo toca el admin desde aquí: lo decide en la revisión de siempre. */
 const notHere = () => Promise.reject(new DomainError("Ese dato no se puede cambiar aquí.", "validation"));

@@ -2,7 +2,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent
 import { I } from "../shared/icons";
 import { Sheet } from "../shared/overlay";
 import { useDismiss } from "../shared/dismiss";
-import { useDesktop } from "./desktop";
+import { useDesktop } from "../shared/desktop";
 import { ClosedField } from "../shared/closed-field";
 
 export interface HouseOption {

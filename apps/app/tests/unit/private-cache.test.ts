@@ -12,7 +12,7 @@ const auth = vi.hoisted(() => ({
   session: { userId: "admin-a", aal: "aal2" } as Session,
 }));
 
-vi.mock("../../src/client/supabase-data", () => ({
+vi.mock("../../src/shared/supabase-data", () => ({
   authApi: () => ({
     session: async () => auth.session,
     onSessionChange: (change: (session: Session | null) => void) => { auth.change = change; },

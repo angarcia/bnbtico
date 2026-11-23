@@ -7,7 +7,7 @@ import { seedFx } from "./fx";
 export const LISTING_STALE_MS = 5 * 60_000;
 export const LISTING_DAYS_STALE_MS = 60_000;
 
-const api = async () => (await import("../client/supabase-data")).publicListings();
+const api = async () => (await import("./supabase-data")).publicListings();
 
 export const listingQuery = (publicId: string) =>
   queryOptions({

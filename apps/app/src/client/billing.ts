@@ -12,7 +12,7 @@ export const billingQuery = (userId: string) =>
     queryKey: ["billing", userId] as const,
     queryFn: async (): Promise<BillingOverview> => {
       await authApi();
-      return (await import("./supabase-data")).ownerBilling().overview();
+      return (await import("../shared/supabase-data")).ownerBilling().overview();
     },
     staleTime: 30_000, // como las casas propias (owner.ts OWNER_STALE_MS; owner.ts importa este módulo)
     // Sin la RPC (base sin la migración) no tiene sentido insistir: las pantallas ya se pintan sin ella.

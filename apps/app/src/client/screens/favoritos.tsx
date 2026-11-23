@@ -5,7 +5,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo } from "react";
 import { favoritesStore, useFavorites } from "../../shared/favorites-store";
 import { ScreenHeader } from "../chrome";
-import { useDesktop } from "../desktop";
+import { useDesktop } from "../../shared/desktop";
 import { CurrencySwitch } from "../../shared/currency-switch";
 import { ListingCard } from "../listing-card";
 import { useSession } from "../session";
@@ -14,7 +14,7 @@ import { EmptyState, LoadError, Notice, Skeleton } from "../../shared/structure"
 
 const favoriteListingsQuery = (ids: string[]) => ({
   queryKey: ["favorite-listings", ids] as const,
-  queryFn: async () => (await import("../supabase-data")).publicListings().getManyPublic(ids),
+  queryFn: async () => (await import("../../shared/supabase-data")).publicListings().getManyPublic(ids),
   enabled: ids.length > 0,
   staleTime: 60_000,
   placeholderData: keepPreviousData,

@@ -12,7 +12,7 @@ export const useCalendarOnline = () => useSyncExternalStore(subscribeOnline, onl
 
 async function calendarData() {
   await authApi();
-  return import("./supabase-data");
+  return import("../shared/supabase-data");
 }
 
 export const airbnbApi = async () => (await calendarData()).airbnbApi();

@@ -16,7 +16,7 @@ import { adminEditKey, adminEditReviewKey, adminEditsKey, adminHousesKey, adminL
 
 export const adminApi = async (): Promise<AdminListingsApi> => {
   await authApi();
-  return (await import("./supabase-data")).adminApi();
+  return (await import("../shared/supabase-data")).adminApi();
 };
 
 export const adminQueueQuery = (userId: string) =>

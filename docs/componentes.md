@@ -191,7 +191,7 @@ oscuro). Familias:
 - **Sombras:** `--shadow`, `--shadow-float`, `--float-shadow`, `--shadow-action`, `--shadow-lift`.
 - **Capas:** `--z-explore`, `--z-float`, `--z-bar`, `--z-banner`, `--z-panel`, `--z-topbar`, `--z-overlay`, `--z-toast`.
 - **Espacio y tamaño:** `--gutter` 16, `--gutter-tight` 12, `--hit` 44, `--dialog-w`, `--dialog-w-wide`, `--dialog-w-photos` (el editor de fotos, historia 06), `--nav-h`.
-- **Puntos de corte** (`breakpoints` del JSON): 900 (lista y mapa en columnas), 1024 (marco de escritorio, `client/desktop.ts`),
+- **Puntos de corte** (`breakpoints` del JSON): 900 (lista y mapa en columnas), 1024 (marco de escritorio, `shared/desktop.ts`),
   1200.
 
 Un token nuevo va primero en `tokens.json` (con su entrada en `changelog`) y después en `:root`.
