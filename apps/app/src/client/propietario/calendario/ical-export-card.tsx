@@ -10,6 +10,7 @@ import { Field, TextArea } from "../../../shared/ui/field";
 import { Button, TextButton } from "../../../shared/ui/button";
 import { Notice } from "../../../shared/ui/structure";
 import { Card } from "../../../shared/ui/card";
+import * as EXPORT_COPY from "./copy/ical-export";
 
 /** El token solo vive en este componente, nunca en Query, almacenamiento o telemetría. */
 export function IcalExportCard({ id, userId, inlineConfirmation = false }: { id: string; userId: string; inlineConfirmation?: boolean }) {
@@ -118,41 +119,41 @@ export function IcalExportCard({ id, userId, inlineConfirmation = false }: { id:
   }
 
   return <Card layout="stack" gap={16} aria-labelledby="ical-export-title" aria-busy={!!busy}>
-    <h2 id="ical-export-title">Exportar hacia Airbnb</h2>
-    <p>Lleve a Airbnb las noches que marque como ocupadas en 3bstays.</p>
-    {busy === "loading" ? <p role="status">Cargando enlace…</p> : null}
-    {!online ? <Notice small>Sin conexión. Para consultar o generar el enlace, vuelva a conectarse.</Notice> : null}
+    <h2 id="ical-export-title">{EXPORT_COPY.title}</h2>
+    <p>{EXPORT_COPY.text}</p>
+    {busy === "loading" ? <p role="status">{EXPORT_COPY.loading}</p> : null}
+    {!online ? <Notice small>{EXPORT_COPY.offline}</Notice> : null}
     {problem ? <p className="field-error" role="alert">{problem}</p> : null}
-    {revoked ? <Notice small>Retire también el enlace anterior de Airbnb. Los bloqueos que ya leyó pueden seguir apareciendo allí.</Notice> : null}
-    {!data && !busy ? <Button variant="secondary" size="lg" disabled={!online} onClick={() => setAttempt(n => n + 1)}>Intentar de nuevo</Button> : null}
-    {data?.suspended ? <Notice>La exportación está suspendida mientras la casa esté bloqueada o rechazada por 3bstays. Los datos se conservan.</Notice> : null}
+    {revoked ? <Notice small>{EXPORT_COPY.revoked}</Notice> : null}
+    {!data && !busy ? <Button variant="secondary" size="lg" disabled={!online} onClick={() => setAttempt(n => n + 1)}>{EXPORT_COPY.retry}</Button> : null}
+    {data?.suspended ? <Notice>{EXPORT_COPY.suspended}</Notice> : null}
     {data && !data.generated && !data.suspended ? <>
-      <p>Todavía no ha generado un enlace de exportación.</p>
-      <Button variant="primary" size="lg" disabled={!!busy || !online} onClick={() => void generate()}>{busy === "generating" ? "Generando enlace…" : "Generar enlace"}</Button>
+      <p>{EXPORT_COPY.noLink}</p>
+      <Button variant="primary" size="lg" disabled={!!busy || !online} onClick={() => void generate()}>{EXPORT_COPY.generate({ busy: busy === "generating" })}</Button>
     </> : null}
     {url ? <>
-      <Field id="ical-export-url" label="Enlace de 3bstays para Airbnb" describedBy="ical-export-help ical-export-copy-error">
+      <Field id="ical-export-url" label={EXPORT_COPY.linkLabel} describedBy="ical-export-help ical-export-copy-error">
         {(control) => <TextArea {...control} ref={field} rows={3} readOnly value={url} autoComplete="off" spellCheck={false} />}
       </Field>
-      <Button variant="primary" size="lg" onClick={() => void copy()}>Copiar enlace</Button>
-      <p id="ical-export-copy-error" className="field-error" role={copyProblem ? "alert" : undefined}>{copyProblem ? "No pudimos copiarlo. Mantenga pulsado el enlace para copiarlo." : null}</p>
-      <p id="ical-export-help" className="hint">Añada este enlace como calendario importado en Airbnb. Cualquier persona que lo tenga puede consultar sus noches bloqueadas; no puede modificarlas.</p>
-      {data?.nights === 0 ? <p className="small muted">No hay noches bloqueadas manualmente en este período.</p> : null}
-      <p className="small">En el calendario del alojamiento en Airbnb, abra Disponibilidad → Conectar calendarios → Conectar otro sitio web. Pegue el enlace y añada el calendario.</p>
-      <p className="hint">Airbnb consulta los cambios según su propio ritmo. Copiar el enlace no confirma que Airbnb lo haya añadido ni actualizado.</p>
+      <Button variant="primary" size="lg" onClick={() => void copy()}>{EXPORT_COPY.copy}</Button>
+      <p id="ical-export-copy-error" className="field-error" role={copyProblem ? "alert" : undefined}>{copyProblem ? EXPORT_COPY.copyFailed : null}</p>
+      <p id="ical-export-help" className="hint">{EXPORT_COPY.help}</p>
+      {data?.nights === 0 ? <p className="small muted">{EXPORT_COPY.noNights}</p> : null}
+      <p className="small">{EXPORT_COPY.steps}</p>
+      <p className="hint">{EXPORT_COPY.pace}</p>
     </> : null}
-    {data?.generated && typeof data.generation === "number" && !(inlineConfirmation && confirmGeneration !== null) ? <TextButton tone="quiet" placement="sub-stop" disabled={!!busy || !online} onClick={() => { setRevokeError(null); setConfirmGeneration(data.generation ?? null); }}>Revocar enlace</TextButton> : null}
+    {data?.generated && typeof data.generation === "number" && !(inlineConfirmation && confirmGeneration !== null) ? <TextButton tone="quiet" placement="sub-stop" disabled={!!busy || !online} onClick={() => { setRevokeError(null); setConfirmGeneration(data.generation ?? null); }}>{EXPORT_COPY.revoke}</TextButton> : null}
     {confirmGeneration !== null && inlineConfirmation ? (
       <div className="stack gap-8">
-        <p>¿Revocar este enlace? El enlace actual dejará de funcionar. Retírelo también de Airbnb.</p>
+        <p>{EXPORT_COPY.revokeInline}</p>
         {revokeError && <p className="field-error" role="alert">{revokeError}</p>}
         <Button variant="danger" disabled={busy === "revoking" || !online} onClick={() => void revoke()}>
-          {busy === "revoking" ? "Revocando…" : "Revocar enlace"}
+          {EXPORT_COPY.revoking({ busy: busy === "revoking" })}
         </Button>
-        <Button variant="secondary" disabled={busy === "revoking"} onClick={() => setConfirmGeneration(null)}>Cancelar</Button>
+        <Button variant="secondary" disabled={busy === "revoking"} onClick={() => setConfirmGeneration(null)}>{EXPORT_COPY.cancel}</Button>
       </div>
-    ) : confirmGeneration !== null ? <ConfirmSheet title="¿Revocar este enlace?" body="El enlace actual dejará de funcionar. Retírelo también de Airbnb: los bloqueos que ya leyó pueden seguir apareciendo allí."
-      confirmLabel={busy === "revoking" ? "Revocando…" : "Revocar enlace"} tone="destructive"
+    ) : confirmGeneration !== null ? <ConfirmSheet title={EXPORT_COPY.revokeTitle} body={EXPORT_COPY.revokeText}
+      confirmLabel={EXPORT_COPY.revoking({ busy: busy === "revoking" })} tone="destructive"
       pending={busy === "revoking"} error={revokeError} onClose={() => setConfirmGeneration(null)} onConfirm={() => void revoke()} /> : null}
   </Card>;
 }

@@ -12,6 +12,7 @@ import { MonthLegend } from "../../../shared/month-grid";
 import { Segmented } from "../../../shared/ui/choice";
 import { Notice } from "../../../shared/ui/structure";
 import { cardClass } from "../../../shared/ui/card";
+import * as ROW_COPY from "./copy/airbnb-row";
 
 const AirbnbConnectPopup = lazy(() => import("./airbnb").then((module) => ({ default: module.AirbnbConnectPopup })));
 
@@ -32,7 +33,7 @@ export function countCalendarOrigins(days: ReadonlyMap<string, CalendarDay>, sel
 }
 
 export function AirbnbLegend({ days, price }: { days: readonly CalendarDay[] | undefined; price?: string }) {
-  return <MonthLegend price={price} extra={days?.some(day => day.imported) ? <span><I.link size={16} />Bloqueado por Airbnb</span> : null} />;
+  return <MonthLegend price={price} extra={days?.some(day => day.imported) ? <span><I.link size={16} />{ROW_COPY.legend}</span> : null} />;
 }
 
 /** Se carga al editar noches importadas; solo modifica la capa manual. */
@@ -40,18 +41,18 @@ export function AirbnbAvailability({ sel, importedCount, manualCount, onChange, 
   sel: Selection; importedCount: number; manualCount: number; onChange: (selection: Selection) => void; children: ReactNode;
 }) {
   return <>
-    <p className="small muted">{importedCount === sel.days.length && manualCount === sel.days.length ? "Bloqueo manual y Airbnb" : importedCount === sel.days.length && manualCount === 0 ? "Ocupado por Airbnb · sin bloqueo manual" : `${manualCount} con bloqueo manual · ${importedCount} con bloqueo de Airbnb`}</p>
+    <p className="small muted">{ROW_COPY.state({ manual: manualCount, imported: importedCount, total: sel.days.length })}</p>
     <div className="stack gap-8">
       <Segmented
         fill
-        label="Disponibilidad manual"
-        options={[{ value: "free", label: manualCount ? "Quitar bloqueo manual" : "Sin bloqueo manual" }, { value: "busy", label: "Ocupado" }]}
+        label={ROW_COPY.manualAvailability}
+        options={[{ value: "free", label: ROW_COPY.freeOption({ manual: !!manualCount }) }, { value: "busy", label: ROW_COPY.busy }]}
         value={sel.available === null ? null : sel.available ? "free" : "busy"}
         onChange={(v) => onChange(setAvailability(sel, v === "free"))}
       />
       {children}
     </div>
-    <p className="hint" role="status">{importedCount === 1 ? "Esta noche sigue ocupada" : `${importedCount} noches siguen ocupadas`} por Airbnb. Para liberarla{importedCount === 1 ? "" : "s"}, cambie el calendario en Airbnb y actualice la importación. Sus precios se conservan.</p>
+    <p className="hint" role="status">{ROW_COPY.stillBusy({ count: importedCount })}</p>
   </>;
 }
 
@@ -84,7 +85,7 @@ export function AirbnbRow({ listing, userId, month, disabled }: { listing: Listi
   }
   return <div className={connected ? "cal-airbnb" : cardClass({ placement: "cal-airbnb" })}>
     <div className="cal-airbnb-line">
-    {info.data?.connected ? <button type="button" className="cal-airbnb-update" aria-label={running ? "Actualizando importación de Airbnb" : info.data.state === "error" ? "Reintentar importación de Airbnb" : "Actualizar importación de Airbnb"} aria-busy={running || undefined} title={limitHint ?? undefined} disabled={disabled || !online || running || suspended || !!limitHint} onClick={() => void update()}><RefreshIcon /></button> : null}
+    {info.data?.connected ? <button type="button" className="cal-airbnb-update" aria-label={ROW_COPY.updateLabel({ running, failed: info.data.state === "error" })} aria-busy={running || undefined} title={limitHint ?? undefined} disabled={disabled || !online || running || suspended || !!limitHint} onClick={() => void update()}><RefreshIcon /></button> : null}
     <button type="button" className="cal-action" disabled={disabled || (desktop && info.isPending)}
       aria-haspopup={opensPopup ? "dialog" : undefined} aria-describedby={disabled ? "airbnb-selection-hint" : undefined}
       onClick={() => {
@@ -92,15 +93,15 @@ export function AirbnbRow({ listing, userId, month, disabled }: { listing: Listi
         else void navigate({ to: "/propietario/casas/$id/airbnb", params: { id: listing.id }, search: month ? { mes: month } : {} });
       }}>
       {!info.data?.connected ? <span className="cal-action-icon"><I.calendar size={20} /></span> : null}
-      <span className="body"><b>{connected ? "Sincronización con Airbnb" : "Conectar con Airbnb"}</b>
-        {running ? <span className="small muted" role="status">Actualizando…</span> : !online && info.data?.connected ? <span className="small muted">Sin conexión</span> : info.data?.state === "error" ? <span className="small muted">No se pudo actualizar</span> : null}
+      <span className="body"><b>{ROW_COPY.rowTitle({ connected: !!connected })}</b>
+        {running ? <span className="small muted" role="status">{ROW_COPY.updating}</span> : !online && info.data?.connected ? <span className="small muted">{ROW_COPY.offline}</span> : info.data?.state === "error" ? <span className="small muted">{ROW_COPY.failed}</span> : null}
         {limitHint && !running && info.data?.connected ? <span className="small muted" data-testid="airbnb-row-limit">{limitHint}</span> : null}
-        {info.data?.lastSuccessAt ? <span className="small muted">Última importación: {new Intl.DateTimeFormat("es-CR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Costa_Rica" }).format(new Date(info.data.lastSuccessAt))}</span> : info.data?.exportGenerated ? <span className="small muted">Enlace de exportación disponible</span> : null}
+        {info.data?.lastSuccessAt ? <span className="small muted">{ROW_COPY.lastImport({ at: new Intl.DateTimeFormat("es-CR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Costa_Rica" }).format(new Date(info.data.lastSuccessAt)) })}</span> : info.data?.exportGenerated ? <span className="small muted">{ROW_COPY.exportReady}</span> : null}
       </span><I.chevron />
     </button>
     </div>
     {problem ? <Notice tone="error">{problem}</Notice> : null}
-    {disabled ? <p className="hint" id="airbnb-selection-hint">Guarde o cancele los días seleccionados antes de abrir la conexión.</p> : null}
+    {disabled ? <p className="hint" id="airbnb-selection-hint">{ROW_COPY.saveFirst}</p> : null}
     {desktop && connectOpen && (
       <Suspense fallback={null}>
         <AirbnbConnectPopup listing={listing} userId={userId} onClose={() => setConnectOpen(false)} />

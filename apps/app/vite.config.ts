@@ -175,8 +175,8 @@ export default defineConfig({
       group("range-calendar", /[\\/]src[\\/]shared[\\/]range-calendar\.tsx$/, { includeDependenciesRecursively: false }),
       // Calendario carga API/fila. La gestión diferida carga también su tarjeta de exportación.
       // Ambos grupos cuentan en airbnb-*.js del presupuesto existente.
-      group("airbnb", /[\\/]src[\\/]client[\\/]propietario[\\/]calendario[\\/](?:airbnb-queries\.ts|airbnb-calendar-row\.tsx)$/, { includeDependenciesRecursively: false }),
-      group("airbnb-management", /[\\/]src[\\/]client[\\/]propietario[\\/]calendario[\\/](?:airbnb|ical-export-card)\.tsx$/, { includeDependenciesRecursively: false }),
+      group("airbnb", /[\\/]src[\\/]client[\\/]propietario[\\/]calendario[\\/](?:airbnb-queries\.ts|airbnb-calendar-row\.tsx|copy[\\/]airbnb-row\.ts)$/, { includeDependenciesRecursively: false }),
+      group("airbnb-management", /[\\/]src[\\/]client[\\/]propietario[\\/]calendario[\\/](?:(?:airbnb|ical-export-card)\.tsx|copy[\\/](?:airbnb|ical-export)\.ts)$/, { includeDependenciesRecursively: false }),
       group("cuenta", /[\\/]src[\\/](?:client[\\/](?:cuenta[\\/]cuenta(?:-(?:navigation|codigo|lista|ayuda|profile))?|comun[\\/]sign-in)\.tsx|client[\\/](?:comun[\\/]copy[\\/]sign-in|cuenta[\\/]copy[\\/]account)\.ts|client[\\/](?:comun[\\/](?:turnstile|token-gate)|cuenta[\\/]support)\.ts|shared[\\/](?:timeout|security)\.ts)$/, { includeDependenciesRecursively: false }),
       group("propietario", /[\\/]src[\\/](?:client[\\/]propietario[\\/](?:propietario\.tsx|owner-ui\.tsx|editor-query\.ts|editor-status\.tsx|house-card\.tsx)|domain[\\/]navigation\.ts)$/, { includeDependenciesRecursively: false }),
       group("admin", /(?:[\\/]src[\\/](?:client[\\/]admin[\\/](?:admin(?:-(?:anuncios|casas|codigo|edicion|revision|review-details|shared))?\.tsx|admin-queries\.ts|copy[\\/]admin\.ts)|domain[\\/](?:admin-houses|owner-notice)\.ts)|[\\/]@tanstack[\\/]react-query[\\/]build[\\/]modern[\\/]useMutationState\.js)$/, { includeDependenciesRecursively: false }),

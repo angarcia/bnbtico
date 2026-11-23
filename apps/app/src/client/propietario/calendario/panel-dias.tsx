@@ -8,6 +8,7 @@ import { Button, TextButton } from "../../../shared/ui/button";
 import { Segmented } from "../../../shared/ui/choice";
 import { AffixInput } from "../../../shared/ui/field";
 import { AirbnbAvailability } from "./airbnb-calendar-row";
+import * as PANEL_COPY from "./copy/panel-dias";
 
 const AVAILABILITY = [
   { value: "free", label: "Disponible" },
@@ -53,11 +54,11 @@ export function Panel({ sel, base, hasSpecial, importedCount, manualCount, probl
     <AffixInput
       size="sm"
       prefix="₡"
-      aria-label="Precio por noche"
+      aria-label={PANEL_COPY.price}
       inputMode="numeric"
       enterKeyHint="done"
       autoComplete="off"
-      placeholder={sel.mixedPrice ? "Varios precios" : undefined}
+      placeholder={sel.mixedPrice ? PANEL_COPY.mixed : undefined}
       value={price}
       aria-invalid={problem ? true : undefined}
       aria-describedby={problem ? problemId : undefined}
@@ -66,19 +67,19 @@ export function Panel({ sel, base, hasSpecial, importedCount, manualCount, probl
     />
   ) : null;
   return (
-    <section className={`cal-panel${kb ? " kb" : ""}`} aria-label="Días seleccionados" onFocus={onFocus} onBlur={onBlur}>
+    <section className={`cal-panel${kb ? " kb" : ""}`} aria-label={PANEL_COPY.selected} onFocus={onFocus} onBlur={onBlur}>
       <div className="row between baseline">
         <b className="display">{selectionLabel(sel.days)}</b>
         <TextButton tone="quiet" onClick={onCancel}>
-          Cancelar
+          {PANEL_COPY.cancel}
         </TextButton>
       </div>
       {importedCount ? <AirbnbAvailability sel={sel} importedCount={importedCount} manualCount={manualCount} onChange={onChange}>{priceField}</AirbnbAvailability> : <>
-      {manualCount ? <p className="small muted">Bloqueo manual</p> : null}
+      {manualCount ? <p className="small muted">{PANEL_COPY.manual}</p> : null}
       <div className="row gap-8 cal-day-fields">
         <Segmented
           fill
-          label="Disponibilidad"
+          label={PANEL_COPY.availability}
           options={AVAILABILITY}
           value={sel.available === null ? null : sel.available ? "free" : "busy"}
           onChange={(v) => onChange(setAvailability(sel, v === "free"))}
@@ -88,7 +89,7 @@ export function Panel({ sel, base, hasSpecial, importedCount, manualCount, probl
       </>}
       {base !== null && hasSpecial && FLAGS.datePrices ? (
         <TextButton tone="link" placement="cal-base" onClick={() => onChange(setPrice(sel, grouped(String(base))))}>
-          Usar el precio base ({formatCRC(base)})
+          {PANEL_COPY.basePrice({ price: formatCRC(base) })}
         </TextButton>
       ) : null}
       {problem ? (
@@ -97,7 +98,7 @@ export function Panel({ sel, base, hasSpecial, importedCount, manualCount, probl
         </p>
       ) : null}
       <Button variant="primary" block disabled={!canSave} onClick={onSave}>
-        Guardar cambios
+        {PANEL_COPY.save}
       </Button>
     </section>
   );
