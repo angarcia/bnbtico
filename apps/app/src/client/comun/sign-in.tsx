@@ -178,7 +178,7 @@ export function SignInForm({ next, mode, onCodeSent, nameStep }: {
             id="account-phone"
             label={SIGN_IN_COPY.phone}
             error={errorOf("phone")}
-            hint={other ? "Escriba el número completo con «+» y el código de su país." : country === DEFAULT_COUNTRY ? "¿Su número no es de Costa Rica? Toque +506 para elegir su país." : "Escriba su número sin el código de país."}
+            hint={other ? SIGN_IN_COPY.phoneHintOther : country === DEFAULT_COUNTRY ? SIGN_IN_COPY.phoneHintCr : SIGN_IN_COPY.phoneHintNoCode}
           >
             {(control) => (
               <div className="input-prefix">

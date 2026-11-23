@@ -8,6 +8,7 @@ import { useSession } from "../comun/session";
 import { Replace } from "./cuenta-navigation";
 import { ButtonLink } from "../../shared/ui/button";
 import { RouterButtonLink } from "../comun/router-buttons";
+import * as ACCOUNT_COPY from "./copy/account";
 
 // ---------- /cuenta/lista ----------
 const listaRoute = getRouteApi("/_flow/cuenta/lista");
@@ -24,17 +25,17 @@ export function ListaScreen() {
   const target = next ?? "/explorar";
   return (
     <>
-      <ScreenHeader kind="flow" title="Ingresar" back={{ to: "/explorar" }} />
+      <ScreenHeader kind="flow" title={ACCOUNT_COPY.signIn} back={{ to: "/explorar" }} />
       <div className="stack flow">
         <div className="stack gap-8">
           <span className="avatar avatar-ok">
             <I.check size={26} />
           </span>
-          <h2 className="flow-title">¡Listo! Su cuenta está creada</h2>
+          <h2 className="flow-title">{ACCOUNT_COPY.created}</h2>
         </div>
-        <h3>¿Tiene una casa para alquilar?</h3>
+        <h3>{ACCOUNT_COPY.ownHouse}</h3>
         <RouterButtonLink to="/propietario/publicar" variant="primary" size="xl">
-          Sí, quiero publicarla
+          {ACCOUNT_COPY.yesPublish}
         </RouterButtonLink>
         <ButtonLink
           href={target}
@@ -45,11 +46,11 @@ export function ListaScreen() {
             void router.navigate({ href: target });
           }}
         >
-          No, busco casa
+          {ACCOUNT_COPY.noSearching}
         </ButtonLink>
         {account.data && !account.data.email ? (
           <Link to="/cuenta" search={{ editar: "1" }} className="link small">
-            Añadir un correo de recuperación
+            {ACCOUNT_COPY.addRecovery}
           </Link>
         ) : null}
       </div>

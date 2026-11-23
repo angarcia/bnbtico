@@ -8,6 +8,7 @@ import { useSession } from "../comun/session";
 import { SignInForm } from "../comun/sign-in";
 import { backFrom, useContactMode } from "./cuenta-navigation";
 import { MyAccount } from "./cuenta-profile";
+import * as ACCOUNT_COPY from "./copy/account";
 
 export { CodigoScreen } from "./cuenta-codigo";
 export { ListaScreen } from "./cuenta-lista";
@@ -32,7 +33,7 @@ export function CuentaScreen() {
       );
     return (
       <TabsFrame>
-        <h1 className="sr-only">Ingresar</h1>
+        <h1 className="sr-only">{ACCOUNT_COPY.signIn}</h1>
         <SignInForm next={search.next} mode="account" />
       </TabsFrame>
     );

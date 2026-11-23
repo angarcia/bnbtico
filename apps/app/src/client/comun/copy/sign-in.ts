@@ -29,3 +29,6 @@ export const changeNumber = "Cambiar número";
 export const noAccess = "No tengo acceso a mi WhatsApp";
 export const privacy = "Su número solo se comparte con el anfitrión cuando usted toca «Contactar por WhatsApp». Explorar y guardar favoritos no necesita cuenta.";
 export const terms = "Al continuar acepta los Términos. 3bstays nunca le pedirá pagos.";
+export const phoneHintOther = "Escriba el número completo con «+» y el código de su país.";
+export const phoneHintCr = "¿Su número no es de Costa Rica? Toque +506 para elegir su país.";
+export const phoneHintNoCode = "Escriba su número sin el código de país.";

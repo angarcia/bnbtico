@@ -15,6 +15,7 @@ import { useContactMode, useGoTo } from "./cuenta-navigation";
 import { CodeInput } from "../comun/code-input";
 import { Button, TextButton } from "../../shared/ui/button";
 import { Notice } from "../../shared/ui/structure";
+import * as ACCOUNT_COPY from "./copy/account";
 
 const message = (e: unknown) => toDomainError(e).message;
 
@@ -94,25 +95,25 @@ function CodeForm({ phone, mode, sentAt, next, inDialog = false, onDone }: { pho
       <div className="stack flow">
         {contact ? <ContactCard next={next} /> : null}
         <div className="stack gap-8">
-          <h2 className="flow-title">Introduzca el código</h2>
+          <h2 className="flow-title">{ACCOUNT_COPY.codeTitle}</h2>
           <p className="muted">
-            Se lo enviamos por WhatsApp al <b className="ink num">{formatPhone(phone)}</b>.
+            {ACCOUNT_COPY.sentTo({ phone: <b key="phone" className="ink num">{formatPhone(phone)}</b> })}
           </p>
         </div>
         <form onSubmit={verify} className="stack gap-18" noValidate>
           <CodeInput id="account-code" value={code} onChange={setCode} error={error} />
           <Button variant="primary" size="xl" block type="submit" disabled={busy}>
-            {busy ? "Verificando…" : "Verificar y continuar"}
+            {ACCOUNT_COPY.verify({ busy })}
           </Button>
         </form>
         <div className="stack small">
           {wait > 0 ? (
             <span className="muted">
-              ¿No llegó? Puede pedir otro en <b className="ink num">{mmss}</b>.
+              {ACCOUNT_COPY.resendIn({ time: <b key="time" className="ink num">{mmss}</b> })}
             </span>
           ) : (
             <TextButton tone="link" onClick={resend}>
-              Pedir otro código
+              {ACCOUNT_COPY.resend}
             </TextButton>
           )}
           <div ref={captcha.container} className="captcha" />
@@ -122,11 +123,11 @@ function CodeForm({ phone, mode, sentAt, next, inDialog = false, onDone }: { pho
             </p>
           ) : null}
           <a className="link" href="https://wa.me/" target="_blank" rel="noopener">
-            Abrir WhatsApp para buscar el mensaje
+            {ACCOUNT_COPY.findMessage}
           </a>
-          {inDialog ? null : <TextButton tone="link" onClick={changeNumber}>Cambiar número</TextButton>}
+          {inDialog ? null : <TextButton tone="link" onClick={changeNumber}>{ACCOUNT_COPY.changeNumber}</TextButton>}
         </div>
-        {contact || inDialog ? null : publish ? <Notice small>Después seguimos con su casa</Notice> : <ReturnCard next={next} />}
+        {contact || inDialog ? null : publish ? <Notice small>{ACCOUNT_COPY.thenHouse}</Notice> : <ReturnCard next={next} />}
       </div>
     </>
   );
@@ -139,7 +140,7 @@ export function DialogCodeForm({ next, onDone }: { next?: string; onDone: () => 
   const [pending] = useState(pendingOtp);
   return pending ? <CodeForm {...pending} next={next} inDialog onDone={onDone} /> : (
     <div className="stack flow">
-      <p role="status">Solicite un código nuevo para continuar.</p>
+      <p role="status">{ACCOUNT_COPY.requestNew}</p>
     </div>
   );
 }
