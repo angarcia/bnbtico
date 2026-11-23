@@ -1,0 +1,138 @@
+/* Base: elementos HTML, texto, utilidades de maquetación y animaciones con nombre (@keyframes). Capa base. */
+
+@layer base {
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%}
+  body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:var(--fs-base);line-height:1.45;-webkit-text-size-adjust:100%}
+  h1,h2,h3,h4{font-family:var(--display);margin:0;letter-spacing:-0.01em;line-height:1.1;text-wrap:balance}
+  h1{font-size:var(--fs-h1);font-weight:var(--w-strong);line-height:1.05}
+  h2{font-size:var(--fs-h2);font-weight:var(--w-strong)}
+  h3{font-size:19px;font-weight:var(--w-strong)}
+  button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
+  button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+  img{max-width:100%;display:block}
+  p{margin:0}
+  a{color:var(--primary)}
+  .num{font-variant-numeric:tabular-nums}
+  .display{font-family:var(--display);letter-spacing:-0.01em}
+  /* ---------- Texto ---------- */
+  .small{font-size:var(--fs-sm)}
+  .xs{font-size:var(--fs-xs)}
+  .muted{color:var(--muted)}
+  .center{text-align:center}
+  .eyebrow{font-size:var(--fs-eyebrow);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:var(--w-medium)}
+  .ink{color:var(--fg)}
+  .primary{color:var(--primary)}
+  .link{color:var(--primary);font-weight:var(--w-medium);text-decoration:none}
+  .field-error{color:var(--bad);font-size:var(--fs-sm);font-weight:var(--w-medium)}
+  .counter-out{color:var(--bad);font-weight:var(--w-medium)}
+  /* Turnstile: invisible salvo que Cloudflare pida interacción. */
+  .captcha{display:flex;justify-content:center}
+  .captcha:empty{display:none}
+  /* ---------- Layout ---------- */
+  .stack{display:flex;flex-direction:column;gap:10px}
+  .row{display:flex;align-items:center;gap:8px}
+  .between{justify-content:space-between}
+  .grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+  @keyframes sk{from{background-position:200% 0}to{background-position:-200% 0}}
+  @keyframes screen-in{from{transform:translateY(100%)}}
+  @keyframes sheet-in{from{transform:translate(-50%,100%)}}
+  /* ---------- Movimiento y respuesta al toque ---------- */
+  /* Todo lo que se toca responde al instante: se encoge un poco al presionar y vuelve rápido. Solo transform y opacity. */
+  a,button{-webkit-tap-highlight-color:transparent}
+  .btn,.chip,.icon-btn,.tabbar .nav,.choice,.photos-grid .add,.photos-grid .remove{-webkit-user-select:none;user-select:none}
+  .btn,.chip,.icon-btn,.list-item,.tabbar .nav,.listing-card,.choice,.photos-grid .add,.photos-grid .remove{transition:transform 160ms var(--ease-out)}
+  .chip{transition:transform 160ms var(--ease-out),background-color 150ms ease,color 150ms ease}
+  .link,.btn-link,.btn-text,.btn-text-danger{transition:opacity 120ms ease}
+  .link:active,.btn-link:active:not(:disabled),.btn-text:active:not(:disabled),.btn-text-danger:active:not(:disabled){opacity:.6}
+  /* Las fotos aparecen con un fundido al cargar (solo las que monta el cliente: nunca la portada de la ficha, que es el LCP).
+  Una foto que no carga se queda oculta y se ve el fondo de su caja; el texto alternativo no se pinta encima. */
+  img[data-fade]{opacity:0;transition:opacity 240ms var(--ease-out)}
+  img[data-fade][data-loaded]{opacity:1}
+  img[data-fade][data-instant]{transition:none}
+  .photo img,.hero img{color:transparent}
+  .update-banner{transition:opacity 200ms ease-out,transform 240ms var(--ease-out)}
+  @starting-style  {
+    .update-banner{opacity:0;transform:translate(-50%,8px)}
+  }
+  /* Entradas: siempre con fill-mode backwards, para que al terminar no retengan el transform y el :active siga funcionando. */
+  @keyframes rise-in{from{opacity:0;transform:translateY(8px)}}
+  @keyframes fade-in{from{opacity:0}}
+  /* Explorar: las tarjetas que sustituyen a los esqueletos aparecen; en la primera carga, una tras otra (40 ms). */
+  .listing-grid.reveal > *{animation:rise-in 280ms var(--ease-out) backwards}
+  .listing-grid.stagger > :nth-child(2){animation-delay:40ms}
+  .listing-grid.stagger > :nth-child(3){animation-delay:80ms}
+  .listing-grid.stagger > :nth-child(4){animation-delay:120ms}
+  .listing-grid.stagger > :nth-child(5){animation-delay:160ms}
+  .listing-grid.stagger > :nth-child(6){animation-delay:200ms}
+  /* Asistente de publicar: la pantalla nueva entra desde la dirección del paso. Se animan los hijos y no el <form>: un
+  transform en el form haría que la barra fija de «Atrás / Continuar» se moviera con él. */
+  @keyframes step-in{from{opacity:0;transform:translateX(var(--step-dx))}}
+  .publish-form[data-enter] > :not(.sticky-actions){animation:step-in 220ms var(--ease-out) backwards}
+  /* «Enviada»: una pequeña celebración, una vez por casa. Foto, sello con el check que se dibuja, y el texto detrás. */
+  @keyframes sent-pop{from{opacity:0;transform:scale(.9)}}
+  @keyframes sent-badge{from{opacity:0;transform:scale(.5)}}
+  @keyframes sent-draw{to{stroke-dashoffset:0}}
+  .sent > :nth-child(n+2){animation:rise-in 320ms var(--ease-out) backwards}
+  .sent > :nth-child(2){animation-delay:140ms}
+  .sent > :nth-child(3){animation-delay:220ms}
+  .sent > :nth-child(n+4){animation-delay:300ms}
+  /* Cambios pequeños de contenido (icono o texto de «Enlace copiado», contador de fotos): el nuevo aparece en su sitio. */
+  @keyframes swap-in{from{opacity:0;transform:scale(.8);filter:blur(2px)}}
+  /* Solo al cambiar (`.changed`, useChanged): al montar el contenido ya está en su sitio. */
+  .swap-in{display:inline-flex}
+  small.swap-in{display:block}
+  .swap-in.changed{animation:swap-in 200ms var(--ease-out) backwards}
+  /* Explorar ↔ ficha (View Transitions con tipos, client/motion.ts): la foto de la tarjeta se convierte en el hero, los
+  botones de la foto y la barra de contacto llegan por su cuenta y el resto de la página se funde. */
+  .hero{view-transition-name:listing-photo}
+  .hero .top{view-transition-name:listing-top}
+  .cta-bar{view-transition-name:listing-cta}
+  @keyframes vt-out{to{opacity:0}}
+  @keyframes vt-cta-in{from{transform:translateY(100%)}}
+  @keyframes vt-cta-out{to{transform:translateY(100%)}}
+  ::view-transition-group(listing-photo){animation-duration:340ms;animation-timing-function:var(--ease-drawer)}
+  ::view-transition-old(listing-photo),::view-transition-new(listing-photo){width:100%;height:100%;object-fit:cover}
+  ::view-transition-old(listing-photo){animation:vt-out 200ms ease-out both}
+  ::view-transition-new(listing-photo){animation:fade-in 200ms ease-out both}
+  ::view-transition-old(root){animation:vt-out 140ms ease-out both}
+  ::view-transition-new(root){animation:fade-in 240ms var(--ease-out) 60ms both}
+  ::view-transition-new(listing-top){animation:fade-in 200ms ease-out 160ms both}
+  ::view-transition-old(listing-top){animation:vt-out 100ms ease-out both}
+  ::view-transition-new(listing-cta){animation:vt-cta-in 340ms var(--ease-drawer) both}
+  ::view-transition-old(listing-cta){animation:vt-cta-out 200ms var(--ease-out) both}
+  /* ---------- Tipografía (revisión UX 2026-10-29, T1) ---------- */
+  /* Negritas sueltas del texto (<b>, <strong>) a 600 como mucho; títulos de pantalla y de casa en --fg al 85 % (un hex fijo,
+  para que contrast.test.ts lo mida), para que no compitan con el precio ni con los botones. */
+  b,strong{font-weight:var(--w-strong)}
+}
+
+@layer sin-movimiento {
+  @media (prefers-reduced-motion:reduce) {
+    .description-screen{animation-name:fade-in}
+    /* Movimiento reducido: mismo selector que la transición de arriba (si no, gana ella) — las fotos saltan a su sitio. */
+    .photos-grid.is-dragging .photo:not(.is-lifted){transition:none}
+    .sheet{animation-name:fade-in}
+  }
+  /* En la capa sin-movimiento: junto a la regla de «reducir movimiento» que la sigue: es más específica y le ganaba también con reducir movimiento; en la misma capa decide la especificidad, como antes. */
+  .btn:active:not(:disabled):not([aria-disabled="true"]),.chip:active,.icon-btn:active,.tabbar .nav:active,.choice:active,.photos-grid .add:active,.photos-grid .remove:active{transform:scale(0.97)}
+  /* En la capa sin-movimiento: junto a la regla de «reducir movimiento» que la sigue: es más específica y le ganaba también con reducir movimiento; en la misma capa decide la especificidad, como antes. */
+  a.list-item:active,button.list-item:active:not(:disabled),.listing-card:active{transform:scale(0.98)}
+  @media (prefers-reduced-motion:reduce) {
+    .app:has(.cal-panel) .tabbar{transform:none}
+    .btn,.chip,.icon-btn,.list-item,.tabbar .nav,.listing-card,.choice,.photos-grid .add,.photos-grid .remove{transition-property:background-color,color,opacity}
+    .btn:active,.card-wa:active,.chip:active,.icon-btn:active,.tabbar .nav:active,.choice:active,.list-item:active,.listing-card:active,.photos-grid .add:active,.photos-grid .remove:active{transform:none}
+    @starting-style  {
+      .update-banner{transform:translateX(-50%)}
+    }
+    .heart:active{transform:none}
+    .listing-grid.reveal > *,.publish-form[data-enter] > :not(.sticky-actions),.sent-circle,.sent-check,.sent > :nth-child(n+2),.swap-in.changed{animation-name:fade-in}
+    .chrome-hide{transition:opacity 160ms ease-out}
+    html.chrome-away .chrome-hide:not(:has(:focus-visible)){transform:none}
+  }
+}
+
+/* Fuera de capa, a propósito: ajustes de Leaflet. Su CSS llega con el trozo del mapa y fuera de capa; una regla en capa
+   le perdería siempre. Fuera de capa los dos, decide la especificidad, como antes del reparto. */
+.leaflet-container{font:inherit}

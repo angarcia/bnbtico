@@ -10,7 +10,7 @@ const join = (...parts: (string | false | undefined)[]) => parts.filter(Boolean)
 /** `plain`: blanco al 70 % (la de casi todo); `solid`: blanco opaco (antes «card-arena», D9); `soft`: verde tonal; `sun`: ocre. */
 export type CardTone = "plain" | "solid" | "soft" | "sun";
 const CARD_TONE: Record<CardTone, string> = { plain: "card", solid: "card-solid", soft: "card-soft", sun: "card-sun" };
-/** Clases de sitio que ya tenían las tarjetas (ver styles/). */
+/** Clases de sitio que ya tenían las tarjetas (ver las hojas de cada área). */
 export type CardPlacement =
   | "return-card" | "contact-card" | "placeholder-card" | "publish-promo" | "subscription-offer" | "diff-fold" | "account-card"
   | "review-owner" | "listing-stats" | "inquiry-card" | "sub-house" | "sub-house-inactive" | "how-it-works" | "house-card"

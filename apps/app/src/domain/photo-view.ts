@@ -1,5 +1,5 @@
 // La foto de la ficha en escritorio (historia 06): la ficha la pinta en una caja de 832 × 480 (`.listing-view > .hero`,
-// 10-ajustes.css; a 1280 la caja mide 797 de ancho) con object-fit: cover centrado. El editor de fotos de escritorio marca
+// shared/ficha.css; a 1280 la caja mide 797 de ancho) con object-fit: cover centrado. El editor de fotos de escritorio marca
 // esa franja sobre la foto entera («Lo que se ve en la ficha»). Módulo de dominio: sin imports de framework.
 export const FICHA_PHOTO = { width: 832, height: 480 } as const;
 

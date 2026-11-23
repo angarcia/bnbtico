@@ -24,7 +24,7 @@ pantallas no escriben sus clases ni redefinen su aspecto, y no llevan `className
   `button.tsx`, `overlay.tsx`, `field.tsx`, `choice.tsx`, `stepper.tsx`, `structure.tsx`, `card.tsx`, `closed-field.tsx`.
   Las variantes sobre `Link` de TanStack Router, en `client/comun/router-buttons.tsx` (`RouterButtonLink`, `RouterTextLink`,
   `RouterIconLink`) y `client/comun/router-rows.tsx` (`RouterCardLink`, `RouterListRow`). `ScreenHeader` está en `client/comun/screen-header.tsx`.
-- **CSS** en `styles/01-base.css` (los tokens en `:root` y un bloque por familia); las hojas de cada pantalla solo colocan
+- **CSS** en `shared/ui/componentes.css` (un bloque por familia; los tokens, en `:root` de `styles/tokens.css`); las hojas de cada área solo colocan
   (rejillas, márgenes), nunca cambian el aspecto de un componente.
 - **`placement`** es la única puerta para clases: una lista cerrada de las clases de sitio que ya existían. Si falta una
   colocación o un tono, se añade al componente con su caso de uso, no se escribe la clase en la pantalla.
@@ -34,7 +34,7 @@ pantallas no escriben sus clases ni redefinen su aspecto, y no llevan `className
 
 ## Botones
 
-`shared/ui/button.tsx`. CSS: «Botones» de `01-base.css`.
+`shared/ui/button.tsx`. CSS: «Botones» de `shared/ui/componentes.css`.
 
 | Pieza | Cuándo | Props clave |
 |---|---|---|
@@ -58,8 +58,8 @@ pantallas no escriben sus clases ni redefinen su aspecto, y no llevan `className
 
 ## Hojas y ventanas
 
-`shared/ui/overlay.tsx` (con la pila de `shared/ui/overlay-stack.ts`); `useDismiss` en `shared/ui/dismiss.ts`. CSS en `07-contacto.css` y
-`13-escritorio.css`.
+`shared/ui/overlay.tsx` (con la pila de `shared/ui/overlay-stack.ts`); `useDismiss` en `shared/ui/dismiss.ts`. CSS en
+`shared/ui/componentes.css` (capas `componentes` y `escritorio`).
 
 | Pieza | Cuándo | Cierra con el fondo | Atrás |
 |---|---|---|---|
@@ -92,7 +92,7 @@ de escritorio.
 
 ## Campos
 
-`shared/ui/field.tsx` y `client/comun/code-input.tsx`. CSS: «Campos» de `01-base.css` (52 px, borde `--line`, radio `--r-control`, letra
+`shared/ui/field.tsx` y `client/comun/code-input.tsx`. CSS: «Campos» de `shared/ui/componentes.css` (52 px, borde `--line`, radio `--r-control`, letra
 de 18 px; nunca menos de 16).
 
 - `Field label error hint count size describedBy grow`: envuelve un control y le da `id`, `aria-describedby` y `aria-invalid`.
@@ -179,7 +179,7 @@ de 18 px; nunca menos de 16).
 
 ## Tokens
 
-La fuente es `design/tokens/tokens.json` **0.3.6**; el CSS los expone como variables en `:root` de `styles/01-base.css` (claro y
+La fuente es `design/tokens/tokens.json` **0.3.6**; el CSS los expone como variables en `:root` de `styles/tokens.css` (claro y
 oscuro). Familias:
 
 - **Color:** `--bg`, `--surface`, `--surface-soft`, `--surface-2`, `--fg`, `--fg-title`, `--muted`, `--line*`, `--primary*`,
@@ -200,7 +200,7 @@ Un token nuevo va primero en `tokens.json` (con su entrada en `changelog`) y des
 
 `apps/app/tests/unit/consistencia.test.ts` falla, con archivo:línea y qué usar, si:
 
-1. fuera de `styles/01-base.css` y de los bloques `:root` aparece un color hex o `rgb()`, un `border-radius` en px, un
+1. fuera de `styles/tokens.css` y de los bloques `:root` aparece un color hex o `rgb()`, un `border-radius` en px, un
    `z-index` numérico (salvo -1 a 3, el orden dentro de un componente), un `font-size` en px o una sombra que no es un token;
 2. un TSX de `src/client` o `src/shared` escribe la clase de un componente común fuera de su archivo (botón, hoja, ventana,
    campo, chip, segmento, contador, tarjeta, fila, aviso, etiqueta, esqueleto, campo cerrado o cabecera);

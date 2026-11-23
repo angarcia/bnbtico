@@ -1,0 +1,50 @@
+/* Piezas de client/comun y lo que comparten varias áreas. Capas areas y escritorio. */
+
+@layer areas {
+  .header-flow{display:flex;align-items:center;gap:8px;margin:0 -8px}
+  .header-flow h1{font-size:var(--fs-h2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .header-flow .right{margin-left:auto;font-size:var(--fs-sm);color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .return-thumb{width:56px;height:56px;border-radius:var(--r-thumb);overflow:hidden;flex-shrink:0;background:var(--state-soft)}
+  .return-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .pills-tl .pill{position:static}
+  .card-zone{display:flex;align-items:center;gap:5px;min-width:0}
+  .card-zone svg{flex-shrink:0}
+  html.map-open{overflow:hidden}
+  .chiprow .currency-switch{margin-left:auto}
+  .gap-14{gap:14px}
+  .gap-18{gap:18px}
+  .flow-title{font-size:32px;line-height:1.05}
+  .avatar-ok{background:var(--primary);color:var(--primary-on)}
+  .account-name{font-size:21px}
+  .verified{gap:6px;font-weight:var(--w-medium);flex-wrap:wrap}
+  .offer-title{font-size:var(--fs-md)}
+  .header-action{margin-left:auto;min-height:44px;display:flex;align-items:center;padding:0 8px;font-size:var(--fs-note);font-weight:var(--w-medium);white-space:nowrap}
+  .label-plain{font-size:var(--fs-xs);font-weight:var(--w-medium);color:var(--muted)}
+  /* Publicar: título y cierre arriba; progreso y cuenta en sus propias filas. */
+  .wizard-heading{display:flex;flex-direction:column;gap:8px;flex:none}
+  .header-flow.publish-header{margin:0;min-height:44px}
+  .publish-header h1{white-space:normal;overflow-wrap:anywhere;line-height:1.2}
+  .publish-header .header-close{flex:0 0 44px;width:44px;height:44px;padding:0;justify-content:center;color:var(--muted)}
+  .queue-card .chev{align-self:center;color:var(--muted)}
+  .house-thumb{width:56px;height:56px;border-radius:var(--r-thumb)}
+  .house-body{gap:2px}
+  .house-title{font-size:var(--fs-base);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  html.chrome-away{--chrome-bottom:var(--float-bottom)}
+  /* Selector de país dentro de la caja del prefijo (revisión UX A6): el select va invisible encima de toda la caja. */
+  .prefix-select{position:relative;gap:4px;cursor:pointer}
+  .prefix-select svg{color:var(--muted);flex-shrink:0}
+  .prefix-select select{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:var(--fs-md);cursor:pointer;-webkit-appearance:none;appearance:none}
+  .prefix-select:focus-within{outline:2px solid var(--focus-ring);outline-offset:2px}
+  html.chrome-away .chrome-hide:not(:has(:focus-visible)){transform:var(--away);opacity:0;pointer-events:none}
+  /* Escondida, tampoco responden sus partes que piden el toque (`pointer-events:auto` en la cabecera de Explorar, que deja pasar
+  el toque entre sus tarjetas): ni a medio salir ni, con movimiento reducido, fundida en su sitio. Con el foco del teclado, sí. */
+  html.chrome-away .chrome-hide:not(:has(:focus-visible)) *{pointer-events:none}
+}
+
+@layer escritorio {
+  @media (min-width: 1024px) {
+    .page-header-text { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+    .page-header-actions { display: flex; flex: none; align-items: center; gap: 10px; }
+    .page-header-actions .btn { width: auto; }
+  }
+}

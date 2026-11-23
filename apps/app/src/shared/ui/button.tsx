@@ -1,6 +1,6 @@
 // Botones comunes (historia 07, paso 2; API en docs/componentes.md). Sin router ni consultas: la ficha SSR
 // (shared/listing-page.tsx) los usa tal cual; las variantes con `Link` de TanStack Router están en client/router-buttons.tsx.
-// El aspecto sale solo de `variant`, `size`, `tone` y `block` (CSS de styles/01-base.css, «Botones»): las pantallas no
+// El aspecto sale solo de `variant`, `size`, `tone` y `block` (CSS de shared/ui/componentes.css, «Botones»): las pantallas no
 // escriben clases de botón. `placement` es la única puerta para clases, y solo admite las de colocación que ya existían
 // (márgenes, flex, orden en una fila): no cambian el aspecto del botón.
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes, HTMLAttributes, ReactNode, Ref } from "react";
@@ -12,7 +12,7 @@ export type ButtonSize = "md" | "lg" | "xl";
 export type TextButtonTone = "link" | "quiet" | "danger";
 export type IconButtonTone = "plain" | "overlay" | "float";
 
-/** Clases de colocación que ya usaban las pantallas (ver los comentarios de cada regla en styles/). */
+/** Clases de colocación que ya usaban las pantallas (ver los comentarios de cada regla en las hojas de cada área). */
 export type ButtonPlacement = "grow" | "back" | "desktop-sign-in" | "house-share";
 export type TextButtonPlacement = "delete-house" | "sub-stop" | "logout-link" | "account-profile-toggle" | "sent-link" | "cal-base" | "header-close";
 export type IconButtonPlacement = "cal-arrow" | "status-back" | "search-close" | "map-card-close" | "map-locate" | "header-close" | "remove";

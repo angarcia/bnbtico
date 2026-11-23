@@ -1,13 +1,26 @@
-@import "./01-base.css";
-@import "./02-app.css";
-@import "./03-casas.css";
-@import "./04-explorar.css";
-@import "./05-cuenta-propietario.css";
-@import "./06-publicar.css";
-@import "./07-contacto.css";
-@import "./08-movimiento.css";
-@import "./09-calendario.css";
-@import "./10-ajustes.css";
-@import "./11-flotantes.css";
-@import "./12-orientacion.css";
-@import "./13-escritorio.css";
+/* Hoja global: la importa client/app/main.tsx y la recibe también la ficha que pinta el worker (index.html).
+   Estructura del CSS (paso 2 de .scratch/estructura-frontend/propuesta.md, 2026-11-23): un archivo por área junto a su
+   carpeta, y capas en cascada que fijan la prioridad sin subir la especificidad. Una capa posterior gana a una anterior
+   sea cual sea el selector; dentro de una capa, como siempre (especificidad y, a igualdad, la regla que va después).
+   - tokens: variables y fuentes.
+   - base: elementos HTML, texto, utilidades y @keyframes.
+   - componentes: los componentes comunes de shared/ui.
+   - areas: las pantallas en el teléfono (marco, ficha, común y cada área, en ese orden de importación).
+   - sin-movimiento: lo que quita animaciones con «reducir movimiento»; antes iba detrás de las pantallas del teléfono.
+   - escritorio: lo de 1024 px o más de cada archivo; gana a lo del teléfono como antes ganaba 13-escritorio.css por ir
+     el último.
+   - encima: el aviso de girar el teléfono, que tapa todo.
+   El CSS de Leaflet y el de «¿Qué es 3bstays?» se cargan con su trozo y quedan fuera de las capas: fuera de capa gana a
+   cualquier capa, por eso los ajustes de Leaflet de estos archivos apuntan a selectores que Leaflet no toca. */
+@layer tokens, base, componentes, areas, sin-movimiento, escritorio, encima;
+
+@import "./tokens.css";
+@import "./base.css";
+@import "../shared/ui/componentes.css";
+@import "../client/app/marco.css";
+@import "../shared/ficha.css";
+@import "../client/comun/comun.css";
+@import "../client/explorar/explorar.css";
+@import "../client/propietario/propietario.css";
+@import "../client/cuenta/cuenta.css";
+@import "../client/admin/admin.css";

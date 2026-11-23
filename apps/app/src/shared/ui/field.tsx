@@ -1,5 +1,5 @@
 // Campos de formulario comunes (historia 07, paso 4; API en docs/componentes.md). Sin router ni consultas. El aspecto
-// sale de styles/01-base.css, bloque «Campos»: las pantallas no escriben las clases ni redefinen el aspecto.
+// sale de shared/ui/componentes.css, bloque «Campos»: las pantallas no escriben las clases ni redefinen el aspecto.
 // - `Field` pinta la etiqueta, la ayuda, el error y el contador, y da al control su `id`, `aria-describedby` (error,
 //   ayuda y contador) y `aria-invalid`. El error va debajo del campo que falla.
 // - `TextInput`, `TextArea` y `Select` son el campo base (el CSS de los elementos), con desactivado y solo lectura.

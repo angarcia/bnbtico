@@ -1,0 +1,283 @@
+/* Explorar, Buscar, Filtros, el mapa y Favoritos (client/explorar). Capas areas y escritorio. */
+
+@layer areas {
+  .listing-card-text{display:flex;flex-direction:column;gap:1px;padding:12px 14px 8px}
+  /* Fotos deslizables (ticket 09 de la ronda del 2 nov): la tira llena la caja de la foto; cada foto, en su casilla (el fondo de
+  `.photo` mientras no está montada o no ha llegado). Sin barra de desplazamiento; el gesto no arrastra la página de lado. */
+  .card-strip{position:absolute;inset:0;display:flex;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-width:none}
+  .card-strip::-webkit-scrollbar{display:none}
+  .card-strip{touch-action:pan-x pan-y;-webkit-touch-callout:none}
+  .listing-card:has(.card-strip),.card-strip img{-webkit-user-drag:none;user-select:none;-webkit-user-select:none}
+  .card-slide{position:relative;flex:0 0 100%;scroll-snap-align:start}
+  /* Botón de WhatsApp: fondo claro, borde fino y sin sombra, con el icono en verde WhatsApp
+  oscurecido (--wa-icon, ≥ 3:1: el #25D366 de marca no llega sobre blanco), abajo a la derecha de la parte de texto, fuera
+  del enlace; el texto le deja su sitio (Daniel, 2026-11-04). */
+  .listing-card-heading{text-align:left}
+  .listing-card-heading h2{overflow-wrap:anywhere}
+  .listing-card-heading .accommodation-type{display:block}
+  .listing-card-footer{display:grid;align-items:center;margin-top:4px}
+  .listing-card-text > .card-features{margin-top:12px}
+  .listing-card-text > .card-features + .listing-card-footer{margin-top:0}
+  .listing-cell:has(> .card-wa) .listing-card-footer{min-height:50px;padding-right:62px}
+  .listing-card-footer .card-price{margin-top:0}
+  .card-wa{position:absolute;right:14px;bottom:14px;width:44px;height:44px;border:1px solid var(--line);border-radius:50%;padding:0;display:grid;place-items:center;background:var(--surface);color:var(--wa-icon);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform 160ms var(--ease-out)}
+  .card-wa:active{transform:scale(0.92)}
+  .listing-cell .card-wa{bottom:10px;width:50px;height:50px;border-radius:var(--r-cta)}
+  .listing-cell .card-wa svg{width:28px;height:28px}
+  .card-price{margin-top:3px}
+  .card-price b{font-weight:var(--w-strong)}
+  /* «≈ ₡180 000 por 4 noches»: si no cabe en una línea (tarjeta del mapa), baja entero «por 4 noches», no solo «noches». */
+  .card-price b,.card-price .muted{white-space:nowrap}
+  @media (max-width:899px) {
+    .listing-grid > .listing-cell,.listing-grid.skeleton > .listing-card{margin-inline:calc(-1 * var(--gutter))}
+  }
+  .listing-cell{position:relative;min-width:0}
+  .heart-card{position:absolute;right:8px;top:8px;color:#FFFFFF}
+  .heart-card svg{filter:drop-shadow(0 1px 2px rgba(28,43,42,.45))}
+  .heart-card[aria-pressed="true"] svg{filter:none}
+  /* «₡ | $» de Favoritos, junto a la cuenta: el toque de 44 px que tenía en la barra de arriba (quitada el 2026-11-03). */
+  .fav-head{inline-size:100%}
+  /* Capacidad y características de Explorar y Favoritos: los mismos iconos de la ficha. */
+  .card-capacity{display:flex;align-items:center;column-gap:6px}
+  .listing-card-text .card-capacity{flex-wrap:wrap;gap:2px 10px}
+  .card-capacity > span:has(svg){display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+  .card-capacity svg,.card-features svg{flex-shrink:0}
+  .card-features{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:8px;color:var(--muted)}
+  .card-features > span{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px}
+  /* Cabecera de Explorar (tarjetas flotantes, tanda 1, decisión 4): flota sobre el mapa a 12 px de los bordes; la píldora a todo
+  el ancho y, debajo, los filtros a la izquierda y «₡ | $» a la derecha, cada uno su tarjeta. Entre ellas el toque pasa al mapa.
+  Por debajo del mapa a pantalla completa (z-index 5). */
+  .explore-top{position:fixed;top:var(--float-top);left:var(--float-gap);right:var(--float-gap);max-width:536px;margin:0 auto;z-index:var(--z-explore);display:flex;flex-direction:column;gap:10px;pointer-events:none;--away:translateY(calc(-100% - var(--float-top) - 8px))}
+  .explore-top .search-pill,.explore-top .chiprow > *{pointer-events:auto}
+  .explore-top .search-pill{min-height:52px;padding:0 16px;border-radius:var(--float-r)}
+  .explore-top .filters-btn{width:48px;height:48px;border-radius:var(--float-r)}
+  .explore-top .currency-switch{padding:2px;gap:2px;border-radius:var(--float-r)}
+  .explore-top .currency-switch button{color:var(--fg-title)}
+  .explore-top .currency-switch button[aria-pressed="true"]{background:color-mix(in srgb,var(--primary) 18%,transparent);color:var(--primary-ink)}
+  .explore-search{display:flex;gap:8px;align-items:center}
+  .explore-search .search-pill{flex:1;min-width:0}
+  .search-pill{display:flex;align-items:center;gap:12px;min-height:56px;padding:0 18px;border-radius:var(--r-control);color:inherit;text-decoration:none;font-weight:var(--w-medium)}
+  .search-pill svg{flex:none;color:var(--primary)}
+  .search-pill-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .explore-layout,.explore-map-pane,.explore-list-pane{display:contents}
+  .map-price{translate:-50% -50%;padding:6px 10px;border-radius:var(--r-pill);background:var(--surface);color:var(--fg);font:600 13px/1.2 var(--body);font-variant-numeric:tabular-nums;white-space:nowrap;box-shadow:0 2px 0 var(--line),0 6px 14px -6px rgba(28,43,42,.5);cursor:pointer}
+  /* Mientras llega Leaflet (C2): los precios sobre el fondo de la caja, en su sitio aproximado. */
+  .map-preview{position:absolute;inset:0;pointer-events:none}
+  .map-preview .map-price{position:absolute}
+  .map-price.is-selected{background:var(--brand-ink);color:var(--on-overlay);box-shadow:0 6px 14px -4px rgba(180,76,48,.6)}
+  /* «Mapa», a 12 px sobre la barra de pestañas; baja con ella (`html.chrome-away`) hasta 12 px del borde, con su misma transición. */
+  .map-label{position:fixed;bottom:calc(var(--float-bottom) + var(--nav-h));z-index:var(--z-float);transition:transform 240ms var(--ease-out);animation:fade-in 160ms var(--ease-out)}
+  html.chrome-away .map-label{transform:translateY(var(--nav-h))}
+  /* Marca del final de la lista (MapLabel): sin alto y sin sumar otro hueco de la columna de .view. */
+  .map-label-end{display:block;height:0;margin-top:-14px}
+  /* Hasta la barra de pestañas plana, que se queda a la vista (abrir el mapa la muestra y con él abierto no se esconde). */
+  .map-full{position:fixed;inset:0 0 calc(var(--nav-h) + env(safe-area-inset-bottom)) 0;z-index:var(--z-float);background:var(--surface-2)}
+  /* Arriba, en una fila de tarjetas de 52 px: volver, la búsqueda y los filtros, como la cabecera de Explorar; la atribución del
+  mapa, debajo de ellas (abajo la taparía «N casas»). */
+  .map-full-top{position:absolute;top:var(--float-top);left:var(--float-gap);right:var(--float-gap);z-index:1;display:flex;align-items:center;gap:8px;max-width:536px;margin:0 auto}
+  .map-full-top .search-pill{flex:1;min-width:0;min-height:52px;padding:0 16px;border-radius:var(--float-r)}
+  .map-full-top .filters-btn{width:52px;height:52px;border-radius:var(--float-r)}
+  .map-round{flex:none;width:52px;height:52px;border-radius:var(--float-r);color:var(--fg);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+  .map-count{position:absolute;bottom:var(--float-gap);z-index:1}
+  /* La casa del marcador tocado, encima de «N casas» (12 + 44 px + 12 de aire). */
+  .map-card{position:absolute;left:var(--float-gap);right:var(--float-gap);bottom:calc(var(--float-gap) + 56px);z-index:1;max-width:536px;margin:0 auto;border-radius:var(--float-r);overflow:hidden;animation:fade-in 160ms var(--ease-out)}
+  .map-card-link{display:flex;color:inherit;text-decoration:none}
+  .map-card .photo{flex:none;width:108px;align-self:stretch;min-height:116px}
+  .map-card-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;padding:10px 14px;font-size:var(--fs-note)}
+  .map-card-text > .muted{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .map-card h2{font-family:var(--display);font-size:19px;font-weight:var(--w-strong);line-height:1.2;letter-spacing:-0.01em;overflow:hidden;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+  .map-card-footer{display:grid;align-content:center;gap:6px;margin-top:auto}
+  .map-card-footer .card-price{margin-top:0}
+  .map-card-footer .card-features{gap:6px;margin-top:0}
+  .map-card:has(> .card-wa) .map-card-footer{min-height:44px;padding-right:44px}
+  .map-card .heart-card{right:auto;left:64px;top:4px}
+  .map-card .card-wa{right:8px;bottom:10px;border-radius:var(--r-cta)}
+  /* Búsqueda a pantalla completa (/explorar/buscar): sección abierta sin fondo blanco y filas crema como el selector de casa. */
+  .search-screen{display:flex;flex-direction:column;gap:10px}
+  .search-closed .search-card-head h2{flex:1;min-width:0}
+  .search-card-body{display:flex;flex-direction:column;gap:14px}
+  .search-card{display:flex;flex-direction:column;gap:10px;padding:6px 0 12px}
+  .search-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .search-card .suggestions{max-height:min(40dvh,288px);overflow-y:auto;overscroll-behavior:contain}
+  .search-screen .range-weekdays,.search-screen .sticky-actions{background:var(--bg)}
+  .range-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:10px;border-top:1.5px solid var(--line-soft)}
+  .range-summary{display:flex;flex-direction:column;min-width:0;line-height:1.25}
+  .explore-top .chiprow{align-items:center}
+  .filters-btn{position:relative;flex:none;justify-content:center;width:44px;height:44px;padding:0}
+  .filters-form{gap:22px}
+  .filters-search{display:grid;grid-auto-rows:minmax(56px,auto)}
+  .kind-section{padding-block:12px;border-bottom:1px solid var(--line-soft)}
+  .filters-search .list-item{padding-inline:0}
+  .filters-search .list-item>svg{flex:none;color:var(--muted)}
+  .filters-search-value{flex:1;min-width:0;text-align:right;overflow-wrap:anywhere;color:var(--muted);font-size:var(--fs-xs)}
+  .map-card-text > .card-capacity{white-space:normal;overflow:visible}
+  .map-card-text > .card-zone{white-space:normal;overflow-wrap:anywhere}
+  .explore-footer-cards{display:grid;gap:14px}
+  @media (max-width:899px) {
+    .explore-footer-cards{margin-inline:calc(3px - var(--gutter))}
+  }
+  @supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))) {
+    .float-card.is-strong{background:var(--float-bg-strong)}
+  }
+}
+
+@layer sin-movimiento {
+  /* iPhone (Safari y la app instalada; en Chrome sí iba): el dedo no pasaba las fotos de la tarjeta y sí las de la ficha. Safari
+  deja arrastrar los enlaces (Chrome no) y la tira va dentro del de la tarjeta: ni el enlace ni sus fotos se arrastran. La tarjeta con tira no se encoge al tocarla
+  (el `transform` que aplica `:active` en el mismo toque le quita el gesto de lado a la tira), la tira declara que se desplaza
+  en los dos ejes (Daniel, 2026-11-04). */
+  /* En la capa sin-movimiento: tiene que ganar a .listing-card:active, que está en esta capa: las tarjetas con fotos deslizables no se encogen al tocarlas. */
+  .listing-card:has(.card-strip):active{transform:none}
+  @media (prefers-reduced-motion:reduce) {
+    .map-label{transition:none}
+  }
+}
+
+@layer escritorio {
+  @media (min-width: 1024px) {
+    .app.desktop-app:has(.explore-top) {
+      --explore-map-start: calc(var(--desktop-edge) + var(--gutter));
+      --explore-map-end: calc(50% + 10px);
+    }
+    .desktop-app .explore-top {
+      position: fixed;
+      inset: calc(var(--desktop-nav-height) + 10px) calc(var(--explore-map-end) + 10px) auto calc(var(--explore-map-start) + 10px);
+      max-width: none;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      align-items: center;
+      gap: 8px;
+    }
+    .desktop-app .explore-search { grid-column: 1 / -1; min-width: 0; }
+    .desktop-app .explore-search .filters-btn { flex: none; height: 52px; pointer-events: auto; }
+    .desktop-filters-content { padding: 20px; }
+    .desktop-filters-content .header-flow { margin: 0 0 16px; }
+    .desktop-filters-actions { position: sticky; bottom: 0; padding: 8px 0; background: var(--bg); }
+    .desktop-app .explore-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      align-items: start;
+      gap: 20px;
+    }
+    .desktop-app .explore-layout > :not(.explore-map-pane) { grid-column: 2; min-width: 0; }
+    .desktop-app .explore-map-pane {
+      display: block;
+      position: fixed;
+      inset: var(--desktop-nav-height) var(--explore-map-end) 0 var(--explore-map-start);
+      z-index: 1;
+    }
+    .desktop-app .explore-map-pane .map-card { bottom: var(--float-gap); }
+    .map-card:has(> .map-card-close) h2 { padding-inline-end: 40px; }
+    .desktop-app:has(.explore-map-pane[data-expanded]) {
+      --explore-map-end: calc(var(--desktop-edge) + var(--gutter));
+    }
+    .desktop-map-controls {
+      position: absolute;
+      inset-inline-end: var(--float-gap);
+      bottom: calc(var(--float-gap) + 24px);
+      z-index: 2;
+      display: grid;
+      gap: 8px;
+    }
+    .desktop-map-controls .icon-btn { border-radius: var(--float-r); font-size: var(--fs-h2); }
+    .explore-map-pane:has(.desktop-map-controls) .map-card { inset-inline-end: calc(var(--float-gap) + 52px); }
+    .desktop-app .explore-list-pane {
+      display: grid;
+      grid-area: 1 / 2;
+      min-width: 0;
+      gap: 14px;
+    }
+    .desktop-app .explore-results > .listing-cell {
+      display: flex;
+      flex-direction: column;
+    }
+    .desktop-app .explore-results .listing-cell > .listing-card,
+    .desktop-app .explore-results .listing-card-text {
+      flex: 1;
+    }
+    .desktop-app .explore-results .listing-card-text > .listing-card-footer {
+      margin-top: auto;
+      padding-top: 4px;
+    }
+    .desktop-search-fields {
+      position: relative;
+      flex: 1;
+      min-width: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, clamp(112px, 12vw, 176px)) max-content;
+      gap: 8px;
+    }
+    .desktop-search-field .search-pill {
+      width: 100%;
+      min-width: 0;
+      pointer-events: auto;
+    }
+    .desktop-search-field .search-pill[aria-expanded="true"] { background: var(--surface); }
+    .desktop-search-panel {
+      position: absolute;
+      top: calc(100% + 8px);
+      z-index: 2;
+      display: grid;
+      gap: 12px;
+      width: min(100%, 400px);
+      max-height: calc(100dvh - 160px);
+      overflow: auto;
+      overscroll-behavior: contain;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--r-sheet);
+      background: var(--surface);
+      box-shadow: var(--shadow-float);
+      pointer-events: auto;
+    }
+    .desktop-search-people {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      min-height: 52px;
+      padding-inline: 10px 4px;
+      border-radius: var(--float-r);
+      pointer-events: auto;
+    }
+    .desktop-search-people .stepper { gap: 0; }
+    .desktop-search-people > svg { flex: none; color: var(--primary); }
+    .desktop-search-people .stepper b { font: var(--w-strong) 16px var(--body); }
+    .desktop-search-calendar { max-height: min(52dvh, 420px); overflow: auto; overscroll-behavior: contain; }
+    .desktop-search-calendar .range-calendar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .desktop-search-calendar .range-weekdays { position: static; }
+    .desktop-app .map-full-top { max-width: 760px; }
+    .desktop-app .map-full { inset: var(--desktop-nav-height) 0 0; }
+    .desktop-app .map-label { bottom: var(--float-bottom); }
+    html.chrome-away .desktop-app .map-label { transform: none; }
+    .desktop-app:not(:has(.explore-top)) > main.view,
+    .app:has(> .site-top-bar) > main.view {
+      width: 100%;
+      max-width: calc(var(--page-max) + 2 * var(--gutter));
+      margin-inline: auto;
+    }
+  }
+}
+
+/* Fuera de capa, a propósito: ajustes de Leaflet. Su CSS llega con el trozo del mapa y fuera de capa; una regla en capa
+   le perdería siempre. Fuera de capa los dos, decide la especificidad, como antes del reparto. */
+/* Mapa de Explorar (maquetas v2 01 y 05): la caja es el primer elemento de la lista, de alto fijo y con fondo arena
+(sin red se queda así); los marcadores, píldoras con el precio (la tocada, terracota #B44C30); «Mapa» y «N casas»,
+píldoras oscuras translúcidas. Leaflet mueve el marcador con `transform`: la píldora se centra en el punto con `translate`, que se suma. */
+/* Arriba de Explorar a todo el ancho, pegado arriba (detrás de la cabecera flotante y del área segura) y con las esquinas de
+abajo redondeadas (tarjetas flotantes, tanda 1). Alto con svh: no cambia al esconderse la barra del navegador. */
+.explore-map{height:min(400px,56svh);margin:calc(-12px - env(safe-area-inset-top)) calc(-1 * var(--gutter)) 0;border-radius:0 0 var(--r-sheet) var(--r-sheet);background:var(--surface-2);cursor:pointer}
+.explore-map[data-still]{cursor:default}
+.explore-map .leaflet-control-attribution{margin:0 10px 8px 0;border-radius:var(--r-pill);font-size:11px}
+.explore-map.leaflet-container,.map-full-box.leaflet-container{background:var(--surface-2)}
+.explore-map:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px}
+.map-full-box{position:absolute;inset:0;isolation:isolate}
+.map-full .leaflet-bottom.leaflet-right{top:calc(var(--float-top) + 60px);bottom:auto}
+.map-full .leaflet-control-attribution{margin:0 12px 0 0;border-radius:var(--r-pill);font-size:11px}
+@media (min-width: 1024px) {
+  .desktop-app .explore-map {
+    height: 100%;
+    margin: 0;
+    border-radius: var(--r-sheet);
+    isolation: isolate;
+  }
+}

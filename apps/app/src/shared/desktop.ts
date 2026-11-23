@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 
-// El mismo corte que el marco de escritorio en 13-escritorio.css.
+// El mismo corte que el marco de escritorio en la capa escritorio de cada hoja (styles/global.css).
 const query = "(min-width: 1024px)";
 
 export function isDesktop(): boolean {

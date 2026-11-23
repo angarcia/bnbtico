@@ -29,7 +29,8 @@ describe("html.chrome-away en global.css", () => {
     expect(css).toContain("html.chrome-away .chrome-hide:not(:has(:focus-visible)) *{pointer-events:none}");
   });
   it("con movimiento reducido solo se funde: sin desplazamiento", () => {
-    expect(css).toMatch(/@media \(prefers-reduced-motion:reduce\)\{\.chrome-hide\{transition:opacity [^}]+\}html\.chrome-away \.chrome-hide:not\(:has\(:focus-visible\)\)\{transform:none\}\}/);
+    // Dentro del bloque de «reducir movimiento» de base.css, que junta las reglas de ese bloque de todas las hojas.
+    expect(css).toMatch(/@media \(prefers-reduced-motion:reduce\)\{(?:(?!@media)[\s\S])*?\.chrome-hide\{transition:opacity [^}]+\}html\.chrome-away \.chrome-hide:not\(:has\(:focus-visible\)\)\{transform:none\}/);
   });
 });
 
@@ -42,7 +43,7 @@ describe("tarjeta flotante (.float-card)", () => {
 
 // Tras probar la tanda 1 (Daniel, 2026-11-04): la barra de abajo vuelve a ser plana y pegada al borde, pero se sigue escondiendo.
 describe("barra de abajo (.tabbar) en global.css", () => {
-  const rule = css.match(/\n\.tabbar\{[^}]*\}/)![0];
+  const rule = css.match(/(?:^|[{};])\.tabbar\{[^}]*\}/)![0];
   it("plana: a todo el ancho, pegada abajo, opaca y con la línea fina arriba; sin píldora ni desenfoque", () => {
     expect(rule).toContain("position:fixed;bottom:0;left:0;right:0;margin:0 auto;width:100%;max-width:560px");
     expect(rule).toContain("height:calc(var(--nav-h) + env(safe-area-inset-bottom))");
