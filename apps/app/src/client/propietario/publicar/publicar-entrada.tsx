@@ -26,6 +26,7 @@ import { EMAIL_INVALID_ERROR } from "../../../domain/account";
 import { RouterButtonLink } from "../../comun/router-buttons";
 import { Notice, Skeleton } from "../../../shared/ui/structure";
 import { Card } from "../../../shared/ui/card";
+import * as ENTRY_COPY from "./copy/publicar-entrada";
 
 const message = (e: unknown) => (e instanceof DomainError ? e.message : "Algo salió mal. Intente de nuevo en un momento.");
 /** Un borrador vacío de hace menos de esto es el de una visita anterior que se cortó (recarga entre crear y guardar). */
@@ -39,7 +40,7 @@ const clearStored = clearPhoneDraft;
 /** La cabecera del asistente sin borrador todavía (el paso 1, o las Fotos al pedir el código): «Cerrar» vuelve a Explorar. */
 function EntryHeader({ step = 1 }: { step?: 1 | 7 }) {
   return (
-    <WizardHeader step={step} close={{ to: "/explorar", label: "Cerrar", title: "Cerrar" }} />
+    <WizardHeader step={step} close={{ to: "/explorar", label: ENTRY_COPY.close, title: ENTRY_COPY.close }} />
   );
 }
 
@@ -64,17 +65,17 @@ export function PublicarEntradaScreen() {
     <>
       <EntryHeader />
       <form onSubmit={submit} className="publish-form" noValidate>
-        <section className="stack gap-4" aria-label="Qué tener a mano">
-          <span className="small strong">Tenga a mano:</span>
+        <section className="stack gap-4" aria-label={ENTRY_COPY.ready}>
+          <span className="small strong">{ENTRY_COPY.readyTitle}</span>
           <ReadyList />
         </section>
         <KindChoice kind={initial} error={error} />
         <StickyActions spacer="none">
-          <ButtonPlaceholder variant="secondary" size="lg" placement="back" aria-disabled="true" aria-label="Atrás">
+          <ButtonPlaceholder variant="secondary" size="lg" placement="back" aria-disabled="true" aria-label={ENTRY_COPY.back}>
             <I.back size={22} />
           </ButtonPlaceholder>
           <Button variant="primary" size="lg" placement="grow" type="submit">
-            Continuar <I.chevron size={20} />
+            {ENTRY_COPY.next} <I.chevron size={20} />
           </Button>
         </StickyActions>
       </form>
@@ -164,22 +165,22 @@ export function ContinuarScreen() {
 
   return (
     <>
-      <ScreenHeader kind="flow" title="Publicar casa" back={{ to: "/propietario/casas" }} />
+      <ScreenHeader kind="flow" title={ENTRY_COPY.title} back={{ to: "/propietario/casas" }} />
       {readFailed ? (
         <div className="stack gap-12">
           <Notice tone="error">
             {message(resumable.error)}
           </Notice>
           <Button variant="primary" size="lg" block disabled={resumable.isFetching} onClick={() => void resumable.refetch()}>
-            Intentar de nuevo
+            {ENTRY_COPY.retry}
           </Button>
         </div>
       ) : null}
       {choosing && draft ? (
         <Card layout="stack" gap={12}>
-          <h3>Tiene un borrador sin enviar</h3>
+          <h3>{ENTRY_COPY.draftTitle}</h3>
           <p className="small muted">
-            {draft.title ? `«${draft.title}»` : "Sin nombre todavía"} · empezado el {new Date(draft.createdAt).toLocaleDateString("es-CR", { day: "numeric", month: "long" })}.
+            {ENTRY_COPY.draftLine({ title: draft.title, date: new Date(draft.createdAt).toLocaleDateString("es-CR", { day: "numeric", month: "long" }) })}
           </p>
           <RouterButtonLink
             to="/propietario/publicar/$id/$paso"
@@ -189,16 +190,16 @@ export function ContinuarScreen() {
             block
             onClick={clearStored}
           >
-            Seguir con el borrador
+            {ENTRY_COPY.continueDraft}
           </RouterButtonLink>
           {create.isError ? null : (
             <Button variant="secondary" block onClick={start}>
-              {stored.title.trim() ? `Seguir con «${stored.title.trim()}»` : "Empezar otra"}
+              {ENTRY_COPY.startOther({ title: stored.title.trim() })}
             </Button>
           )}
         </Card>
       ) : !create.isError && !readFailed ? (
-        <Skeleton shape="row" label="Preparando su casa" />
+        <Skeleton shape="row" label={ENTRY_COPY.preparing} />
       ) : null}
       {create.isError ? (
         <div className="stack gap-12">
@@ -206,7 +207,7 @@ export function ContinuarScreen() {
             {message(create.error)}
           </Notice>
           <Button variant="primary" size="lg" block onClick={start}>
-            Intentar de nuevo
+            {ENTRY_COPY.retry}
           </Button>
         </div>
       ) : null}
@@ -249,10 +250,10 @@ export function CorreoScreen() {
   }
   return (
     <>
-      <ScreenHeader kind="flow" title="Publicar casa" />
+      <ScreenHeader kind="flow" title={ENTRY_COPY.title} />
       <form onSubmit={(e) => void save(e)} className="stack flow" noValidate>
-        <h2>¿Quiere añadir un correo?</h2>
-        <Field id="pub-email" label="Correo" error={emailError} hint="Para recuperar su cuenta si pierde el acceso a su WhatsApp. Opcional.">
+        <h2>{ENTRY_COPY.emailTitle}</h2>
+        <Field id="pub-email" label={ENTRY_COPY.email} error={emailError} hint={ENTRY_COPY.emailHint}>
           {(control) => <TextInput {...control} name="email" type="email" autoComplete="email" inputMode="email" />}
         </Field>
         {error && !error.field ? (
@@ -261,10 +262,10 @@ export function CorreoScreen() {
           </Notice>
         ) : null}
         <Button variant="primary" size="lg" block type="submit" disabled={busy}>
-          Guardar correo
+          {ENTRY_COPY.saveEmail}
         </Button>
         <Button variant="secondary" block onClick={skip}>
-          Ahora no
+          {ENTRY_COPY.skip}
         </Button>
       </form>
     </>

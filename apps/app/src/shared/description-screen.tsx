@@ -4,6 +4,7 @@
 import { I } from "./ui/icons";
 import { FullScreen } from "./ui/overlay";
 import { IconButton } from "./ui/button";
+import * as LISTING_PARTS_COPY from "./copy/listing-parts";
 
 export function DescriptionScreen({ paragraphs, onClose }: { paragraphs: string[]; onClose: () => void }) {
   return (
@@ -11,11 +12,11 @@ export function DescriptionScreen({ paragraphs, onClose }: { paragraphs: string[
       {({ titleId, close }) => (
         <>
           <div className="description-screen-head">
-            <IconButton label="Cerrar" onClick={close}>
+            <IconButton label={LISTING_PARTS_COPY.close} onClick={close}>
               <I.back />
             </IconButton>
           </div>
-          <h2 id={titleId}>Descripción</h2>
+          <h2 id={titleId}>{LISTING_PARTS_COPY.description}</h2>
           <div className="listing-description">
             {paragraphs.map((p, i) => (
               <p key={i}>{p}</p>

@@ -52,6 +52,8 @@ import { Field } from "./ui/field";
 import { Stepper } from "./ui/stepper";
 import { Notice } from "./ui/structure";
 import { ClosedField } from "./ui/closed-field";
+import * as CONTACT_COPY from "./copy/contact";
+import * as CALENDAR_COPY from "../domain/calendar-copy";
 
 const STAY_OPTIONS = [
   { value: "dates", label: "Fechas" },
@@ -243,15 +245,15 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend, inlin
   const fieldError = !!dateError || error?.field === "people";
   const datesErrorId = `${titleId}-dates-error`;
 
-  const subtitle = <>Anfitrión de {title}{listing.ownerWhatsappVerified ? " · WhatsApp verificado" : ""}</>;
-  const heading = `Escríbale a ${name}`;
+  const subtitle = CONTACT_COPY.subtitle({ title, verified: listing.ownerWhatsappVerified });
+  const heading = CONTACT_COPY.heading({ name });
   const form = (
         <form onSubmit={onSubmit} noValidate>
           {nightsChoice ? (
             <Segmented
               fill
               placement="contact-stay"
-              label="Cómo indicar la estancia"
+              label={CONTACT_COPY.stayKind}
               options={STAY_OPTIONS}
               value={stayMode}
               onChange={chooseStay}
@@ -265,7 +267,7 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend, inlin
           {/* Fechas con el calendario de «¿Cuándo?»: dos casillas que lo abren. */}
           <div className="dates">
             {(["arrival", "departure"] as const).map((field) => (
-              <DateBox key={field} label={field === "arrival" ? "Llegada" : "Salida"} value={draft[field]} open={picking} invalid={error?.field === field || undefined} describedBy={error?.field === field ? datesErrorId : undefined} onToggle={toggleCalendar} />
+              <DateBox key={field} label={field === "arrival" ? CONTACT_COPY.arrival : CONTACT_COPY.departure} value={draft[field]} open={picking} invalid={error?.field === field || undefined} describedBy={error?.field === field ? datesErrorId : undefined} onToggle={toggleCalendar} />
             ))}
           </div>
           {dateError ? (
@@ -292,20 +294,20 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend, inlin
               <div className="row between">
                 {draft.arrival ? (
                   <TextButton tone="quiet" onClick={() => changeDates({ arrival: null, departure: null })}>
-                    Quitar fechas
+                    {CALENDAR_COPY.clearDates}
                   </TextButton>
                 ) : (
                   <span />
                 )}
                 <TextButton tone="quiet" onClick={() => setPicking(false)}>
-                  Listo
+                  {CALENDAR_COPY.done}
                 </TextButton>
               </div>
             </div>
           ) : null}
           </>}
           {/* − / + como el paso 4 de publicar, con el campo editable en medio y tope en la capacidad (revisión UX A3). */}
-          <Field id="contact-people" label="Personas (opcional)" size="compact" error={error?.field === "people" ? error.message : null}>
+          <Field id="contact-people" label={CONTACT_COPY.people} size="compact" error={error?.field === "people" ? error.message : null}>
             {(control) => (
               <Stepper
                 unit="Una persona"
@@ -314,7 +316,7 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend, inlin
                 max={maxPeople}
                 onChange={changePeople}
                 // En escritorio, «Opcional» en vez del guion: «– − +» parecía un contador sin valor (revisión 2026-11-13, A2).
-                input={{ ...control, name: "people", placeholder: inline ? "Opcional" : "–", value: draft.people, onInput: (text) => changePeople(parsePeople(text)) }}
+                input={{ ...control, name: "people", placeholder: inline ? CONTACT_COPY.peoplePlaceholder : "–", value: draft.people, onInput: (text) => changePeople(parsePeople(text)) }}
               />
             )}
           </Field>
@@ -329,12 +331,12 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend, inlin
           ) : null}
           <div className="stack gap-4">
             <span className="field-label" id="contact-message-label">
-              Su mensaje
+              {CONTACT_COPY.message}
             </span>
             <p className="message-preview" aria-labelledby="contact-message-label" data-testid="contact-message">
               {draft.composed}
             </p>
-            <span className="hint">Podrá añadir lo que quiera en WhatsApp antes de enviarlo.</span>
+            <span className="hint">{CONTACT_COPY.messageHint}</span>
           </div>
           {error && !fieldError ? (
             <Notice tone="error">
@@ -353,13 +355,13 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend, inlin
             aria-busy={status.kind === "sending" || undefined}
           >
             {/* Sin sesión el botón todavía no abre WhatsApp: lleva a verificar el número (revisión UX C2). */}
-            {status.kind === "sending" ? "Abriendo WhatsApp…" : inline ? `Escribir a ${name} por WhatsApp` : signedOut ? "Continuar" : "Abrir WhatsApp"}
+            {status.kind === "sending" ? CONTACT_COPY.sending : inline ? CONTACT_COPY.writeTo({ name }) : signedOut ? CONTACT_COPY.continueLabel : CONTACT_COPY.open}
           </Button>
           {/* En escritorio, el botón dice a quién y por dónde, y dos avisos en lugar de tres: sin sesión, el del código; con ella,
               qué verá el anfitrión (revisión 2026-11-13, A3). */}
-          {signedOut ? <span className="consent">Para escribirle necesita verificar su WhatsApp con un código. Lo que escribió se guarda.</span> : null}
-          {inline && signedOut ? null : <span className="consent">{name} verá su nombre y su WhatsApp.</span>}
-          <span className="safety">Por su seguridad, nunca envíe dinero antes de confirmar la casa. 3bstays no procesa ni pide pagos.</span>
+          {signedOut ? <span className="consent">{CONTACT_COPY.needsCode}</span> : null}
+          {inline && signedOut ? null : <span className="consent">{CONTACT_COPY.hostSees({ name })}</span>}
+          <span className="safety">{CONTACT_COPY.safety}</span>
         </form>
   );
   if (inline) {

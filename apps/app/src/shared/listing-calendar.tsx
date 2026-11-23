@@ -20,6 +20,7 @@ import { listingDaysQuery } from "./listing-query";
 import { MonthGrid, MonthLegend, WeekdayRow } from "./month-grid";
 import { stayDates, useStayDates } from "./stay-dates";
 import { IconButton, TextButton } from "./ui/button";
+import * as CALENDAR_COPY from "../domain/calendar-copy";
 
 /** Hoy en Costa Rica (UTC−6, sin horario de verano), igual que `costaRicaToday` de domain/inquiry: importarla desde allí
  *  ata este trozo al de la consulta y Rolldown vuelve a partir los de la hoja de contacto (medido: +0,07 KB en la zona
@@ -123,7 +124,7 @@ export function ListingCalendar({ listing: l, currency, fx, onStay }: { listing:
         <MonthLegend price={!FLAGS.datePrices && base !== null ? formatMoney(base, currency, fx) : undefined} />
         {value.arrival ? (
           <TextButton tone="quiet" onClick={clear}>
-            Quitar fechas
+            {CALENDAR_COPY.clearDates}
           </TextButton>
         ) : null}
       </div>
@@ -138,11 +139,11 @@ function MonthHead({ month, setMonth, title, win }: { month: string; setMonth: (
   return (
     <div className="cal-month">
       <div className="row gap-4">
-        <IconButton label="Mes anterior" placement="cal-arrow" disabled={month <= win.firstMonth} onClick={() => setMonth(addMonths(month, -1))}>
+        <IconButton label={CALENDAR_COPY.prevMonth} placement="cal-arrow" disabled={month <= win.firstMonth} onClick={() => setMonth(addMonths(month, -1))}>
           <I.back size={20} />
         </IconButton>
         <b className="display cal-title">{title}</b>
-        <IconButton label="Mes siguiente" placement="cal-arrow" disabled={month >= win.lastMonth} onClick={() => setMonth(addMonths(month, 1))}>
+        <IconButton label={CALENDAR_COPY.nextMonth} placement="cal-arrow" disabled={month >= win.lastMonth} onClick={() => setMonth(addMonths(month, 1))}>
           <I.chevron size={20} />
         </IconButton>
       </div>

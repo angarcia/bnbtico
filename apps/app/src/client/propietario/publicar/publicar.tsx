@@ -29,6 +29,7 @@ import { Button } from "../../../shared/ui/button";
 import { RouterButtonLink } from "../../comun/router-buttons";
 import { LoadError, Notice, Skeleton } from "../../../shared/ui/structure";
 import { Card } from "../../../shared/ui/card";
+import * as PUBLICAR_COPY from "./copy/publicar";
 
 const message = (e: unknown) => (e instanceof DomainError ? e.message : "Algo salió mal. Intente de nuevo en un momento.");
 const DESKTOP_STEPS: readonly Step[] = [1, 7, 6, LAST_STEP];
@@ -100,7 +101,7 @@ export function PublicarScreen() {
   const failure = create.isError ? message(create.error) : create.isIdle ? lost : null;
   const start = (
     <Button variant={draft ? "secondary" : "primary"} size={draft ? "md" : "lg"} block disabled={create.isPending} onClick={() => create.mutate()}>
-      {create.isPending ? "Un momento…" : draft ? "Empezar otro" : "Empezar"}
+      {PUBLICAR_COPY.start({ pending: create.isPending, draft: !!draft })}
     </Button>
   );
   const failed =
@@ -118,12 +119,12 @@ export function PublicarScreen() {
     return (
       <>
         <StepHeader step={1} />
-        <Skeleton shape="row" label="Cargando sus casas" />
+        <Skeleton shape="row" label={PUBLICAR_COPY.loading} />
       </>
     );
   return (
     <>
-      <ScreenHeader kind="flow" title="Publicar casa" back={{ to: "/cuenta", historyBack: true }} />
+      <ScreenHeader kind="flow" title={PUBLICAR_COPY.title} back={{ to: "/cuenta", historyBack: true }} />
       {resumable.isError ? (
         <LoadError onRetry={() => void resumable.refetch()}>
           {message(resumable.error)}
@@ -131,21 +132,21 @@ export function PublicarScreen() {
       ) : null}
       {draft ? (
         <Card layout="stack" gap={12}>
-          <h3>Tiene un borrador sin enviar</h3>
+          <h3>{PUBLICAR_COPY.draftTitle}</h3>
           <p className="small muted">
-            {draft.title ? `«${draft.title}»` : "Sin nombre todavía"} · empezado el {new Date(draft.createdAt).toLocaleDateString("es-CR", { day: "numeric", month: "long" })}.
+            {PUBLICAR_COPY.draftLine({ title: draft.title, date: new Date(draft.createdAt).toLocaleDateString("es-CR", { day: "numeric", month: "long" }) })}
           </p>
           <RouterButtonLink to="/propietario/publicar/$id/$paso" params={{ id: draft.id, paso: String(resumeStep(draft)) }} variant="primary" size="lg" block>
-            Seguir con el borrador
+            {PUBLICAR_COPY.continueDraft}
           </RouterButtonLink>
           {start}
         </Card>
       ) : draft === null ? (
         <Card layout="stack" gap={12}>
-          <h3>Publique su casa en pocos pasos</h3>
+          <h3>{PUBLICAR_COPY.intro}</h3>
           {/* Solo si no se pudo crear el borrador: lo que pide el asistente y «Empezar» para reintentar. */}
           <ReadyList />
-          <p className="small muted">La revisamos a mano y queda visible con su enlace para compartir por WhatsApp.</p>
+          <p className="small muted">{PUBLICAR_COPY.introNote}</p>
           {start}
         </Card>
       ) : null}
@@ -173,7 +174,7 @@ function StepHeader({ id, step, lastInGroup, missingSteps, actions }: { id?: str
   const { admin } = useEditor();
   const close = useCloseWizard(id);
   return (
-    <WizardHeader title={admin ? "Asistir casa" : "Publicar casa"} step={step} lastInGroup={lastInGroup} close={close} missingSteps={missingSteps} actions={actions} />
+    <WizardHeader title={PUBLICAR_COPY.wizardTitle({ admin: !!admin })} step={step} lastInGroup={lastInGroup} close={close} missingSteps={missingSteps} actions={actions} />
   );
 }
 
@@ -240,7 +241,7 @@ export function PasoScreen() {
             {message(query.error)}
           </LoadError>
         ) : (
-          <Skeleton shape="row" label="Cargando sus casas" />
+          <Skeleton shape="row" label={PUBLICAR_COPY.loading} />
         )}
       </>
     );

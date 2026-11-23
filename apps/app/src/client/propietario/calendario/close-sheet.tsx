@@ -8,6 +8,7 @@ import { costaRicaToday } from "../../../domain/inquiry";
 import { Sheet } from "../../../shared/ui/overlay";
 import { Field, TextInput } from "../../../shared/ui/field";
 import { Button } from "../../../shared/ui/button";
+import * as CLOSE_COPY from "./copy/close-sheet";
 
 export function CloseSheet({ onConfirm, onClose }: { onConfirm: (reopenAt: string | null) => void; onClose: () => void }) {
   const [date, setDate] = useState("");
@@ -22,14 +23,14 @@ export function CloseSheet({ onConfirm, onClose }: { onConfirm: (reopenAt: strin
   }
 
   return (
-    <Sheet title="Pausar la casa" closeButton={false} onClose={onClose} confirmDiscard={() => date !== ""}>
+    <Sheet title={CLOSE_COPY.title} closeButton={false} onClose={onClose} confirmDiscard={() => date !== ""}>
         <form onSubmit={onSubmit} noValidate>
           <Field
             id="close-reopen"
-            label="Volver a publicarla el (opcional)"
+            label={CLOSE_COPY.reopen}
             size="compact"
             error={problem}
-            hint="No aparecerá en Explorar ni recibirá consultas. Sus noches y precios se conservan. Sin fecha, sigue pausada hasta que usted la vuelva a publicar."
+            hint={CLOSE_COPY.hint}
           >
             {(control) => (
               <TextInput
@@ -47,10 +48,10 @@ export function CloseSheet({ onConfirm, onClose }: { onConfirm: (reopenAt: strin
             )}
           </Field>
           <Button variant="primary" size="lg" type="submit">
-            Pausar la casa
+            {CLOSE_COPY.submit}
           </Button>
           <Button variant="secondary" size="lg" onClick={onClose}>
-            Cancelar
+            {CLOSE_COPY.cancel}
           </Button>
         </form>
     </Sheet>

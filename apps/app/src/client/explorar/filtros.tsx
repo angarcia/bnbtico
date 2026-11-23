@@ -32,6 +32,7 @@ import { listingsQuery, loadedListings, provincesQuery, zoneListingsQuery, zones
 import { Button } from "../../shared/ui/button";
 import { RouterListRow } from "../comun/router-rows";
 import { ScreenHeader } from "../comun/screen-header";
+import * as FILTERS_COPY from "./copy/filters";
 
 const route = getRouteApi("/_tabs/explorar/filtros");
 const KIND_FILTER_LABEL = { completo: "Alojamiento completo", habitacion: "Habitación" } as const;
@@ -114,14 +115,12 @@ function FiltrosForm({
       type="submit"
       disabled={badRange}
     >
-      {count === undefined
-        ? "Ver casas"
-        : `Ver ${hasNextPage ? "más de " : ""}${housesCount(count)}`}
+      {FILTERS_COPY.seeHouses({ houses: count === undefined ? null : housesCount(count), more: !!hasNextPage })}
     </Button>
   );
   return (
     <>
-      <ScreenHeader kind="flow" title="Filtros" titleId={titleId} {...(onClose ? { close: { label: "Cerrar filtros", onClick: onClose } } : { back: { to: "/explorar", search: initial } })} action={
+      <ScreenHeader kind="flow" title={FILTERS_COPY.title} titleId={titleId} {...(onClose ? { close: { label: FILTERS_COPY.close, onClick: onClose } } : { back: { to: "/explorar", search: initial } })} action={
         <div className="right">
           <Button
             variant="secondary"
@@ -130,7 +129,7 @@ function FiltrosForm({
               setPrices({ min: "", max: "" });
             }}
           >
-            Limpiar
+            {FILTERS_COPY.reset}
           </Button>
         </div>
       } />
@@ -143,7 +142,7 @@ function FiltrosForm({
       >
         <section className="stack" role="group" aria-labelledby="f-mine">
           <span className="eyebrow" id="f-mine">
-            Su búsqueda
+            {FILTERS_COPY.yourSearch}
           </span>
           <div className="filters-search filter-counters">
             {!onClose && mineRows.map((r) => (
@@ -157,7 +156,7 @@ function FiltrosForm({
               </RouterListRow>
             ))}
             <CounterRow
-              label="Personas"
+              label={FILTERS_COPY.people}
               icon={<I.users size={22} />}
               unit="Una persona"
               value={f.ppl}
@@ -171,7 +170,7 @@ function FiltrosForm({
             {FLAGS.rooms ? (
             <section className="stack kind-section" role="group" aria-labelledby="f-tipo">
               <span className="eyebrow" id="f-tipo">
-                Tipo de alojamiento
+                {FILTERS_COPY.kind}
               </span>
               <ChoiceChips
                 as="button"
@@ -182,7 +181,7 @@ function FiltrosForm({
                   label: (
                     <>
                       {kind === null ? <I.list size={24} /> : kind === "completo" ? <I.house size={24} /> : <I.bed size={24} />}
-                      <span>{kind === null ? "Cualquiera" : kind === "completo" ? "Completo" : KIND_FILTER_LABEL[kind]}</span>
+                      <span>{kind === null ? FILTERS_COPY.anyKind : kind === "completo" ? FILTERS_COPY.whole : KIND_FILTER_LABEL[kind]}</span>
                     </>
                   ),
                 }))}
@@ -195,7 +194,7 @@ function FiltrosForm({
             </section>
             ) : null}
             {f.kind === "completo" || !FLAGS.rooms ? <CounterRow
-              label="Dormitorios"
+              label={FILTERS_COPY.bedrooms}
               icon={<I.bed size={22} />}
               unit="Un dormitorio"
               value={f.beds}
@@ -209,11 +208,11 @@ function FiltrosForm({
           </div>
         </section>
         {f.zone && (!zoneListings.data || featureChoices.length > 0) && <section className="stack">
-          <span className="eyebrow">Qué necesitan</span>
+          <span className="eyebrow">{FILTERS_COPY.needs}</span>
           {!zoneListings.data && (zoneListings.isError || zoneListings.isPaused ? (
-            <p className="xs muted" role="status">No pudimos cargar las características disponibles.</p>
+            <p className="xs muted" role="status">{FILTERS_COPY.featuresError}</p>
           ) : (
-            <p className="xs muted" role="status">Cargando características…</p>
+            <p className="xs muted" role="status">{FILTERS_COPY.loadingFeatures}</p>
           ))}
           <ChoiceChips
             as="button"
@@ -223,10 +222,10 @@ function FiltrosForm({
           />
         </section>}
         <section className="stack">
-          <span className="eyebrow">Precio</span>
+          <span className="eyebrow">{FILTERS_COPY.price}</span>
           <div className="grid-2">
             {(["min", "max"] as const).map((key) => (
-              <Field key={key} id={`f-${key}`} label={key === "min" ? "Mínimo" : "Máximo"} describedBy={badRange ? "f-price-error" : currency === "CRC" ? "f-price-help" : undefined}>
+              <Field key={key} id={`f-${key}`} label={key === "min" ? FILTERS_COPY.min : FILTERS_COPY.max} describedBy={badRange ? "f-price-error" : currency === "CRC" ? "f-price-help" : undefined}>
                 {(control) => (
                   <AffixInput
                     {...control}
@@ -234,7 +233,7 @@ function FiltrosForm({
                     prefix={symbol}
                     inputMode="decimal"
                     placeholder={key === "min" ? "0" : currency === "USD" ? "300" : "150 000"}
-                    aria-label={key === "min" ? "Precio mínimo por noche" : "Precio máximo por noche"}
+                    aria-label={key === "min" ? FILTERS_COPY.minPrice : FILTERS_COPY.maxPrice}
                     aria-invalid={badRange || undefined}
                     value={prices[key]}
                     onChange={(e) => setPrice(key, e.target.value)}
@@ -243,10 +242,10 @@ function FiltrosForm({
               </Field>
             ))}
           </div>
-          {currency === "CRC" ? <span className="field-hint" id="f-price-help">En colones (₡). Puede verlos en dólares desde Explorar.</span> : null}
+          {currency === "CRC" ? <span className="field-hint" id="f-price-help">{FILTERS_COPY.priceHint}</span> : null}
           {badRange ? (
             <p className="field-error" id="f-price-error" role="alert">
-              El precio mínimo no puede ser mayor que el máximo.
+              {FILTERS_COPY.badRange}
             </p>
           ) : null}
         </section>
@@ -266,7 +265,7 @@ function FiltrosContent({ search, onClose, titleId }: { search: ExploreSearch; o
   // En dólares, los campos se rellenan con el tipo vigente: se espera a tenerlo (si falla la lectura, el inicial).
   const usd = useCurrency() === "USD";
   const fx = useQuery({ ...fxQuery, enabled: usd });
-  if (!provinces || (usd && fx.isPending)) return onClose ? <p role="status">Cargando filtros…</p> : null;
+  if (!provinces || (usd && fx.isPending)) return onClose ? <p role="status">{FILTERS_COPY.loading}</p> : null;
   return (
     <FiltrosForm
       provinces={provinces}

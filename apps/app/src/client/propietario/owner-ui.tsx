@@ -15,6 +15,7 @@ import { RouterButtonLink } from "../comun/router-buttons";
 import { RouterListRow } from "../comun/router-rows";
 import { Notice } from "../../shared/ui/structure";
 import { Card, ListRow } from "../../shared/ui/card";
+import * as OWNER_COPY from "./copy/owner";
 
 const base = () => window.location.origin;
 export const titleOf = (l: Listing) => l.title || "Borrador sin título";
@@ -43,7 +44,7 @@ export function SubscriptionLink({ publicId, children }: { publicId?: string; ch
 export function PayButton({ publicId }: { publicId: string }) {
   return (
     <RouterButtonLink to="/propietario/suscripcion" search={{ casa: publicId }} hash={`pago=${publicId}`} variant="pay" block>
-      Añadir método de pago
+      {OWNER_COPY.addMethod}
     </RouterButtonLink>
   );
 }
@@ -52,7 +53,7 @@ export function PayButton({ publicId }: { publicId: string }) {
 export function ActivateButton({ publicId }: { publicId: string }) {
   return (
     <RouterButtonLink to="/propietario/suscripcion" search={{ casa: publicId }} hash={`pago=${publicId}`} variant="pay" block>
-      Activar suscripción
+      {OWNER_COPY.activate}
     </RouterButtonLink>
   );
 }
@@ -98,7 +99,7 @@ export function HoldNotice({ listing: l, card = false }: { listing: Listing; car
         target="_blank"
         rel="noopener"
       >
-        Escribir a 3bstays
+        {OWNER_COPY.write3bstays}
       </ButtonLink>
     ) : null;
   if (card)
@@ -106,7 +107,7 @@ export function HoldNotice({ listing: l, card = false }: { listing: Listing; car
       <>
         <Notice tone="solid" small data-testid="hold-note">
           <span>
-            <b>{copy.title}.</b> Motivo: {hold.reason}
+            {OWNER_COPY.holdNote({ title: <b key="title">{OWNER_COPY.holdTitle({ title: copy.title })}</b>, reason: hold.reason })}
           </span>
         </Notice>
         {write}
@@ -117,7 +118,7 @@ export function HoldNotice({ listing: l, card = false }: { listing: Listing; car
       <h2 className="display offer-title">{copy.title}</h2>
       <span className="small ink">{copy.body}</span>
       <span className="small ink">
-        <b>Motivo:</b> <span data-testid="hold-reason">{hold.reason}</span>
+        <b>{OWNER_COPY.reasonLabel}</b> <span data-testid="hold-reason">{hold.reason}</span>
       </span>
       {write}
     </Card>
@@ -129,9 +130,9 @@ export function ShareButtonInline({ listing: l, placement = "grow", block = fals
   const target = shareOf(l);
   const { share, copied, swap } = useShare(target);
   return (
-    <Button variant="primary" block={block} placement={block ? undefined : placement} icon={<I.share size={20} />} onClick={share} aria-label={copied ? "Enlace copiado" : "Compartir ficha"} data-share-url={target.url}>
+    <Button variant="primary" block={block} placement={block ? undefined : placement} icon={<I.share size={20} />} onClick={share} aria-label={OWNER_COPY.shareLabel({ copied })} data-share-url={target.url}>
       <span key={copied ? "copied" : "share"} className={swap}>
-        {copied ? "Enlace copiado" : "Compartir"}
+        {OWNER_COPY.shareButton({ copied })}
       </span>
     </Button>
   );
@@ -145,7 +146,7 @@ export function WhatsAppItem({ listing: l }: { listing: Listing }) {
         <I.phone />
       </span>
       <span className="body">
-        WhatsApp de esta casa<small className="num">{formatPhone(l.whatsappPhone)} · verificado</small>
+        {OWNER_COPY.housePhone}<small className="num">{OWNER_COPY.housePhoneLine({ phone: formatPhone(l.whatsappPhone) })}</small>
       </span>
     </ListRow>
   );

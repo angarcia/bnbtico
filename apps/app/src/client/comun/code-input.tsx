@@ -2,10 +2,11 @@
 // (screens/admin-codigo.tsx). Seis casillas que pintan lo escrito en un solo campo casi invisible encima, con el teclado
 // numérico y el autocompletado del código que llega por mensaje. El error va debajo y queda enlazado al campo.
 import { Field } from "../../shared/ui/field";
+import * as CODE_COPY from "./copy/code-input";
 
 export function CodeInput({ id, value, onChange, error }: { id: string; value: string; onChange(code: string): void; error: string | null }) {
   return (
-    <Field id={id} label="Código de 6 dígitos" error={error}>
+    <Field id={id} label={CODE_COPY.label} error={error}>
       {(control) => (
         <div className="code-field">
           <div className="code-boxes" aria-hidden="true">

@@ -5,27 +5,28 @@ import { Button, ButtonLink, WaIcon } from "../../shared/ui/button";
 import { Field, TextInput } from "../../shared/ui/field";
 import { RouterButtonLink } from "../comun/router-buttons";
 import { Card } from "../../shared/ui/card";
+import * as ACCOUNT_COPY from "./copy/account";
 
 // ---------- /cuenta/recuperar ----------
 export function RecuperarScreen() {
   return (
     <>
-      <ScreenHeader kind="flow" title="Recuperar mi cuenta" back={{ to: "/cuenta", historyBack: true }} />
+      <ScreenHeader kind="flow" title={ACCOUNT_COPY.recoverTitle} back={{ to: "/cuenta", historyBack: true }} />
       <Card layout="stack" gap={14}>
-        <p>Use el correo que añadió y confirmó en su perfil. Después podrá verificar su nuevo WhatsApp para recuperar el acceso.</p>
-        <Field id="recovery-email" label="Correo confirmado">
-          {(control) => <TextInput {...control} type="email" placeholder="nombre@ejemplo.com" disabled />}
+        <p>{ACCOUNT_COPY.recoverText}</p>
+        <Field id="recovery-email" label={ACCOUNT_COPY.recoverEmail}>
+          {(control) => <TextInput {...control} type="email" placeholder={ACCOUNT_COPY.emailPlaceholder} disabled />}
         </Field>
         <Button variant="primary" size="lg" disabled>
-          Recuperar con mi correo
+          {ACCOUNT_COPY.recoverButton}
         </Button>
-        <p className="xs muted">La recuperación por correo se activa cuando confirme uno en su perfil.</p>
+        <p className="xs muted">{ACCOUNT_COPY.recoverNote}</p>
       </Card>
       <Card layout="stack">
-        <h3>¿No tiene un correo confirmado?</h3>
-        <p className="small">Pida ayuda a 3bstays para revisar la recuperación. Indicar su nombre y otro número no basta para recuperar una cuenta. No mande documentos ni códigos por este formulario.</p>
+        <h3>{ACCOUNT_COPY.noEmailTitle}</h3>
+        <p className="small">{ACCOUNT_COPY.noEmailText}</p>
         <RouterButtonLink to="/ayuda" variant="secondary" size="xl" block icon={<WaIcon />}>
-          Escribir a 3bstays por WhatsApp
+          {ACCOUNT_COPY.writeTo3bstays}
         </RouterButtonLink>
       </Card>
     </>
@@ -37,24 +38,24 @@ export function AyudaScreen() {
   const s = SUPPORT[(useListingsCount().count ?? 0) > 0 ? "owner" : "guest"];
   return (
     <>
-      <ScreenHeader kind="flow" title="Ayuda por WhatsApp" back={{ to: "/cuenta", historyBack: true }} />
+      <ScreenHeader kind="flow" title={ACCOUNT_COPY.helpTitle} back={{ to: "/cuenta", historyBack: true }} />
       <Card layout="stack" gap={14}>
         <span className="eyebrow">{s.label}</span>
         <p>{s.intro}</p>
         {s.number ? (
           <>
             <p className="small muted">
-              <span className="num">{s.number}</span> · canal separado del de {s.other}.
+              {ACCOUNT_COPY.channel({ number: <span key="number" className="num">{s.number}</span>, other: s.other })}
             </p>
             <ButtonLink variant="secondary" size="xl" block icon={<WaIcon />} href={waLink(s.number, s.greeting)} target="_blank" rel="noopener">
-              Abrir WhatsApp
+              {ACCOUNT_COPY.openWhatsapp}
             </ButtonLink>
           </>
         ) : (
           <>
-            <p className="small muted">Número pendiente de configurar. Canal separado del de {s.other}.</p>
+            <p className="small muted">{ACCOUNT_COPY.noNumber({ other: s.other })}</p>
             <Button variant="secondary" size="xl" block icon={<WaIcon />} disabled>
-              Abrir WhatsApp
+              {ACCOUNT_COPY.openWhatsapp}
             </Button>
           </>
         )}

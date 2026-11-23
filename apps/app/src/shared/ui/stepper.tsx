@@ -2,6 +2,7 @@
 // de noches, la hoja de contacto y Explorar en escritorio. Botones de 44 × 44, un solo desactivado y un nombre accesible
 // único («Una persona menos», «Un dormitorio más»). `CounterRow` es su fila con la etiqueta y el icono.
 import type { ReactNode } from "react";
+import * as UI_COPY from "./copy/ui";
 
 /** Lo que cuenta, en singular con su artículo: da el nombre de los botones («Una persona menos»). */
 export type StepperUnit = "Una persona" | "Un dormitorio" | "Un baño" | "Una noche";
@@ -50,7 +51,7 @@ export function Stepper({
 }) {
   return (
     <span className="stepper">
-      <button type="button" aria-label={`${unit} menos`} aria-describedby={describedBy} disabled={value <= min} onClick={() => onChange(value - 1)}>
+      <button type="button" aria-label={UI_COPY.less({ unit })} aria-describedby={describedBy} disabled={value <= min} onClick={() => onChange(value - 1)}>
         −
       </button>
       {icon ? (
@@ -79,7 +80,7 @@ export function Stepper({
           {empty ? "–" : (display ?? value)}
         </b>
       )}
-      <button type="button" aria-label={`${unit} más`} aria-describedby={describedBy} disabled={value >= max} onClick={() => onChange(value + 1)}>
+      <button type="button" aria-label={UI_COPY.more({ unit })} aria-describedby={describedBy} disabled={value >= max} onClick={() => onChange(value + 1)}>
         +
       </button>
     </span>

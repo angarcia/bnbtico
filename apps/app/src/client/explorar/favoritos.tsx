@@ -11,6 +11,7 @@ import { ListingCard } from "./listing-card";
 import { useSession } from "../comun/session";
 import { RouterButtonLink } from "../comun/router-buttons";
 import { EmptyState, LoadError, Notice, Skeleton } from "../../shared/ui/structure";
+import * as FAVORITES_COPY from "./copy/favorites";
 
 const favoriteListingsQuery = (ids: string[]) => ({
   queryKey: ["favorite-listings", ids] as const,
@@ -19,12 +20,6 @@ const favoriteListingsQuery = (ids: string[]) => ({
   staleTime: 60_000,
   placeholderData: keepPreviousData,
 });
-
-function countLine(n: number, signedIn: boolean): string {
-  const casas = `${n} ${n === 1 ? "casa" : "casas"}`;
-  if (signedIn) return `${casas} ${n === 1 ? "guardada" : "guardadas"}`;
-  return `${casas} · ${n === 1 ? "guardada" : "guardadas"} en este teléfono`;
-}
 
 export function FavoritosScreen() {
   const desktop = useDesktop();
@@ -48,13 +43,13 @@ export function FavoritosScreen() {
   return (
     <>
       <ScreenHeader kind="root"
-        title="Favoritos"
+        title={FAVORITES_COPY.title}
         aside={
           favs.length ? (
             // Sin logo ni barra arriba (2026-11-03): en una fila, cuántas hay y «₡ | $» para sus precios.
             <div className="row between gap-8 fav-head">
               <span className="small muted" data-testid="favorites-count">
-                {countLine(loading ? favs.length : shown.length, status === "signed-in")}
+                {FAVORITES_COPY.count({ count: loading ? favs.length : shown.length, signedIn: status === "signed-in" })}
               </span>
               {!desktop && <CurrencySwitch />}
             </div>
@@ -66,8 +61,8 @@ export function FavoritosScreen() {
         <EmptyState
           framed={false}
           placement="fav-empty"
-          text={<p className="muted">{desktop ? "Pulse" : "Toque"} el corazón de una casa para guardarla aquí.</p>}
-          action={<RouterButtonLink to="/explorar" replace variant="primary" size="lg">Explorar casas</RouterButtonLink>}
+          text={<p className="muted">{desktop ? FAVORITES_COPY.emptyClick : FAVORITES_COPY.emptyTouch}</p>}
+          action={<RouterButtonLink to="/explorar" replace variant="primary" size="lg">{FAVORITES_COPY.explore}</RouterButtonLink>}
         />
       ) : loading ? (
         isError ? <LoadError onRetry={() => void refetch()} /> : <Skeleton shape="grid" count={Math.min(favs.length, 4)} />
@@ -82,8 +77,8 @@ export function FavoritosScreen() {
       )}
 
       <Notice as="div" layout="column">
-        <b>Compare y escriba directo</b>
-        <span>Escriba directo desde aquí. Guardar casas no necesita cuenta; para escribir solo verifica su WhatsApp con un código.</span>
+        <b>{FAVORITES_COPY.noticeTitle}</b>
+        <span>{FAVORITES_COPY.noticeText}</span>
       </Notice>
     </>
   );

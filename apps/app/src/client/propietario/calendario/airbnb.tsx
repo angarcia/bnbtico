@@ -17,6 +17,7 @@ import { Field, TextInput } from "../../../shared/ui/field";
 import { Button, TextButton } from "../../../shared/ui/button";
 import { LoadError, Notice, Skeleton } from "../../../shared/ui/structure";
 import { Card, cardClass } from "../../../shared/ui/card";
+import * as AIRBNB_COPY from "./copy/airbnb";
 
 const route = getRouteApi("/_flow/_privateFlow/propietario/casas/$id/airbnb");
 const time = (iso: string) => new Intl.DateTimeFormat("es-CR", { dateStyle: "medium", timeStyle: "short", timeZone: "America/Costa_Rica" }).format(new Date(iso));
@@ -112,33 +113,33 @@ function AirbnbManagementScreen({ id, uid, mes, popup }: { id: string; uid: stri
   }} /> : null;
   if (popup) return connectForm;
   return <>
-    <ScreenHeader kind="flow" title="Calendarios de Airbnb" back={{ to: "/propietario/calendario", search: { casa: id, ...(mes ? { mes } : {}) }, historyBack: true }} />
+    <ScreenHeader kind="flow" title={AIRBNB_COPY.title} back={{ to: "/propietario/calendario", search: { casa: id, ...(mes ? { mes } : {}) }, historyBack: true }} />
     {l ? <p className="cal-house">{l.title}</p> : null}
-    {house.isPending || info.isPending && l ? <Skeleton shape="calendar" label="Cargando conexión de Airbnb" /> : null}
+    {house.isPending || info.isPending && l ? <Skeleton shape="calendar" label={AIRBNB_COPY.loading} /> : null}
     {house.isError || info.isError ? <LoadError onRetry={() => { if (house.isError) void house.refetch(); if (info.isError) void info.refetch(); }}>{toDomainError(house.error ?? info.error).message}</LoadError> : null}
-    {house.data === null ? <Notice tone="error">No encontramos ese anuncio.</Notice> : null}
+    {house.data === null ? <Notice tone="error">{AIRBNB_COPY.notFound}</Notice> : null}
     {l && summary ? <Card layout="stack" gap={16} aria-labelledby="airbnb-import-title" aria-busy={busy}>
-      <h2 id="airbnb-import-title">Importar desde Airbnb</h2>
-      <p>Traiga a 3bstays las noches bloqueadas en Airbnb.</p>
-      {suspended ? <Notice>La conexión está suspendida mientras la casa esté bloqueada o rechazada por 3bstays. Los datos se conservan.</Notice> : null}
-      {summary.lastSuccessAt ? <p className="small muted">Última importación correcta: {time(summary.lastSuccessAt)}</p> : null}
-      {summary.connected ? <p>{summary.nights ? `${summary.nights} ${summary.nights === 1 ? "noche bloqueada" : "noches bloqueadas"} por Airbnb` : "No hay noches bloqueadas por Airbnb en este período."}</p> : null}
-      {!online ? <Notice small>Sin conexión. Puede consultar el último estado guardado.</Notice> : null}
-      {summary.errorCode ? <Notice tone="error">{summary.connected ? <>No se pudo actualizar{summary.lastErrorAt ? ` · ${time(summary.lastErrorAt)}` : ""}. Se conservan las últimas noches importadas. </> : null}{new IcalError(summary.errorCode).message}</Notice> : null}
+      <h2 id="airbnb-import-title">{AIRBNB_COPY.importTitle}</h2>
+      <p>{AIRBNB_COPY.importText}</p>
+      {suspended ? <Notice>{AIRBNB_COPY.suspended}</Notice> : null}
+      {summary.lastSuccessAt ? <p className="small muted">{AIRBNB_COPY.lastSuccess({ at: time(summary.lastSuccessAt) })}</p> : null}
+      {summary.connected ? <p>{AIRBNB_COPY.nights({ count: summary.nights })}</p> : null}
+      {!online ? <Notice small>{AIRBNB_COPY.offline}</Notice> : null}
+      {summary.errorCode ? <Notice tone="error">{summary.connected ? <>{AIRBNB_COPY.updateFailed({ at: summary.lastErrorAt ? time(summary.lastErrorAt) : null })}</> : null}{new IcalError(summary.errorCode).message}</Notice> : null}
       {problem ? <p className="field-error" role="alert">{problem}</p> : null}
-      {summary.state === "running" ? <p role="status">{summary.connected ? "Actualizando…" : "Conectando…"}</p> : null}
-      {!summary.connected && !suspended ? <Button variant="primary" size="lg" disabled={busy || !online} onClick={() => setConnecting("connect")}>Conectar Airbnb</Button> : null}
+      {summary.state === "running" ? <p role="status">{AIRBNB_COPY.running({ connected: summary.connected })}</p> : null}
+      {!summary.connected && !suspended ? <Button variant="primary" size="lg" disabled={busy || !online} onClick={() => setConnecting("connect")}>{AIRBNB_COPY.connect}</Button> : null}
       {summary.connected ? <>
-        <Button variant="primary" size="lg" disabled={busy || !online || suspended || !!limitHint} aria-describedby={limitHint && !busy ? "airbnb-limit" : undefined} onClick={() => void update()}>{operation === "refresh" || summary.state === "running" ? "Actualizando…" : summary.errorCode ? "Intentar de nuevo" : "Actualizar ahora"}</Button>
+        <Button variant="primary" size="lg" disabled={busy || !online || suspended || !!limitHint} aria-describedby={limitHint && !busy ? "airbnb-limit" : undefined} onClick={() => void update()}>{AIRBNB_COPY.update({ running: operation === "refresh" || summary.state === "running", failed: !!summary.errorCode })}</Button>
         {limitHint && !busy && !suspended ? <p id="airbnb-limit" className="small muted center" data-testid="airbnb-limit">{limitHint}</p> : null}
-        <Button variant="secondary" size="lg" disabled={busy || !online || suspended || dayFull} onClick={() => setConnecting("replace")}>Sustituir enlace</Button>
-        <TextButton tone="quiet" placement="sub-stop" disabled={!!operation || !online} onClick={() => { setDisconnectError(null); setConfirmDisconnect(randomUuid()); }}>Desconectar Airbnb</TextButton>
+        <Button variant="secondary" size="lg" disabled={busy || !online || suspended || dayFull} onClick={() => setConnecting("replace")}>{AIRBNB_COPY.replace}</Button>
+        <TextButton tone="quiet" placement="sub-stop" disabled={!!operation || !online} onClick={() => { setDisconnectError(null); setConfirmDisconnect(randomUuid()); }}>{AIRBNB_COPY.disconnect}</TextButton>
       </> : null}
     </Card> : null}
     {l && summary ? <IcalExportCard key={`${uid}:${id}`} id={id} userId={uid} /> : null}
-    <Notice small>Los calendarios se actualizan periódicamente. Los cambios pueden tardar en aparecer en la otra plataforma. Confirme la disponibilidad antes de acordar una estancia</Notice>
-    {confirmDisconnect ? <ConfirmSheet title="¿Desconectar Airbnb?" body="Se retirarán las noches importadas de Airbnb y dejarán de actualizarse. Sus bloqueos manuales y precios se conservan."
-      confirmLabel={operation === "disconnect" ? "Desconectando…" : "Desconectar Airbnb"} tone="destructive"
+    <Notice small>{AIRBNB_COPY.syncNote}</Notice>
+    {confirmDisconnect ? <ConfirmSheet title={AIRBNB_COPY.disconnectTitle} body={AIRBNB_COPY.disconnectText}
+      confirmLabel={AIRBNB_COPY.disconnecting({ pending: operation === "disconnect" })} tone="destructive"
       pending={operation === "disconnect"} error={disconnectError} onClose={() => setConfirmDisconnect(null)} onConfirm={() => void disconnect()} /> : null}
     {connectForm}
   </>;
@@ -168,21 +169,21 @@ function ConnectSheet({ houseName, exportCard, connected = false, replacing, onC
     finally { setSaving(false); }
   }
   // En escritorio, desde la fila del Calendario, es la ventana ancha «Calendarios de Airbnb» (nunca se cierra con el fondo).
-  return <Sheet layout={exportCard ? "airbnb" : undefined} title={exportCard ? "Calendarios de Airbnb" : replacing ? "Sustituir enlace" : "Conectar Airbnb"}
+  return <Sheet layout={exportCard ? "airbnb" : undefined} title={AIRBNB_COPY.sheetTitle({ exportCard: !!exportCard, replacing: !!replacing })}
     busy={saving} onClose={onClose} dismissible={exportCard ? { backdrop: false } : undefined} confirmDiscard={() => !connected && url.trim() !== ""}>
       {houseName ? <p className="small muted">{houseName}</p> : null}
       <div className={exportCard ? "airbnb-calendar-directions" : "stack gap-14"}>
       <div className={exportCard ? cardClass({ layout: "stack", gap: 14 }) : "stack gap-14"}>
-      {exportCard ? <h2>Importar desde Airbnb</h2> : null}
-      {connected ? <p role="status">Airbnb conectado.</p> : <>
-      <p>En Airbnb, abra el calendario de este alojamiento y copie su enlace de exportación. Péguelo aquí.</p>
-      {replacing ? <p className="hint">El enlace actual seguirá conectado hasta que podamos leer el nuevo.</p> : null}
+      {exportCard ? <h2>{AIRBNB_COPY.importTitle}</h2> : null}
+      {connected ? <p role="status">{AIRBNB_COPY.connected}</p> : <>
+      <p>{AIRBNB_COPY.howTo}</p>
+      {replacing ? <p className="hint">{AIRBNB_COPY.keepsCurrent}</p> : null}
       <form onSubmit={submit} noValidate aria-busy={saving}>
-        <Field id="airbnb-connect" label="Enlace de calendario de Airbnb" size="compact" error={problem} hint="Solo importamos noches bloqueadas. No copiamos precios ni datos de huéspedes. Compruebe que el enlace corresponde a esta casa.">
+        <Field id="airbnb-connect" label={AIRBNB_COPY.linkLabel} size="compact" error={problem} hint={AIRBNB_COPY.linkHint}>
           {(control) => <TextInput {...control} type="url" value={url} autoComplete="off" autoCorrect="off" spellCheck={false} autoCapitalize="none" inputMode="url" maxLength={2048} disabled={saving} onChange={e => { setUrl(e.target.value); setRequestId(randomUuid()); setProblem(null); }} />}
         </Field>
-        <Button variant="primary" size="lg" type="submit" disabled={saving || !online || !url.trim()}>{saving ? replacing ? "Sustituyendo…" : "Conectando…" : replacing ? "Sustituir enlace" : "Conectar"}</Button>
-        {!exportCard && <Button variant="secondary" size="lg" disabled={saving} onClick={close}>Cancelar</Button>}
+        <Button variant="primary" size="lg" type="submit" disabled={saving || !online || !url.trim()}>{AIRBNB_COPY.submit({ saving, replacing: !!replacing })}</Button>
+        {!exportCard && <Button variant="secondary" size="lg" disabled={saving} onClick={close}>{AIRBNB_COPY.cancel}</Button>}
       </form>
       </>}
       </div>

@@ -28,6 +28,7 @@ import type { LatLng } from "../../domain/geo";
 import type { SearchListing } from "../../domain/listing";
 import { Button } from "../../shared/ui/button";
 import { CountBadge, EmptyState, LoadError, Notice, Skeleton } from "../../shared/ui/structure";
+import * as EXPLORE_COPY from "./copy/explore";
 
 // El mapa a pantalla completa (`?mapa=1`) va en su trozo: se pide al abrirlo.
 // Al final de la lista: en su propio trozo, fuera del JS inicial (lo comparte con Cuenta).
@@ -59,7 +60,7 @@ function SearchPill({ filters: f, zoneName, search }: { filters: Filters; zoneNa
   return (
     <Link to="/explorar/buscar" search={search} className="search-pill float-card" onPointerDown={prefetchZones} onFocus={prefetchZones}>
       <I.search size={22} />
-      <span className="search-pill-text">{searchSummary(f, zoneName) ?? "Empiece su búsqueda"}</span>
+      <span className="search-pill-text">{searchSummary(f, zoneName) ?? EXPLORE_COPY.searchPill}</span>
     </Link>
   );
 }
@@ -82,7 +83,7 @@ function ExploreHeader({ filters: f, zoneName, search }: { filters: Filters; zon
   const extras = extrasCount(f);
   return (
     <header className={desktop ? "explore-top" : "explore-top chrome-hide"}>
-      <h1 className="sr-only">Explorar casas</h1>
+      <h1 className="sr-only">{EXPLORE_COPY.heading}</h1>
       <div className="explore-search">
         {desktop && f.zone && (
           <button type="button" className="chip filters-btn float-card" aria-label={filtersLabel(extras)} aria-haspopup="dialog" onClick={() => setFiltersOpen(true)}>
@@ -122,11 +123,11 @@ function MoreListings({ loading, failed, onMore }: { loading: boolean; failed: b
     <div className="stack gap-8">
       {failed && !loading ? (
         <Notice as="div" tone="error">
-          No pudimos cargar más casas. Revise su conexión e inténtelo de nuevo.
+          {EXPLORE_COPY.moreError}
         </Notice>
       ) : null}
       <Button variant="primary" block pending={loading} onClick={onMore}>
-        {loading ? "Cargando casas…" : "Ver más casas"}
+        {EXPLORE_COPY.more({ loading })}
       </Button>
     </div>
   );
@@ -245,19 +246,19 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
                   </>
                 );
               })()
-            : "Buscando casas…"}
+            : EXPLORE_COPY.searching}
         </span>
         {f.nights > 0 && listings?.length ? (
-          <span className="xs muted">Precios orientativos con el precio por noche. El anfitrión le confirma por WhatsApp si está libre.</span>
+          <span className="xs muted">{EXPLORE_COPY.nightsNote}</span>
         ) : null}
         {currency === "USD" ? <UsdNote /> : null}
       </div>
       {!listings ? (
         isDatesError(error) ? (
           <Notice as="div" tone="error" layout="column">
-            <span>Revise las fechas de su búsqueda.</span>
+            <span>{EXPLORE_COPY.datesError}</span>
             <Button variant="primary" block onClick={() => go({ ...f, arrival: null, departure: null })}>
-              Quitar fechas
+              {EXPLORE_COPY.clearDates}
             </Button>
           </Notice>
         ) : isError ? (
@@ -362,7 +363,7 @@ export function ExplorarScreen() {
         <>
           {/* Sin ninguna casa publicada, el mapa de verdad (quieto, centrado en Limón), no solo su caja vacía. */}
           <div className="explore-map-pane"><ExploreMap listings={NO_LISTINGS} zone={null} nights={0} onOpen={null} /></div>
-          <EmptyState title="Todavía no hay casas publicadas" text={<p className="small muted">Las primeras casas del Caribe sur están en camino.</p>} />
+          <EmptyState title={EXPLORE_COPY.noListingsTitle} text={<p className="small muted">{EXPLORE_COPY.noListingsText}</p>} />
         </>
       ) : (
         <Results filters={f} provinces={provinces} zoneName={zoneName} zone={zone} />
@@ -378,7 +379,7 @@ function UsdNote() {
   const credit = FX_ATTRIBUTION[fx.source];
   return (
     <p className="xs muted" data-testid="usd-note">
-      Dólares solo para orientarle: ≈ {fxRateLabel(fx.crcPerUsd)} por US$1 (tipo de referencia del {fxDayLabel(fx.day)}). Los anfitriones fijan sus precios en colones.
+      {EXPLORE_COPY.usdNote({ rate: fxRateLabel(fx.crcPerUsd), day: fxDayLabel(fx.day) })}
       {credit ? (
         <>
           {" · "}

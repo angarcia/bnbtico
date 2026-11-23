@@ -4,6 +4,8 @@ import { I } from "./ui/icons";
 import { SiteTopBar } from "./site-top-bar";
 import { ButtonLink, IconButtonLink } from "./ui/button";
 import { EmptyState } from "./ui/structure";
+import * as STATUS_COPY from "./copy/status";
+import * as TOP_BAR_COPY from "./copy/top-bar";
 
 /** Páginas de estado de la ficha (las pinta el worker y van sin JS: los botones son enlaces). Nunca un callejón sin salida:
  *  quien llega por un enlace compartido ve otras casas o puede reintentar (revisión UX N4). */
@@ -14,12 +16,12 @@ function StatusPage({ title, children, actions }: { title: string; children: Rea
       <main className="view no-nav">
         <header className="header-root status-header">
           {/* En escritorio, la flecha de volver en vez del logo, que ya va en la barra (revisión 2026-11-13). */}
-          <IconButtonLink href="/explorar" label="Volver a Explorar" placement="status-back">
+          <IconButtonLink href="/explorar" label={STATUS_COPY.back} placement="status-back">
             <I.back />
           </IconButtonLink>
           <div className="top">
-            <a href="/explorar" aria-label="3bstays, inicio">
-              <img className="logo" src="/logo-horizontal.png" alt="3bstays" width={109} height={38} />
+            <a href="/explorar" aria-label={TOP_BAR_COPY.home}>
+              <img className="logo" src="/logo-horizontal.png" alt={TOP_BAR_COPY.logo} width={109} height={38} />
             </a>
           </div>
         </header>
@@ -31,8 +33,8 @@ function StatusPage({ title, children, actions }: { title: string; children: Rea
 
 export function MissingPage() {
   return (
-    <StatusPage title="Este enlace no existe" actions={<ButtonLink href="/explorar" variant="primary">Ver otras casas en el Caribe</ButtonLink>}>
-      <p>Revise que el enlace esté completo. Si se lo pasaron por WhatsApp, pida que se lo envíen de nuevo.</p>
+    <StatusPage title={STATUS_COPY.missingTitle} actions={<ButtonLink href="/explorar" variant="primary">{STATUS_COPY.otherHouses}</ButtonLink>}>
+      <p>{STATUS_COPY.missingText}</p>
     </StatusPage>
   );
 }
@@ -41,9 +43,9 @@ export function MissingPage() {
  *  el texto genérico. */
 export function BlockedPage({ reason }: { reason?: BlockedReason }) {
   return (
-    <StatusPage title="Este enlace ya no está activo" actions={<ButtonLink href="/explorar" variant="primary">Ver otras casas en el Caribe</ButtonLink>}>
+    <StatusPage title={STATUS_COPY.blockedTitle} actions={<ButtonLink href="/explorar" variant="primary">{STATUS_COPY.otherHouses}</ButtonLink>}>
       <p>{blockedReason(reason ?? null)}</p>
-      <p className="small muted">Si ya habló con el anfitrión por WhatsApp, puede seguir esa conversación por su cuenta.</p>
+      <p className="small muted">{STATUS_COPY.blockedNote}</p>
     </StatusPage>
   );
 }
@@ -51,16 +53,16 @@ export function BlockedPage({ reason }: { reason?: BlockedReason }) {
 export function ErrorPage() {
   return (
     <StatusPage
-      title="No pudimos cargar esta casa"
+      title={STATUS_COPY.errorTitle}
       actions={
         <>
           {/* Enlace a la misma página: recarga sin JS. */}
-          <ButtonLink href="" variant="primary">Intentar de nuevo</ButtonLink>
-          <ButtonLink href="/explorar" variant="secondary">Ir a Explorar</ButtonLink>
+          <ButtonLink href="" variant="primary">{STATUS_COPY.retry}</ButtonLink>
+          <ButtonLink href="/explorar" variant="secondary">{STATUS_COPY.explore}</ButtonLink>
         </>
       }
     >
-      <p>Revise su conexión e intente de nuevo en un momento.</p>
+      <p>{STATUS_COPY.errorText}</p>
     </StatusPage>
   );
 }

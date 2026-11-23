@@ -4,6 +4,7 @@ import { Sheet } from "../../shared/ui/overlay";
 import { useDismiss } from "../../shared/ui/dismiss";
 import { useDesktop } from "../../shared/desktop";
 import { ClosedField } from "../../shared/ui/closed-field";
+import * as PICKER_COPY from "./copy/house-picker";
 
 export interface HouseOption {
   id: string;
@@ -24,11 +25,11 @@ export function HousePicker({ houses, currentId, onPick, allowAll = false, curre
   const desktop = useDesktop() && !zone;
   const trigger = useRef<HTMLButtonElement>(null);
   const id = useId();
-  const title = zone ? "Elegir zona" : allowAll ? "Filtrar por casa" : "Elegir casa";
+  const title = zone ? PICKER_COPY.chooseZone : allowAll ? PICKER_COPY.filterHouse : PICKER_COPY.chooseHouse;
   const name = houses.find((h) => h.id === currentId)?.name ?? currentName ?? (currentId === null && allowAll ? "Todas las casas" : "Casa seleccionada");
   return (
     <div className="house-picker">
-      <ClosedField kind="picker" ref={trigger} icon={zone ? <I.pin size={20} /> : <I.house size={20} />} value={name} data-testid={zone ? "zone-picker-trigger" : "house-picker-trigger"} aria-label={zone ? `Zona, ${name}` : undefined} aria-haspopup={desktop ? "listbox" : "dialog"} aria-expanded={open} aria-controls={open ? id : undefined} title={name}
+      <ClosedField kind="picker" ref={trigger} icon={zone ? <I.pin size={20} /> : <I.house size={20} />} value={name} data-testid={zone ? "zone-picker-trigger" : "house-picker-trigger"} aria-label={zone ? PICKER_COPY.zoneLabel({ name }) : undefined} aria-haspopup={desktop ? "listbox" : "dialog"} aria-expanded={open} aria-controls={open ? id : undefined} title={name}
         onClick={() => setOpen(desktop ? !open : true)} onKeyDown={(e) => { if (e.key === "ArrowDown") { e.preventDefault(); setOpen(true); } }} />
       {open ? <HousePickerPanel desktop={desktop} trigger={trigger.current} id={id} title={title} houses={houses} currentId={currentId} allowAll={allowAll} onClose={() => setOpen(false)} onPick={(next) => {
         setOpen(false);
@@ -52,7 +53,7 @@ function HousePickerPanel({ desktop, trigger, id, title, houses, currentId, allo
   const options: { id: string | null; name: string }[] = allowAll ? [{ id: null, name: "Todas las casas" }, ...houses] : [...houses];
   const [focused, setFocused] = useState(() => options.some((h) => h.id === currentId) ? currentId : (options[0]?.id ?? null));
   const list = (
-    <div id={desktop ? id : undefined} className="house-picker-list" role="listbox" aria-label={desktop || title === "Elegir zona" ? title : "Elegir casa"} onKeyDown={move}>
+    <div id={desktop ? id : undefined} className="house-picker-list" role="listbox" aria-label={desktop || title === PICKER_COPY.chooseZone ? title : PICKER_COPY.chooseHouse} onKeyDown={move}>
       {options.map((h) => (
         <button key={h.id ?? "all"} type="button" role="option" aria-selected={h.id === currentId} tabIndex={h.id === focused ? 0 : -1}
           onFocus={() => setFocused(h.id)} onClick={() => {

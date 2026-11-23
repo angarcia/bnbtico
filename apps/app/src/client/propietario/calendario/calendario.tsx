@@ -58,6 +58,7 @@ import { Button } from "../../../shared/ui/button";
 import { RouterButtonLink } from "../../comun/router-buttons";
 import { LoadError, Notice, Skeleton } from "../../../shared/ui/structure";
 import { Card } from "../../../shared/ui/card";
+import * as CAL_COPY from "./copy/calendar";
 
 const route = getRouteApi("/_tabs/_private/_owner/propietario/calendario");
 const LAST_HOUSE = "3bstays-calendario-casa";
@@ -127,23 +128,23 @@ export function CalendarioScreen() {
 
   return (
     <>
-      <ScreenHeader kind="root" title="Calendario" />
+      <ScreenHeader kind="root" title={CAL_COPY.title} />
       {listings.isError && !houses ? (
         <LoadError onRetry={() => void listings.refetch()}>
           {toDomainError(listings.error).message}
         </LoadError>
       ) : null}
-      {!houses && !listings.isError ? <Skeleton shape="calendar" label="Cargando su calendario" /> : null}
+      {!houses && !listings.isError ? <Skeleton shape="calendar" label={CAL_COPY.loading} /> : null}
       {houses && houses.length === 0 ? (
         <Card layout="stack" gap={12}>
-          <p>Su calendario se activa cuando envíe su casa a revisión.</p>
+          <p>{CAL_COPY.activates}</p>
           {draft ? (
             <RouterButtonLink to="/propietario/publicar/$id/$paso" params={{ id: draft.id, paso: String(resumeStep(draft)) }} variant="primary" size="lg" block>
-              Seguir publicando
+              {CAL_COPY.continuePublishing}
             </RouterButtonLink>
           ) : (
             <RouterButtonLink to="/propietario/publicar" variant="primary" size="lg" block>
-              Publicar casa
+              {CAL_COPY.publish}
             </RouterButtonLink>
           )}
         </Card>
@@ -265,7 +266,7 @@ export function Calendar({ listing: l, userId, month, houseControl }: {
       <div className="owner-calendar-options">
         {houseControl}
         {canMark || canPause || !port.admin ? (
-          <section className="cal-actions" aria-label="Acciones del calendario">
+          <section className="cal-actions" aria-label={CAL_COPY.actions}>
             {canMark || canPause ? <Card as="div" placement="cal-action-group">
               {canMark ? <MarkRow today={today} onMark={onMark} calendarDays={query.data} prepare={prepareMark} /> : null}
               {canPause ? <PauseRow listing={l} userId={userId} /> : null}
@@ -274,7 +275,7 @@ export function Calendar({ listing: l, userId, month, houseControl }: {
           </section>
         ) : null}
         <div className="row between gap-8 cal-hint-row">
-          {closed ? <span /> : blocked ? <p className="small muted" data-testid="calendar-blocked">Casa bloqueada por 3bstays: el calendario es de solo lectura.</p> : <p className="small muted">{desktop ? "Pulse" : "Toque"} los días para editarlos</p>}
+          {closed ? <span /> : blocked ? <p className="small muted" data-testid="calendar-blocked">{CAL_COPY.blocked}</p> : <p className="small muted">{CAL_COPY.hint({ desktop })}</p>}
           <CurrencySwitch placement="calendar-local-currency" />
         </div>
         {/* Precios por fecha apagados (feature flag): el precio base en la leyenda y las casillas sin precio. */}
@@ -360,7 +361,7 @@ function MarkRow({ today, onMark, calendarDays, prepare }: {
           <I.calendar size={20} />
         </span>
         <span className="body">
-          <b>Marcar una reserva</b>
+          <b>{CAL_COPY.mark}</b>
         </span>
         <I.chevron />
       </button>
@@ -423,7 +424,7 @@ function PauseRow({ listing: l, userId }: { listing: Listing; userId: string }) 
             <PauseIcon />
           </span>
           <span className="body">
-            <b>Pausar la casa</b>
+            <b>{CAL_COPY.pause}</b>
           </span>
           <I.chevron />
         </button>
@@ -433,8 +434,8 @@ function PauseRow({ listing: l, userId }: { listing: Listing; userId: string }) 
             <PauseIcon />
           </span>
           <span className="body">
-            <b>{l.reopenAt ? `Pausada hasta el ${shortDate(l.reopenAt)}` : "Pausada"}</b>
-            <span className="small muted">No aparece en Explorar ni recibe consultas.</span>
+            <b>{CAL_COPY.paused({ until: l.reopenAt ? shortDate(l.reopenAt) : null })}</b>
+            <span className="small muted">{CAL_COPY.pausedNote}</span>
           </span>
           <Button
             ref={button}
@@ -446,7 +447,7 @@ function PauseRow({ listing: l, userId }: { listing: Listing; userId: string }) 
               available.mutate({ available: true });
             }}
           >
-            Volver a publicarla
+            {CAL_COPY.republish}
           </Button>
         </div>
       )}
@@ -499,7 +500,7 @@ class SheetBoundary extends Component<{ name: string; onRetry: () => void; child
     return (
       <div className="row gap-8 baseline cal-action-error">
         <p className="field-error" role="alert">
-          No pudimos abrir «{this.props.name}». Revise su conexión e inténtelo de nuevo.
+          {CAL_COPY.openError({ name: this.props.name })}
         </p>
         <Button
           variant="secondary"
@@ -508,7 +509,7 @@ class SheetBoundary extends Component<{ name: string; onRetry: () => void; child
             this.setState({ failed: false });
           }}
         >
-          Reintentar
+          {CAL_COPY.retry}
         </Button>
       </div>
     );

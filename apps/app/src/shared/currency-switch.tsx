@@ -1,6 +1,7 @@
 import { Segmented } from "./ui/choice";
 import type { Currency } from "../domain/currency";
 import { setCurrency, useCurrency } from "./currency";
+import * as LISTING_PARTS_COPY from "./copy/listing-parts";
 
 const OPTIONS = [
   { value: "CRC", label: "₡", name: "Colones" },
@@ -18,7 +19,7 @@ export function CurrencySwitch({ placement }: { placement?: "float" | "calendar-
       options={OPTIONS}
       value={useCurrency()}
       onChange={setCurrency}
-      label="Moneda de los precios"
+      label={LISTING_PARTS_COPY.currency}
       currency
       float={placement === "float"}
       placement={placement === "float" ? undefined : placement}

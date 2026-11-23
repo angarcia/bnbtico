@@ -16,6 +16,7 @@ import { PlaceSearch, type PlaceItem } from "./place-search";
 import { useStepReady } from "./step-ready";
 import { ZoneSelect } from "./zone-select";
 import { Button } from "../../../shared/ui/button";
+import * as LOCATION_COPY from "./copy/location-step";
 
 const NOT_LAND = "Ponga el punto sobre tierra, dentro de Costa Rica";
 const same = (a: LatLng | null, b: LatLng | null) => a !== null && b !== null && a.lat === b.lat && a.lng === b.lng;
@@ -26,13 +27,13 @@ export const zonesQuery = queryOptions({ queryKey: ["zones"], queryFn: async () 
 function PlaceLine({ state, onRetry }: { state: LookupState; onRetry(): void }) {
   return (
     <div className="place-line" aria-live="polite">
-      {state.status === "loading" ? <span className="muted">Buscando el cantón…</span> : null}
+      {state.status === "loading" ? <span className="muted">{LOCATION_COPY.findingCanton}</span> : null}
       {state.status === "ready" ? state.place ? <b>{placeLine(state.place)}</b> : <span className="place-off">{NOT_LAND}</span> : null}
       {state.status === "error" ? (
         <>
-          <span className="place-off">No pudimos ubicar el punto. Revise su conexión.</span>
+          <span className="place-off">{LOCATION_COPY.placeFailed}</span>
           <Button variant="secondary" onClick={onRetry}>
-            Reintentar
+            {LOCATION_COPY.retry}
           </Button>
         </>
       ) : null}
@@ -94,8 +95,8 @@ export function LocationStep({ listing: _listing, draft, readOnly = false, fullW
         <LocationPicker ref={picker} lat={start?.lat ?? null} lng={start?.lng ?? null} onPick={pick} readOnly={readOnly} />
         <PlaceSearch
           float
-          label="Busque un pueblo, playa o barrio"
-          placeholder="Busque un pueblo, playa o barrio…"
+          label={LOCATION_COPY.search}
+          placeholder={LOCATION_COPY.searchPlaceholder}
           local={zoneItems}
           near={() => picker.current?.center() ?? pin ?? PROVINCE_CENTERS[DEFAULT_PROVINCE]!}
           onChoose={(item) => item.point && picker.current?.view(item.point, ZONE_ZOOM)}
@@ -103,18 +104,18 @@ export function LocationStep({ listing: _listing, draft, readOnly = false, fullW
       </div>
       {readOnly ? null : (
         // Una línea: lo que preocupa al marcar la casa (Ana, 2026-11-04). El «toque o arrastre» sobraba: el punto ya invita.
-        <p className="small muted location-hint">Los clientes solo ven la zona, no su dirección.</p>
+        <p className="small muted location-hint">{LOCATION_COPY.privacy}</p>
       )}
       <PlaceLine state={state} onRetry={() => lookup.current?.retry()} />
       <ZoneSelect options={options} value={choice} other={otherOpen && !!pin} onChange={(c) => (setChoice(c), setOtherOpen(false))} onOther={() => pin && setOtherOpen(true)} />
       {otherOpen && pin ? (
         <PlaceSearch
-          label="Otra zona"
-          placeholder="Escriba el nombre de la zona"
+          label={LOCATION_COPY.otherZone}
+          placeholder={LOCATION_COPY.otherPlaceholder}
           local={() => []}
           near={() => pin}
           withinM={ZONE_RADIUS_M}
-          extra={(text) => (otherName(text) ? { key: "use", name: otherName(text), label: `Usar "${otherName(text)}"`, detail: "", point: null } : null)}
+          extra={(text) => (otherName(text) ? { key: "use", name: otherName(text), label: LOCATION_COPY.useName({ name: otherName(text) }), detail: "", point: null } : null)}
           onChoose={(item) => {
             setChoice(otherChoice(item.name, options, pin));
             setOtherOpen(false);

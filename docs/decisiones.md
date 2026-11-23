@@ -1,3 +1,16 @@
+## 2026-11-23 · Textos en catálogos a mano, sin Paraglide (paso 3 de la estructura del frontend)
+
+Ana eligió **catálogos TypeScript a mano** tras la prueba de Paraglide JS 3.2.2 (rama local `prueba-paraglide`, resultado en `.scratch/estructura-frontend/propuesta.md`). Paraglide funcionó con Favoritos y con la ficha del worker en dos idiomas, pero su runtime suma unos 1,28 KB al JS inicial aunque solo haya español, y lo deja en 161,36 KB, por encima del límite de 161 KB; no se deja recortar.
+
+- **Forma:** una carpeta `copy/` por área (`client/<área>/copy/`; la ficha, `shared/copy/`; los componentes comunes, `shared/ui/copy/`) con un módulo por pantalla o pieza y un `export const` por mensaje, que la pantalla importa como espacio de nombres (`import * as FAVORITES_COPY from "./copy/favorites"`, y en el JSX `FAVORITES_COPY.title`). Mensajes completos; lo que lleva datos es una función con parámetros con nombre (`count({ count, signedIn })`). Donde la frase lleva marcado en medio, la función recibe esa pieza y devuelve la frase entera en trozos, sin partirla en el componente. Se descartó un objeto `as const` por catálogo: el minificador no acorta las propiedades y un objeto del JS inicial arrastra también los textos de las piezas diferidas (con los de `shared/`, el JS inicial pasaba de 160,14 a 161,08 KB; con módulos, 160,38 KB). Por lo mismo, los textos de una pieza diferida van en su propio módulo, que viaja con su trozo.
+- **Plurales** con `domain/plural.ts` (`Intl.PluralRules("es")`; la forma «many» de los millones, si el mensaje la da).
+- **Regla:** `consistencia.test.ts` falla si un TSX de `src/` escribe texto suelto en el JSX (texto, atributos que se leen o se oyen como `label`, `title`, `aria-label`, `placeholder`, `alt`, `hint`, `body` o `confirmLabel`, y `text:` de las etiquetas).
+- **Sin segundo idioma todavía:** cuando haya uno, cada catálogo tendrá su versión con el mismo tipo y se elegirá el idioma en la ficha del worker y en la SPA; la clave de caché de la ficha tendrá que llevarlo, y para buscadores, la URL.
+- **Hecho en todas las áreas** el mismo día, un commit por área (`shared`, Explorar, el marco y `comun`, Cuenta, el admin y las partes de `propietario`). El JS inicial pasa de 159,95 a 160,71 KB (límite 161 KB); cada trozo diferido crece lo que pesan sus textos. Los textos no cambian, salvo los plurales que antes no los tenían (en la revisión del admin, «1 fotos» pasa a «1 foto»).
+- **Catálogos y trozos:** un catálogo lo importan solo los archivos que viajan en el mismo trozo (por eso hay uno por pantalla o pieza, junto a ella); si lo comparten una pieza del JS inicial y otra diferida, Rolldown parte el código en un trozo más y se pierde compresión (con un solo catálogo para la lista y la tarjeta de Explorar, +1,4 KB). Los catálogos de los archivos de un grupo de `vite.config.ts` (`marco`, `cuenta`, `admin`, `propietario`, `airbnb` y `airbnb-management`) entran en el mismo grupo, y `domain/plural.ts` va en `marco`.
+
+Motivo: con catálogos a mano el JS inicial solo paga los textos, sin dependencia nueva ni paso de compilación. Con la misma forma de catálogo se puede pasar a Paraglide más adelante sin rehacer las pantallas.
+
 ## 2026-11-23 · CSS por área: siete capas y todo cargado al arrancar (paso 2 de la estructura del frontend)
 
 Al construir el paso 2 se ajusta lo aprobado el 2026-11-22:

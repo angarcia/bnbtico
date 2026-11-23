@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { MAX_PHOTOS, type Listing } from "../../../domain/listing";
 import { useEditor } from "../editor-port";
 import { PhotoCounter, PhotoGrid, rereadOwnListing, type PhotoSource } from "./photo-grid";
+import * as PHOTOS_COPY from "./copy/photos";
 
 export function PhotoUploader({ listing, userId }: { listing: Listing; userId: string }) {
   const client = useQueryClient();
@@ -25,10 +26,10 @@ export function PhotoUploader({ listing, userId }: { listing: Listing; userId: s
   const header = (
     <>
       <div className="row between baseline">
-        <h2>Fotos</h2>
+        <h2>{PHOTOS_COPY.title}</h2>
         <PhotoCounter counter={source.counter} />
       </div>
-      {n === 0 ? <p className="small muted photos-help">Necesita al menos una foto para enviarla a revisión.</p> : null}
+      {n === 0 ? <p className="small muted photos-help">{PHOTOS_COPY.needsPhoto}</p> : null}
     </>
   );
   return <PhotoGrid source={source} userId={userId} header={header} />;

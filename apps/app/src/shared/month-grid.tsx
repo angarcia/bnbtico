@@ -11,6 +11,7 @@ import { longDateWithYear } from "../domain/dates";
 import { FX_INITIAL } from "../domain/fx";
 import { formatMoney } from "../domain/money";
 import type { ReactNode } from "react";
+import * as CALENDAR_COPY from "../domain/calendar-copy";
 
 const WEEKDAYS = ["L", "K", "M", "J", "V", "S", "D"];
 
@@ -117,14 +118,14 @@ export function MonthLegend({ extra, price }: { extra?: ReactNode; price?: strin
     <div className="month-legend">
       <span>
         <i className="swatch" aria-hidden="true" />
-        Disponible
+        {CALENDAR_COPY.available}
       </span>
       <span>
         <i className="swatch is-busy" aria-hidden="true" />
-        Ocupado
+        {CALENDAR_COPY.busy}
       </span>
       {extra}
-      {price ? <span className="legend-price">{`${price} / noche`}</span> : null}
+      {price ? <span className="legend-price">{CALENDAR_COPY.perNight({ price })}</span> : null}
     </div>
   );
 }

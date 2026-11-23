@@ -163,7 +163,9 @@ export default defineConfig({
       codeSplitting: { groups: [
       // Lo común que pide el marco de la app y también las pantallas diferidas (cabecera, contador de consultas, claves de
       // consultas): un solo trozo en vez de tres, que pesaban 0,6 KB más en el JS inicial (estructura por áreas, 2026-11-22).
-      group("marco", /[\\/]src[\\/]client[\\/](?:comun[\\/](?:screen-header\.tsx|listing-keys\.ts)|propietario[\\/]inquiries\.ts)$/, { includeDependenciesRecursively: false }),
+      // También el catálogo de la cabecera y domain/plural (los textos con plural del marco y de Favoritos), que si no salían
+      // en trozos propios (estructura por áreas, paso 3).
+      group("marco", /[\\/]src[\\/](?:client[\\/](?:comun[\\/](?:screen-header\.tsx|copy[\\/]screen-header\.ts|listing-keys\.ts)|propietario[\\/]inquiries\.ts)|domain[\\/]plural\.ts)$/, { includeDependenciesRecursively: false }),
       // Los ganchos de estado del router en un trozo, como antes de repartir client/ por áreas: rolldown los partía en tres
       // (useMatch, useSelector, useLocation) y el JS inicial pagaba 0,3 KB más (estructura por áreas, 2026-11-22).
       group("useMatch", /[\\/]node_modules[\\/](?:use-sync-external-store[\\/]|@tanstack[\\/]react-store[\\/]dist[\\/]useSelector\.js$|@tanstack[\\/]react-router[\\/]dist[\\/]esm[\\/](?:useMatch|useLocation)\.js$)/, { includeDependenciesRecursively: false }),
@@ -173,11 +175,11 @@ export default defineConfig({
       group("range-calendar", /[\\/]src[\\/]shared[\\/]range-calendar\.tsx$/, { includeDependenciesRecursively: false }),
       // Calendario carga API/fila. La gestión diferida carga también su tarjeta de exportación.
       // Ambos grupos cuentan en airbnb-*.js del presupuesto existente.
-      group("airbnb", /[\\/]src[\\/]client[\\/]propietario[\\/]calendario[\\/](?:airbnb-queries\.ts|airbnb-calendar-row\.tsx)$/, { includeDependenciesRecursively: false }),
-      group("airbnb-management", /[\\/]src[\\/]client[\\/]propietario[\\/]calendario[\\/](?:airbnb|ical-export-card)\.tsx$/, { includeDependenciesRecursively: false }),
-      group("cuenta", /[\\/]src[\\/](?:client[\\/](?:cuenta[\\/]cuenta(?:-(?:navigation|codigo|lista|ayuda|profile))?|comun[\\/]sign-in)\.tsx|client[\\/](?:comun[\\/](?:turnstile|token-gate)|cuenta[\\/]support)\.ts|shared[\\/](?:timeout|security)\.ts)$/, { includeDependenciesRecursively: false }),
-      group("propietario", /[\\/]src[\\/](?:client[\\/]propietario[\\/](?:propietario\.tsx|owner-ui\.tsx|editor-query\.ts|editor-status\.tsx|house-card\.tsx)|domain[\\/]navigation\.ts)$/, { includeDependenciesRecursively: false }),
-      group("admin", /(?:[\\/]src[\\/](?:client[\\/]admin[\\/](?:admin(?:-(?:anuncios|casas|codigo|edicion|revision|review-details|shared))?\.tsx|admin-queries\.ts)|domain[\\/](?:admin-houses|owner-notice)\.ts)|[\\/]@tanstack[\\/]react-query[\\/]build[\\/]modern[\\/]useMutationState\.js)$/, { includeDependenciesRecursively: false }),
+      group("airbnb", /[\\/]src[\\/]client[\\/]propietario[\\/]calendario[\\/](?:airbnb-queries\.ts|airbnb-calendar-row\.tsx|copy[\\/]airbnb-row\.ts)$/, { includeDependenciesRecursively: false }),
+      group("airbnb-management", /[\\/]src[\\/]client[\\/]propietario[\\/]calendario[\\/](?:(?:airbnb|ical-export-card)\.tsx|copy[\\/](?:airbnb|ical-export)\.ts)$/, { includeDependenciesRecursively: false }),
+      group("cuenta", /[\\/]src[\\/](?:client[\\/](?:cuenta[\\/]cuenta(?:-(?:navigation|codigo|lista|ayuda|profile))?|comun[\\/]sign-in)\.tsx|client[\\/](?:comun[\\/]copy[\\/]sign-in|cuenta[\\/]copy[\\/]account)\.ts|client[\\/](?:comun[\\/](?:turnstile|token-gate)|cuenta[\\/]support)\.ts|shared[\\/](?:timeout|security)\.ts)$/, { includeDependenciesRecursively: false }),
+      group("propietario", /[\\/]src[\\/](?:client[\\/]propietario[\\/](?:propietario\.tsx|owner-ui\.tsx|editor-query\.ts|editor-status\.tsx|house-card\.tsx|copy[\\/]owner\.ts)|domain[\\/]navigation\.ts)$/, { includeDependenciesRecursively: false }),
+      group("admin", /(?:[\\/]src[\\/](?:client[\\/]admin[\\/](?:admin(?:-(?:anuncios|casas|codigo|edicion|revision|review-details|shared))?\.tsx|admin-queries\.ts|copy[\\/]admin\.ts)|domain[\\/](?:admin-houses|owner-notice)\.ts)|[\\/]@tanstack[\\/]react-query[\\/]build[\\/]modern[\\/]useMutationState\.js)$/, { includeDependenciesRecursively: false }),
     ] } } } } },
   },
   // La base local (Docker) llama a /_purge del preview por host.docker.internal (pg_net, tests/e2e/frescura.spec.ts).

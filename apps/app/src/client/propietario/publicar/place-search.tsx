@@ -8,6 +8,7 @@ import { useCombobox } from "../../../shared/ui/combobox";
 import { SearchInput } from "../../../shared/ui/field";
 import type { LatLng } from "../../../domain/geo";
 import { parsePhotonNear, photonNearUrl, sameName, ZONE_DEBOUNCE_MS } from "../../../domain/place-search";
+import * as SEARCH_COPY from "./copy/place-search";
 
 export interface PlaceItem {
   key: string;
@@ -157,11 +158,13 @@ export function PlaceSearch(props: PlaceSearchProps) {
         </ul>
         {/* Datos de OpenStreetMap (ODbL), también los de Photon: la atribución va donde se muestran. */}
         <p className="zone-credit">
-          Datos ©{" "}
-          <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">
-            OpenStreetMap
-          </a>{" "}
-          · Photon
+          {SEARCH_COPY.credit({
+            link: (
+              <a key="osm" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">
+                {SEARCH_COPY.osm}
+              </a>
+            ),
+          })}
         </p>
       </div>
     </div>

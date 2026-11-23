@@ -25,6 +25,7 @@ import { currentSession, onSignedOut, useSession } from "../comun/session";
 import { UpdateBanner } from "./update-banner";
 import { FLAGS, SEARCH_MODE } from "../../shared/flags";
 import { RouterButtonLink } from "../comun/router-buttons";
+import * as SHELL_COPY from "./copy/shell";
 
 // En el JS inicial solo van Explorar y la ficha. Las demás pantallas se descargan al abrirlas, al apuntar o tocar
 // su enlace (defaultPreload "intent": en el móvil, touchstart) y, en reposo tras el primer pintado, las de las pestañas.
@@ -72,12 +73,12 @@ const rootRoute = createRootRoute({
   notFoundComponent: () => (
     <TabsFrame>
       <Placeholder
-        title="No encontramos esta página"
+        title={SHELL_COPY.notFoundTitle}
         back="/explorar"
-        text="Revise el enlace o vuelva a Explorar."
+        text={SHELL_COPY.notFoundText}
         action={
           <RouterButtonLink to="/explorar" replace variant="primary">
-            Ir a Explorar
+            {SHELL_COPY.explore}
           </RouterButtonLink>
         }
       />
@@ -159,16 +160,16 @@ const wizardPending = (to: string, close: string, label: string) => ({
   pendingMinMs: 0,
   pendingComponent: () => (
     <>
-      <ScreenHeader kind="wizard" title="Publicar casa" close={{ to, label: close, title: close }} />
+      <ScreenHeader kind="wizard" title={SHELL_COPY.publishTitle} close={{ to, label: close, title: close }} />
       <Skeleton shape="row" label={label} />
     </>
   ),
 });
-const publicarPending = wizardPending("/propietario/casas", "Cerrar y seguir después", "Cargando sus casas");
+const publicarPending = wizardPending("/propietario/casas", SHELL_COPY.closeAndContinue, SHELL_COPY.loadingHouses);
 
 /** El mismo esqueleto sin cuenta: «Cerrar» vuelve a Explorar (Mis casas pediría ingresar), como la cabecera de la entrada. */
 const PHOTOS_STEP = 7;
-const publicarLocalPending = wizardPending("/explorar", "Cerrar", "Cargando");
+const publicarLocalPending = wizardPending("/explorar", SHELL_COPY.close, SHELL_COPY.loading);
 
 // La zona del admin se descarga al abrirla: no entra en el JS inicial.
 const adminScreen = (name: "AnunciosScreen" | "CasasAdminScreen" | "RevisarScreen" | "RevisarEdicionScreen" | "SegundoCodigoScreen") => lazyRouteComponent(() => import("../admin/admin"), name);
@@ -179,7 +180,7 @@ const casasSearch = (params: Record<string, unknown>): { ver?: string } => (type
 // Editar casas (ronda de Ana del 2 nov, ticket 10): las pantallas del anfitrión con el puerto del admin, en su propio trozo.
 const asistir = (name: "AsistirCasaScreen" | "AsistirPasoScreen" | "AsistirCampoScreen" | "AsistirCalendarioScreen" | "BorradoresScreen") =>
   lazyRouteComponent(() => import("../propietario/asistir"), name);
-const adminSoon = (title: string) => () => <Placeholder title={title} home="/admin" text="Muy pronto: esta sección de la zona del admin llega en otra entrega." />;
+const adminSoon = (title: string) => () => <Placeholder title={title} home="/admin" text={SHELL_COPY.adminSoon} />;
 
 /** La ficha de la SPA solo entiende `contacto=1`: reabrir la hoja al volver de Ingresar. */
 /** `contacto=1`: vuelta de verificar el WhatsApp (la hoja reabre y sigue sola); `escribir=1`: abrir la hoja desde
@@ -219,7 +220,7 @@ const routeTree = rootRoute.addChildren([
       createRoute({ getParentRoute: () => adminTabs, path: "/admin", validateSearch: adminSearch, component: adminScreen("AnunciosScreen") }),
       createRoute({ getParentRoute: () => adminTabs, path: "/admin/casas", validateSearch: casasSearch, component: adminScreen("CasasAdminScreen") }),
       createRoute({ getParentRoute: () => adminTabs, path: "/admin/borradores", component: asistir("BorradoresScreen") }),
-      createRoute({ getParentRoute: () => adminTabs, path: "/admin/usuarios", component: adminSoon("Usuarios") }),
+      createRoute({ getParentRoute: () => adminTabs, path: "/admin/usuarios", component: adminSoon(SHELL_COPY.users) }),
     ]),
   ]),
   // /cuenta elige el marco en la pantalla (Ingresar y Cuenta, los dos a pantalla completa, sin la barra inferior).

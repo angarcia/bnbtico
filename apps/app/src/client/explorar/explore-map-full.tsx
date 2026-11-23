@@ -17,6 +17,7 @@ import { showChrome } from "../comun/hiding-chrome";
 import { CardWhatsApp } from "./card-whatsapp";
 import { CardCapacity, CardFeatures, CardPriceText } from "./listing-card";
 import { IconButton } from "../../shared/ui/button";
+import * as MAP_FULL_COPY from "./copy/map-full";
 
 export function MapScreen({ listings, zone, nights, selected, onSelect, onClose, header }: { listings: SearchListing[]; zone: LatLng | null; nights: number; selected: string | null; onSelect(id: string | null): void; onClose(): void; header: ReactNode }) {
   const box = useRef<HTMLDivElement>(null);
@@ -63,7 +64,7 @@ export function MapScreen({ listings, zone, nights, selected, onSelect, onClose,
   return (
     // Fuera de la pila de superficies (shared/overlay-stack.ts): el estado está en la URL (`?mapa=1`) y la lista sigue montada
     // debajo. Escape vuelve a la lista, como «Ver lista» (historia 07, paso 3).
-    <div ref={overlay} className="map-full" role="region" aria-label="Mapa de casas" onKeyDown={(event) => {
+    <div ref={overlay} className="map-full" role="region" aria-label={MAP_FULL_COPY.region} onKeyDown={(event) => {
       // Solo lo de dentro del mapa en el DOM: una hoja abierta desde él (portal) se cierra sola.
       if (event.key !== "Escape" || event.defaultPrevented || !(event.target instanceof Node) || !overlay.current?.contains(event.target)) return;
       event.preventDefault();
@@ -76,7 +77,7 @@ export function MapScreen({ listings, zone, nights, selected, onSelect, onClose,
       {house ? <MapCard listing={house} nights={nights} /> : null}
       <button ref={count} type="button" className="map-count" onClick={onClose}>
         <I.list size={20} />
-        Ver lista · {housesCount(listings.length)}
+        {MAP_FULL_COPY.list({ houses: housesCount(listings.length) })}
       </button>
     </div>
   );
@@ -106,7 +107,7 @@ export function MapCard({ listing: l, nights, onClose }: { listing: SearchListin
         </div>
       </Link>
       {onClose && (
-        <IconButton label="Cerrar tarjeta" placement="map-card-close" onClick={onClose}>
+        <IconButton label={MAP_FULL_COPY.closeCard} placement="map-card-close" onClick={onClose}>
           <I.x size={20} />
         </IconButton>
       )}

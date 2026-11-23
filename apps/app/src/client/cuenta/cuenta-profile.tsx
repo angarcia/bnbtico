@@ -23,6 +23,7 @@ import { EMAIL_INVALID_ERROR } from "../../domain/account";
 import { Notice, Skeleton } from "../../shared/ui/structure";
 import { Card, List } from "../../shared/ui/card";
 import { RouterListRow } from "../comun/router-rows";
+import * as ACCOUNT_COPY from "./copy/account";
 
 const message = (e: unknown) => toDomainError(e).message;
 const field = (fd: FormData, key: string) => String(fd.get(key) ?? "");
@@ -36,16 +37,16 @@ const AccountSubscriptionDetails = lazy(() => suscripcionScreen().then((m) => ({
 const SUBSCRIPTION_PLACEHOLDER = (
   <Card layout="stack">
     <div className="row between">
-      <b>Suscripción</b>
-      <span className="xs muted">Oferta de lanzamiento</span>
+      <b>{ACCOUNT_COPY.subscription}</b>
+      <span className="xs muted">{ACCOUNT_COPY.launchOffer}</span>
     </div>
-    <p className="small muted">Cuando publique una casa, aquí verá su suscripción. Las primeras 50 casas tienen 12 meses gratis.</p>
+    <p className="small muted">{ACCOUNT_COPY.subscriptionText}</p>
     <hr className="divider" />
     <div className="row between baseline">
-      <span className="small muted">Próximo cobro</span>
-      <b className="num">₡0 · sin método de pago</b>
+      <span className="small muted">{ACCOUNT_COPY.nextCharge}</span>
+      <b className="num">{ACCOUNT_COPY.noCharge}</b>
     </div>
-    <span className="xs muted">{formatCRC(MONTHLY_FEE_CRC)} al mes por casa activa, sin permanencia. Sin comisiones por alquiler, nunca.</span>
+    <span className="xs muted">{ACCOUNT_COPY.feeNote({ fee: formatCRC(MONTHLY_FEE_CRC) })}</span>
   </Card>
 );
 
@@ -93,7 +94,7 @@ export function MyAccount({ editing, tab = false }: { editing: boolean; tab?: bo
   const accountContent = (
     <>
       {/* Como pestaña (C4), sin flecha ni título visible; al editar o desde un flujo, con su cabecera. */}
-      {tab ? (desktop ? null : <h1 className="sr-only">Cuenta</h1>) : <ScreenHeader kind="flow" title="Cuenta" back={{ to: "/explorar", onBack: back }} />}
+      {tab ? (desktop ? null : <h1 className="sr-only">{ACCOUNT_COPY.title}</h1>) : <ScreenHeader kind="flow" title={ACCOUNT_COPY.title} back={{ to: "/explorar", onBack: back }} />}
       {a ? (
         <Card layout="row" placement="account-card">
           <span className="avatar" aria-hidden="true">
@@ -104,30 +105,30 @@ export function MyAccount({ editing, tab = false }: { editing: boolean; tab?: bo
             {/* El número en su línea y la verificación debajo: «WhatsApp verificado ·» se cortaba (C5). */}
             <span className="num account-phone">{formatPhone(a.phone)}</span>
             <span className="row small primary verified">
-              <I.check size={16} /> WhatsApp verificado
+              <I.check size={16} /> {ACCOUNT_COPY.whatsappVerified}
             </span>
             <span className="xs muted" data-testid="identity-soon">
-              Pronto podrá verificar también su identidad (opcional).
+              {ACCOUNT_COPY.identitySoon}
             </span>
           </div>
           {/* Editar y Listo sustituyen la entrada del historial: la flecha de Cuenta sigue volviendo adonde se estaba. */}
           {splitAccount ? null : editing ? (
             <Link to="/cuenta" replace className="link small account-edit">
-              Listo
+              {ACCOUNT_COPY.done}
             </Link>
           ) : (
             <Link to="/cuenta" search={{ editar: "1" }} replace className="link small account-edit">
-              Editar
+              {ACCOUNT_COPY.edit}
             </Link>
           )}
         </Card>
       ) : (
-        <Skeleton shape="account" label="Cargando su cuenta" />
+        <Skeleton shape="account" label={ACCOUNT_COPY.loading} />
       )}
 
       {a && splitAccount ? <DesktopProfile key={a.id} account={a} /> : a && editing ? (
         <Card layout="stack">
-          <h3>Mi perfil</h3>
+          <h3>{ACCOUNT_COPY.profile}</h3>
           <ProfileForm key={a.id} account={a} />
         </Card>
       ) : null}
@@ -143,7 +144,7 @@ export function MyAccount({ editing, tab = false }: { editing: boolean; tab?: bo
           <RouterListRow to="/admin" replace>
             <I.inbox />
             <span className="body">
-              Revisión de anuncios · admin<small>Cola de casas por revisar (pide un segundo código)</small>
+              {ACCOUNT_COPY.adminRow}<small>{ACCOUNT_COPY.adminRowHint}</small>
             </span>
             <span className="chev">
               <I.chevron />
@@ -153,7 +154,7 @@ export function MyAccount({ editing, tab = false }: { editing: boolean; tab?: bo
         {!tab || !desktop ? <RouterListRow to="/ayuda">
           <I.help />
           <span className="body">
-            Ayuda por WhatsApp<small>{owner ? "Línea de 3bstays para anfitriones" : "Línea de 3bstays para clientes"}</small>
+            {ACCOUNT_COPY.helpRow}<small>{ACCOUNT_COPY.helpLine({ owner: !!owner })}</small>
           </span>
           <span className="chev">
             <I.chevron />
@@ -163,13 +164,13 @@ export function MyAccount({ editing, tab = false }: { editing: boolean; tab?: bo
 
       {/* Lo último de la pantalla, pequeño y con confirmación: cerrar la sesión obliga a pedir un código nuevo. */}
       <div className="stack account-foot">
-        <span className="xs muted">Términos y privacidad</span>
+        <span className="xs muted">{ACCOUNT_COPY.terms}</span>
         {/* Atribución de la licencia ODbL de los límites administrativos (zonas); antes al pie de Ayuda (revisión UX 2026-10-29, N7). */}
         <span className="xs muted">
-          Límites administrativos © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">colaboradores de OpenStreetMap</a> (ODbL).
+          {ACCOUNT_COPY.osm({ link: <a key="osm" href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">{ACCOUNT_COPY.osmLink}</a> })}
         </span>
         <TextButton tone="quiet" placement="logout-link" onClick={() => setAsking(true)} disabled={leaving}>
-          Cerrar sesión
+          {ACCOUNT_COPY.signOut}
         </TextButton>
         {logoutError ? (
           <Notice tone="error" small>
@@ -179,9 +180,9 @@ export function MyAccount({ editing, tab = false }: { editing: boolean; tab?: bo
       </div>
       {asking ? (
         <ConfirmSheet
-          title="¿Cerrar sesión?"
-          body="Tendrá que recibir un código nuevo para volver a entrar."
-          confirmLabel="Cerrar sesión"
+          title={ACCOUNT_COPY.signOutTitle}
+          body={ACCOUNT_COPY.signOutText}
+          confirmLabel={ACCOUNT_COPY.signOut}
           onClose={() => setAsking(false)}
           onConfirm={() => {
             setAsking(false);
@@ -192,7 +193,7 @@ export function MyAccount({ editing, tab = false }: { editing: boolean; tab?: bo
     </>
   );
   // En escritorio, la pestaña lleva cabecera de página con el título visible (revisión 2026-11-13, A9).
-  const pageHeader = tab && desktop ? <ScreenHeader kind="root" title="Cuenta" /> : null;
+  const pageHeader = tab && desktop ? <ScreenHeader kind="root" title={ACCOUNT_COPY.title} /> : null;
   return splitAccount ? (
     <>
     {pageHeader}
@@ -220,7 +221,7 @@ function FavoritesRow() {
     <RouterListRow to="/favoritos" data-testid="favorites-row">
       <I.heart />
       <span className="body">
-        Favoritos<small className="num">{n === 0 ? "Ninguna casa guardada" : n === 1 ? "1 casa guardada" : `${n} casas guardadas`}</small>
+        {ACCOUNT_COPY.favorites}<small className="num">{ACCOUNT_COPY.favoritesCount({ count: n })}</small>
       </span>
       <span className="chev">
         <I.chevron />
@@ -238,16 +239,16 @@ function DesktopProfile({ account }: { account: Account }) {
   return (
     <Card layout="stack">
       <div className="row between">
-        <h3>Mi perfil</h3>
+        <h3>{ACCOUNT_COPY.profile}</h3>
         <TextButton tone="link" placement="account-profile-toggle" aria-expanded={editing} onClick={() => setEditing(!editing)}>
-          {editing ? "Listo" : "Editar"}
+          {editing ? ACCOUNT_COPY.done : ACCOUNT_COPY.edit}
         </TextButton>
       </div>
       {editing ? <ProfileForm account={account} /> : (
         <dl className="stack gap-14 account-profile-values">
-          <div><dt className="small muted">Nombre</dt><dd>{name}</dd></div>
-          <div><dt className="small muted">Descripción (opcional)</dt><dd>{description || "Sin descripción"}</dd></div>
-          <div><dt className="small muted">Correo de recuperación (opcional)</dt><dd>{email || "Sin correo de recuperación"}</dd></div>
+          <div><dt className="small muted">{ACCOUNT_COPY.name}</dt><dd>{name}</dd></div>
+          <div><dt className="small muted">{ACCOUNT_COPY.description}</dt><dd>{description || ACCOUNT_COPY.noDescription}</dd></div>
+          <div><dt className="small muted">{ACCOUNT_COPY.email}</dt><dd>{email || ACCOUNT_COPY.noEmail}</dd></div>
         </dl>
       )}
     </Card>
@@ -292,14 +293,14 @@ function ProfileForm({ account }: { account: Account }) {
   const emailError = state.error === EMAIL_INVALID_ERROR ? state.error : null;
   return (
     <form onSubmit={save} onInput={onInput} className="stack gap-14" noValidate>
-      <Field id="account-name" label="Nombre">
+      <Field id="account-name" label={ACCOUNT_COPY.name}>
         {(control) => <TextInput {...control} name="name" defaultValue={account.name} maxLength={80} autoComplete="name" />}
       </Field>
-      <Field id="account-description" label="Descripción (opcional)">
-        {(control) => <TextArea {...control} name="description" rows={3} maxLength={1000} defaultValue={account.description ?? ""} placeholder="Cuéntenos un poco sobre usted" />}
+      <Field id="account-description" label={ACCOUNT_COPY.description}>
+        {(control) => <TextArea {...control} name="description" rows={3} maxLength={1000} defaultValue={account.description ?? ""} placeholder={ACCOUNT_COPY.descriptionPlaceholder} />}
       </Field>
-      <Field id="account-email" label="Correo de recuperación (opcional)" error={emailError} hint="Sirve para recuperar la cuenta si pierde el acceso a su WhatsApp.">
-        {(control) => <TextInput {...control} name="email" type="email" autoComplete="email" defaultValue={account.email ?? ""} placeholder="nombre@ejemplo.com" />}
+      <Field id="account-email" label={ACCOUNT_COPY.email} error={emailError} hint={ACCOUNT_COPY.emailHint}>
+        {(control) => <TextInput {...control} name="email" type="email" autoComplete="email" defaultValue={account.email ?? ""} placeholder={ACCOUNT_COPY.emailPlaceholder} />}
       </Field>
       {state.error && !emailError ? (
         <Notice tone="error">
@@ -308,11 +309,11 @@ function ProfileForm({ account }: { account: Account }) {
       ) : null}
       {state.ok ? (
         <Notice announce>
-          <I.check size={18} /> Cambios guardados.
+          <I.check size={18} /> {ACCOUNT_COPY.saved}
         </Notice>
       ) : null}
       <Button variant="primary" size="lg" type="submit" disabled={!dirty} pending={state.busy}>
-        {state.busy ? "Guardando…" : state.ok ? "Guardado" : "Guardar cambios"}
+        {ACCOUNT_COPY.save({ busy: !!state.busy, ok: !!state.ok })}
       </Button>
     </form>
   );

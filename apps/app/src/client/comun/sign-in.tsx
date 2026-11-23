@@ -15,6 +15,7 @@ import { Button, TextButton } from "../../shared/ui/button";
 import { Field, TextInput } from "../../shared/ui/field";
 import { Notice } from "../../shared/ui/structure";
 import { Card } from "../../shared/ui/card";
+import * as SIGN_IN_COPY from "./copy/sign-in";
 
 const message = (e: unknown) => toDomainError(e).message;
 const field = (fd: FormData, key: string) => String(fd.get(key) ?? "");
@@ -33,11 +34,10 @@ export function ContactCard({ next }: { next?: string }) {
     <Card as="div" layout="row" gap={12} placement="contact-card" data-testid="return-card">
       <span className="return-thumb">{photo ? <Picture photo={photo} alt="" sizes="56px" width={56} height={56} /> : null}</span>
       <span className="stack gap-0">
-        <b className="ink">{l?.title ?? "La casa"}</b>
+        <b className="ink">{l?.title ?? SIGN_IN_COPY.house}</b>
         {l ? (
           <span className="small muted">
-            {firstName(l.ownerName)}
-            {l.ownerWhatsappVerified ? " · WhatsApp verificado" : ""}
+            {SIGN_IN_COPY.verified({ name: firstName(l.ownerName), verified: l.ownerWhatsappVerified })}
           </span>
         ) : null}
       </span>
@@ -56,7 +56,7 @@ export function ReturnCard({ next }: { next?: string }) {
         <span className="avatar avatar-sm">
           <I.chevron size={18} />
         </span>
-        <span className="small muted">Después de verificar vuelve adonde estaba.</span>
+        <span className="small muted">{SIGN_IN_COPY.returnHere}</span>
       </Card>
     );
   }
@@ -66,7 +66,7 @@ export function ReturnCard({ next }: { next?: string }) {
     <Card as="div" layout="row" gap={12} placement="return-card" data-testid="return-card">
       <span className="return-thumb">{photo ? <Picture photo={photo} alt="" sizes="56px" width={56} height={56} /> : null}</span>
       <span className="small muted">
-        Después de verificar vuelve a <b className="ink">{l?.title ?? "la casa"}</b> con su consulta tal como la dejó.
+        {SIGN_IN_COPY.returnTo({ title: <b key="title" className="ink">{l?.title ?? SIGN_IN_COPY.theHouse}</b> })}
       </span>
     </Card>
   );
@@ -155,32 +155,30 @@ export function SignInForm({ next, mode, onCodeSent, nameStep }: {
       {contact ? <ContactCard next={next} /> : null}
       <div className="stack gap-8">
         <h2 className="flow-title">
-          {newPhone ? "Es su primera vez en 3bstays" : contact ? `Un paso y le escribe a ${owner ?? "el anfitrión"}` : publish ? "Para subir las fotos, verifique su WhatsApp" : "Entre con su WhatsApp"}
+          {newPhone ? SIGN_IN_COPY.titleNew : contact ? SIGN_IN_COPY.titleContact({ owner: owner ?? null }) : publish ? SIGN_IN_COPY.titlePublish : SIGN_IN_COPY.titleSignIn}
         </h2>
         <p className="muted">
           {newPhone ? (
-            <>
-              Díganos su nombre para crear su cuenta. Le mandamos el código al <b className="ink num">{formatPhone(newPhone)}</b>.
-            </>
+            <>{SIGN_IN_COPY.textNew({ phone: <b key="phone" className="ink num">{formatPhone(newPhone)}</b> })}</>
           ) : publish ? (
-            "Lo que ya escribió se guarda. Le enviamos un código por WhatsApp: así nadie más puede publicar en su nombre."
+            SIGN_IN_COPY.textPublish
           ) : (
-            "Le mandamos un código por WhatsApp para confirmar que el número es suyo. Si es su primera vez, le pedimos también su nombre. Sin contraseña ni correo."
+            SIGN_IN_COPY.textSignIn
           )}
         </p>
       </div>
       {/* Sin `key`: el contenedor de Turnstile tiene que seguir montado entre los dos pasos (un token por envío). */}
       <form onSubmit={submit} className="stack gap-14" noValidate>
         {newPhone ? (
-          <Field id="account-name" label="Nombre" error={errorOf("name")}>
-            {(control) => <TextInput {...control} name="name" autoComplete="name" maxLength={80} placeholder="Su nombre" required autoFocus />}
+          <Field id="account-name" label={SIGN_IN_COPY.name} error={errorOf("name")}>
+            {(control) => <TextInput {...control} name="name" autoComplete="name" maxLength={80} placeholder={SIGN_IN_COPY.namePlaceholder} required autoFocus />}
           </Field>
         ) : (
           <Field
             id="account-phone"
-            label="Número de WhatsApp"
+            label={SIGN_IN_COPY.phone}
             error={errorOf("phone")}
-            hint={other ? "Escriba el número completo con «+» y el código de su país." : country === DEFAULT_COUNTRY ? "¿Su número no es de Costa Rica? Toque +506 para elegir su país." : "Escriba su número sin el código de país."}
+            hint={other ? SIGN_IN_COPY.phoneHintOther : country === DEFAULT_COUNTRY ? SIGN_IN_COPY.phoneHintCr : SIGN_IN_COPY.phoneHintNoCode}
           >
             {(control) => (
               <div className="input-prefix">
@@ -188,13 +186,13 @@ export function SignInForm({ next, mode, onCodeSent, nameStep }: {
                     países con su código. El select invisible ocupa toda la caja, así que tocar «+506 ▾» lo abre. */}
                 <span className="prefix prefix-select">
                   <span className="prefix-value" aria-hidden="true">
-                    {other ? "Otro" : `+${country}`}
+                    {other ? SIGN_IN_COPY.otherShort : `+${country}`}
                   </span>
                   <I.chevronDown size={16} />
                   <select
                     id="account-country"
                     name="country"
-                    aria-label="País de su WhatsApp"
+                    aria-label={SIGN_IN_COPY.country}
                     autoComplete="tel-country-code"
                     value={country}
                     onChange={(e) => {
@@ -207,7 +205,7 @@ export function SignInForm({ next, mode, onCodeSent, nameStep }: {
                         {c.name} (+{c.code})
                       </option>
                     ))}
-                    <option value={OTHER_COUNTRY}>Otro país</option>
+                    <option value={OTHER_COUNTRY}>{SIGN_IN_COPY.otherCountry}</option>
                   </select>
                 </span>
                 <TextInput
@@ -216,7 +214,7 @@ export function SignInForm({ next, mode, onCodeSent, nameStep }: {
                   type="tel"
                   autoComplete={other ? "tel" : "tel-national"}
                   inputMode="tel"
-                  placeholder={country === DEFAULT_COUNTRY ? "8000 0001" : other ? "+00 000 000 000" : "Sin el código de país"}
+                  placeholder={country === DEFAULT_COUNTRY ? SIGN_IN_COPY.phoneLocal : other ? SIGN_IN_COPY.phoneIntl : SIGN_IN_COPY.phoneNoCode}
                   required
                 />
               </div>
@@ -226,18 +224,18 @@ export function SignInForm({ next, mode, onCodeSent, nameStep }: {
         <div ref={captcha.container} className="captcha" />
         {error ? <p className="field-error" role="alert">{error}</p> : null}
         <Button variant="primary" size="xl" block type="submit" icon={<I.wa size={20} />} disabled={busy}>
-          {busy ? "Un momento…" : "Recibir código por WhatsApp"}
+          {SIGN_IN_COPY.submit({ busy })}
         </Button>
       </form>
       <div className="stack small">
         {newPhone && !nameStep ? (
           <TextButton tone="link" onClick={changeNumber}>
-            Cambiar número
+            {SIGN_IN_COPY.changeNumber}
           </TextButton>
         ) : null}
         {contact ? null : (
           <Link to="/cuenta/recuperar" className="link muted">
-            No tengo acceso a mi WhatsApp
+            {SIGN_IN_COPY.noAccess}
           </Link>
         )}
       </div>
@@ -246,11 +244,11 @@ export function SignInForm({ next, mode, onCodeSent, nameStep }: {
       {publish ? null : (
         <Notice as="div">
           <I.shield size={22} />
-          <span>Su número solo se comparte con el anfitrión cuando usted toca «Contactar por WhatsApp». Explorar y guardar favoritos no necesita cuenta.</span>
+          <span>{SIGN_IN_COPY.privacy}</span>
         </Notice>
       )}
       {listingInNext(next) && mode === "account" ? <ReturnCard next={next} /> : null}
-      <p className="xs muted center">Al continuar acepta los Términos. 3bstays nunca le pedirá pagos.</p>
+      <p className="xs muted center">{SIGN_IN_COPY.terms}</p>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import type { ZoneChoice, ZoneSelectOption } from "../../../domain/zones";
 import { HousePicker } from "../house-picker";
+import * as ZONE_COPY from "./copy/zone-select";
 
 const OTHER = "other";
 const CURRENT = "current";
@@ -22,7 +23,7 @@ export function ZoneSelect({ options, value, other, onChange, onOther }: { optio
 
   return (
     <div className="field">
-      <span className="label-plain">Zona</span>
+      <span className="label-plain">{ZONE_COPY.zone}</span>
       <HousePicker zone houses={choices} currentId={other ? OTHER : match?.key ?? (current ? CURRENT : null)}
         currentName={options.length ? "Elija la zona" : "Marque el punto en el mapa"} onPick={pick} />
     </div>

@@ -9,6 +9,7 @@ import { NotAdmin, message, useIsAdmin } from "./admin-shared";
 import { CodeInput } from "../comun/code-input";
 import { Button } from "../../shared/ui/button";
 import { Skeleton } from "../../shared/ui/structure";
+import * as ADMIN_COPY from "./copy/admin";
 
 // ---------- Segundo código ----------
 const codigoRoute = getRouteApi("/_flow/_privateFlow/admin/codigo");
@@ -21,10 +22,10 @@ export function SegundoCodigoScreen() {
   if (session?.aal === "aal2") return <Navigate to={target as "/admin"} replace />;
   return (
     <>
-      <ScreenHeader kind="flow" title="Segundo código" back={{ to: "/cuenta", historyBack: true }} />
+      <ScreenHeader kind="flow" title={ADMIN_COPY.codeTitle} back={{ to: "/cuenta", historyBack: true }} />
       {isAdmin === false ? <NotAdmin /> : null}
       {isAdmin === null ? (
-        <Skeleton shape="account" label="Cargando su cuenta" />
+        <Skeleton shape="account" label={ADMIN_COPY.loadingAccount} />
       ) : null}
       {isAdmin && session ? <SecondCodeForm userId={session.userId} next={target} /> : null}
     </>
@@ -72,21 +73,20 @@ function SecondCodeForm({ userId, next }: { userId: string; next: string }) {
         <span className="avatar avatar-ok" aria-hidden="true">
           <I.shield size={26} />
         </span>
-        <h2 className="flow-title">{enrol ? "Vincule su app de autenticación" : "Confirme que es usted"}</h2>
+        <h2 className="flow-title">{ADMIN_COPY.codeHeading({ enrol: !!enrol })}</h2>
         {enrol ? (
           <p className="muted">
-            Para revisar anuncios le pedimos un segundo código. Escanee este código QR con su app de autenticación (Google Authenticator, 1Password u otra) y
-            escriba abajo el código de 6 dígitos que le muestre.
+            {ADMIN_COPY.enrolText}
           </p>
         ) : (
-          <p className="muted">Abra su app de autenticación y escriba el código de 6 dígitos de 3bstays.</p>
+          <p className="muted">{ADMIN_COPY.codeText}</p>
         )}
       </div>
       {enrol ? (
         <div className="totp-enrol stack gap-8">
-          <img className="totp-qr" src={enrol.qrCode} alt="Código QR para su app de autenticación" width={184} height={184} />
-          <p className="small muted">¿No puede escanearlo? Escriba esta clave en la app:</p>
-          <code className="totp-secret num" aria-label="Clave para la app de autenticación">
+          <img className="totp-qr" src={enrol.qrCode} alt={ADMIN_COPY.qrAlt} width={184} height={184} />
+          <p className="small muted">{ADMIN_COPY.cantScan}</p>
+          <code className="totp-secret num" aria-label={ADMIN_COPY.secretLabel}>
             {groupSecret(enrol.secret)}
           </code>
         </div>
@@ -94,7 +94,7 @@ function SecondCodeForm({ userId, next }: { userId: string; next: string }) {
       <form onSubmit={verify} className="stack gap-18" noValidate>
         <CodeInput id="admin-code" value={code} onChange={setCode} error={error} />
         <Button variant="primary" size="xl" block type="submit" disabled={busy || factor === null}>
-          {busy ? "Verificando…" : factor === null && !error ? "Preparando…" : "Verificar y entrar"}
+          {ADMIN_COPY.verify({ busy, preparing: factor === null && !error })}
         </Button>
       </form>
     </div>

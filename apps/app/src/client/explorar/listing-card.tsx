@@ -12,6 +12,7 @@ import { Picture } from "../../shared/picture";
 import { stripStep } from "./card-strip";
 import { PhotoDots } from "../../shared/photo-dots";
 import { CardWhatsApp } from "./card-whatsapp";
+import * as CARD_COPY from "./copy/listing-card";
 
 const SIZES = "(min-width: 900px) 33vw, 100vw";
 
@@ -89,13 +90,13 @@ export function CardCapacity({ listing: l, compact = false }: { listing: PublicL
   const [people, rooms] = cardFacts(l).split(" · ");
   const isRoom = l.kind === "habitacion";
   const bathrooms = l.bathrooms;
-  const bath = `${bathrooms} ${bathrooms === 1 ? "baño" : "baños"}`;
+  const bath = CARD_COPY.bathrooms({ count: bathrooms });
   return (
     <span className="muted card-capacity">
       <span title={people}><I.users size={18} /><span className={compact ? "sr-only" : undefined}>{people}</span>{compact ? <span aria-hidden="true">{l.capacity}</span> : null}</span>
       {!isRoom && <>
         {compact && <span aria-hidden="true"> · </span>}
-        <span title={rooms}><I.bed size={18} /><span className={compact ? "sr-only" : undefined}>{rooms}</span>{compact && <span aria-hidden="true">{l.bedrooms || "Estudio"}</span>}</span>
+        <span title={rooms}><I.bed size={18} /><span className={compact ? "sr-only" : undefined}>{rooms}</span>{compact && <span aria-hidden="true">{l.bedrooms || CARD_COPY.studio}</span>}</span>
         {compact && <span aria-hidden="true"> · </span>}
         <span title={bath}><I.bath size={18} /><span className={compact ? "sr-only" : undefined}>{bath}</span>{compact && <span aria-hidden="true">{bathrooms}</span>}</span>
       </>}

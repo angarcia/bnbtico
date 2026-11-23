@@ -5,11 +5,13 @@
 // 2. TSX: ninguna pantalla escribe a mano la clase de un componente común (botón, hoja, ventana, campo, chip, segmento,
 //    contador, tarjeta, aviso, etiqueta o cabecera): esa clase solo la pinta el archivo del componente.
 // 3. TSX: ningún `style={…}` con colores, fondos, bordes, radios o sombras.
+// 4. TSX: ningún archivo escribe texto suelto en el JSX: va en la carpeta `copy/` de su área.
 //
 // Cada fallo dice archivo:línea, qué encontró y qué usar. Para añadir una excepción: una entrada en CSS_EXCEPTIONS o en
 // CLASS_EXCEPTIONS, con su motivo en `why` (una línea). Ver docs/componentes.md, «Prueba de consistencia y sus excepciones».
 import { readFileSync, readdirSync } from "node:fs";
 import { join, relative } from "node:path";
+import ts from "typescript";
 import { describe, expect, it } from "vitest";
 
 const SRC = new URL("../../src/", import.meta.url).pathname;
@@ -273,5 +275,54 @@ describe("restos retirados", () => {
     const css = files(SRC, /\.css$/).map((f) => readFileSync(f, "utf8")).join("\n");
     for (const dead of ["--ok:", "--warn:", "--cal-free", "--selection-ink", "--float-r-bar", ".soon", ".nav-count", ".house-inquiries-count", ".badge-count", ".card-arena", ".note-arena", ".note-plain", ".badge-warn", ".badge-sel"])
       expect(css, dead).not.toContain(dead);
+  });
+});
+
+// ---------- 4. Textos ----------
+// Paso 3 de la estructura por áreas (decisión del 2026-11-23): los textos viven en la carpeta `copy/` de su área, no
+// sueltos en el JSX. Se aplica a todos los TSX de src/.
+
+/** Todos los TSX de src/ (desde el 2026-11-23 no queda texto suelto en ninguno). */
+const TEXT_FILES = files(SRC, /\.tsx$/).map((f) => relative(SRC, f));
+/** Atributos que el usuario lee o escucha. */
+const TEXT_ATTRS = new Set(["label", "title", "aria-label", "placeholder", "alt", "text", "hint", "body", "confirmLabel"]);
+const hasWords = (s: string) => /\p{L}{2,}/u.test(s);
+
+function looseTexts(file: string): string[] {
+  const text = readFileSync(join(SRC, file), "utf8");
+  const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const out: string[] = [];
+  const report = (node: ts.Node, what: string) => out.push(`${file}:${lineOf(text, node.getStart())} ${what}`);
+  /** Cadenas que acaban en pantalla dentro de una expresión: la propia cadena, las ramas de ?: y ||/??. */
+  const strings = (e: ts.Expression): ts.Node[] => {
+    if (ts.isParenthesizedExpression(e)) return strings(e.expression);
+    if (ts.isConditionalExpression(e)) return [...strings(e.whenTrue), ...strings(e.whenFalse)];
+    if (ts.isBinaryExpression(e) && [ts.SyntaxKind.BarBarToken, ts.SyntaxKind.QuestionQuestionToken, ts.SyntaxKind.AmpersandAmpersandToken].includes(e.operatorToken.kind))
+      return strings(e.right);
+    if (ts.isStringLiteral(e) || ts.isNoSubstitutionTemplateLiteral(e)) return hasWords(e.text) ? [e] : [];
+    if (ts.isTemplateExpression(e)) return hasWords(e.head.text + e.templateSpans.map((s) => s.literal.text).join("")) ? [e] : [];
+    return [];
+  };
+  const visit = (node: ts.Node) => {
+    if (ts.isJsxText(node) && hasWords(node.text)) report(node, `texto «${node.text.trim()}»`);
+    if (ts.isJsxExpression(node) && node.expression && !ts.isJsxAttribute(node.parent))
+      for (const s of strings(node.expression)) report(s, `texto ${s.getText()}`);
+    if (ts.isJsxAttribute(node) && TEXT_ATTRS.has(node.name.getText()) && node.initializer) {
+      const init = node.initializer;
+      const found = ts.isStringLiteral(init) ? (hasWords(init.text) ? [init] : []) : init.kind === ts.SyntaxKind.JsxExpression && (init as ts.JsxExpression).expression ? strings((init as ts.JsxExpression).expression!) : [];
+      for (const s of found) report(s, `${node.name.getText()} ${s.getText()}`);
+    }
+    // Objetos que se pintan como texto ({ text: "…" } de StatusTag y parecidos).
+    if (ts.isPropertyAssignment(node) && TEXT_ATTRS.has(node.name.getText()) && ts.findAncestor(node, ts.isJsxAttribute))
+      for (const s of strings(node.initializer)) report(s, `${node.name.getText()}: ${s.getText()}`);
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  return out;
+}
+
+describe("TSX: textos en el catálogo de su área", () => {
+  it("ningún TSX escribe texto suelto en el JSX (use la carpeta `copy/` del área)", () => {
+    expect(TEXT_FILES.flatMap(looseTexts)).toEqual([]);
   });
 });

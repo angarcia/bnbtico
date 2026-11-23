@@ -39,6 +39,7 @@ import { Button } from "../../../shared/ui/button";
 import { RouterButtonLink } from "../../comun/router-buttons";
 import { Dialog, DiscardConfirm } from "../../../shared/ui/overlay";
 import { LoadError, Notice, Skeleton } from "../../../shared/ui/structure";
+import * as EDITAR_COPY from "./copy/editar";
 
 /** De vuelta a la ficha sin apilarla: la ficha abrió esta pantalla, así que se vuelve atrás en el historial; si se llegó
  *  de fuera (un enlace guardado), se reemplaza esta pantalla por la ficha. Igual que la flecha (ScreenHeader con `back.historyBack`). */
@@ -87,7 +88,7 @@ export function EditarCampoScreen() {
             {toDomainError(query.error).message}
           </LoadError>
         ) : (
-          <Skeleton shape="row" label="Cargando sus casas" />
+          <Skeleton shape="row" label={EDITAR_COPY.loading} />
         )}
       </>
     );
@@ -250,7 +251,7 @@ function EditFieldForm({ listing, field, userId, dialog = false }: { listing: Li
       footer={
         <>
           {/* «Cancelar» cierra sin preguntar (historia 07). */}
-          <Button variant="secondary" disabled={saving} onClick={finish}>Cancelar</Button>
+          <Button variant="secondary" disabled={saving} onClick={finish}>{EDITAR_COPY.cancel}</Button>
           <Button variant="primary" type="submit" form={formId} disabled={!hasChanges} pending={saving}>{action}</Button>
         </>
       }
@@ -326,9 +327,9 @@ function EditPhotos({ listing, userId }: { listing: Listing; userId: string }) {
       <ScreenHeader kind="flow" title={FIELD_TITLES.fotos} back={{ to: ficha.replace("$id", listing.id), historyBack: true }} action={<PhotoCounter counter={source.counter} />} />
       <div className="publish-form">
         {/* Como el paso 7: la ayuda de la primera foto se va con ella. */}
-        {total === 0 ? <p className="small muted photos-help">Necesita al menos una foto para enviarla a revisión.</p> : null}
+        {total === 0 ? <p className="small muted photos-help">{EDITAR_COPY.needsPhoto}</p> : null}
         <PhotoGrid source={source} userId={userId} />
-        <Notice small>{admin ? "Las fotos nuevas, el orden y las que quite se guardan al momento." : `El orden y las fotos que quite se guardan al momento. ${EDIT_COPY.photosNotice}`}</Notice>
+        <Notice small>{EDITAR_COPY.photosNotice({ admin, reviewNotice: EDIT_COPY.photosNotice })}</Notice>
         <StickyActions spacer="none">
           <RouterButtonLink
             variant="primary"
@@ -342,7 +343,7 @@ function EditPhotos({ listing, userId }: { listing: Listing; userId: string }) {
               toFicha();
             }}
           >
-            Listo
+            {EDITAR_COPY.done}
           </RouterButtonLink>
         </StickyActions>
       </div>

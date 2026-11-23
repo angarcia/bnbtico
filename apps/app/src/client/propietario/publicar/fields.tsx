@@ -31,6 +31,7 @@ import { useStepReady } from "./step-ready";
 import { KindChoice, ReadyList } from "./wizard-parts";
 import { Button } from "../../../shared/ui/button";
 import { Card } from "../../../shared/ui/card";
+import * as FIELDS_COPY from "./copy/fields";
 
 /** Paso 7 en su propio trozo: la rejilla, la subida y el ordenado de fotos solo se piden al llegar a las fotos (el service
  * worker los precachea con el resto). Mientras carga, el encabezado ocupa su sitio y nada salta. Un solo componente para
@@ -42,7 +43,7 @@ let PhotoUploader = loadPhotos();
 const photosFrame = (rest?: ReactNode) => (
   <div className="stack grow-col gap-12">
     <div className="row between baseline">
-      <h2>Fotos</h2>
+      <h2>{FIELDS_COPY.photos}</h2>
     </div>
     {rest}
   </div>
@@ -62,7 +63,7 @@ class PhotosStep extends Component<{ listing: Listing; userId: string }, { faile
       return photosFrame(
         <div className="row gap-8 baseline">
           <p className="field-error" role="alert">
-            {failed === "chunk" ? "No pudimos cargar las fotos. Revise su conexión." : "Algo falló al mostrar las fotos. Inténtelo de nuevo."}
+            {FIELDS_COPY.photosFailed({ chunk: failed === "chunk" })}
           </p>
           <Button
             variant="secondary"
@@ -71,7 +72,7 @@ class PhotosStep extends Component<{ listing: Listing; userId: string }, { faile
               this.setState({ failed: null });
             }}
           >
-            Reintentar
+            {FIELDS_COPY.retry}
           </Button>
         </div>,
       );
@@ -127,14 +128,14 @@ export function FeatureChips({ selected, parkingPaid }: { selected: Feature[]; p
         selected={on}
         onToggle={toggle}
       />
-      <span className="field-hint">Las mismas que usan los clientes para filtrar.</span>
+      <span className="field-hint">{FIELDS_COPY.featuresHint}</span>
       {on.includes("parking") ? (
-        <Field id="pub-parkingPaid" label="Tipo de parqueo" error={parkingError}>
+        <Field id="pub-parkingPaid" label={FIELDS_COPY.parkingKind} error={parkingError}>
           {(control) => (
             <Select {...control} name="parkingPaid" defaultValue={parkingPaid === null ? "" : parkingPaid ? "paid" : "free"}>
-              <option value="">Seleccione una opción</option>
-              <option value="free">Gratuito</option>
-              <option value="paid">De pago</option>
+              <option value="">{FIELDS_COPY.chooseOption}</option>
+              <option value="free">{FIELDS_COPY.parkingFree}</option>
+              <option value="paid">{FIELDS_COPY.parkingPaid}</option>
             </Select>
           )}
         </Field>
@@ -156,7 +157,7 @@ export function BathroomChoice({ shared, showIcon = false }: { shared: boolean |
   return (
     <div className="stack gap-8">
       <span id={labelId} className="row label-plain">
-        {showIcon ? <I.bath size={22} /> : null}Baño de la habitación
+        {showIcon ? <I.bath size={22} /> : null}{FIELDS_COPY.roomBath}
       </span>
       <Segmented name="bathroomShared" labelledBy={labelId} options={BATHROOM_OPTIONS} value={v} onChange={(val) => setV(val)} placement="bathroom-options" />
       {error ? (
@@ -185,7 +186,7 @@ export function MonthlyQuestion({ accepts, price }: { accepts: boolean; price: n
     <>
       <div className="stack gap-8">
         <span id="pub-acceptsMonthly" className="label-plain">
-          ¿Acepta alquiler por meses?
+          {FIELDS_COPY.acceptsMonthly}
         </span>
         <Segmented
           name="acceptsMonthly"
@@ -201,9 +202,9 @@ export function MonthlyQuestion({ accepts, price }: { accepts: boolean; price: n
       {yes ? (
         <Field
           id="pub-monthlyPriceCrc"
-          label="Precio al mes (opcional)"
+          label={FIELDS_COPY.monthlyPrice}
           error={error}
-          hint={bad ?? "Si lo deja vacío, en su ficha dirá «Precio a negociar con el anfitrión»."}
+          hint={bad ?? FIELDS_COPY.monthlyHint}
           hintTone={bad ? "warn" : "muted"}
         >
           {(control) => <AffixInput {...control} size="lg" prefix="₡" name="monthlyPriceCrc" inputMode="numeric" autoComplete="off" value={text} onChange={(e) => setText(e.currentTarget.value)} placeholder="350 000" />}
@@ -218,11 +219,11 @@ export function MonthlyQuestion({ accepts, price }: { accepts: boolean; price: n
 export function CapacityCounters({ draft, icons = false, iconByValue }: { draft: ListingDraft; icons?: boolean; iconByValue?: boolean }) {
   return (
     <Card as="div" placement="counters">
-      <Counter name="capacity" label="Personas" unit="Una persona" value={draft.capacity} min={1} icon={icons ? <I.users size={22} /> : undefined} iconByValue={iconByValue} />
+      <Counter name="capacity" label={FIELDS_COPY.people} unit={FIELDS_COPY.onePerson} value={draft.capacity} min={1} icon={icons ? <I.users size={22} /> : undefined} iconByValue={iconByValue} />
       {draft.kind === "habitacion" ? null : (
         <>
-          <Counter name="bedrooms" label="Dormitorios" unit="Un dormitorio" value={draft.bedrooms} min={0} icon={icons ? <I.bed size={22} /> : undefined} iconByValue={iconByValue} />
-          <Counter name="bathrooms" label="Baños" unit="Un baño" value={draft.bathrooms} min={1} icon={icons ? <I.bath size={22} /> : undefined} iconByValue={iconByValue} />
+          <Counter name="bedrooms" label={FIELDS_COPY.bedrooms} unit={FIELDS_COPY.oneBedroom} value={draft.bedrooms} min={0} icon={icons ? <I.bed size={22} /> : undefined} iconByValue={iconByValue} />
+          <Counter name="bathrooms" label={FIELDS_COPY.bathrooms} unit={FIELDS_COPY.oneBathroom} value={draft.bathrooms} min={1} icon={icons ? <I.bath size={22} /> : undefined} iconByValue={iconByValue} />
         </>
       )}
     </Card>
@@ -234,11 +235,11 @@ export function PriceFields({ draft }: { draft: ListingDraft }) {
   const error = useFieldError("nightlyPriceCrc");
   return (
     <>
-      <Field id="pub-nightlyPriceCrc" label="Precio por noche" error={error}>
+      <Field id="pub-nightlyPriceCrc" label={FIELDS_COPY.nightlyPrice} error={error}>
         {(control) => <AffixInput {...control} size="lg" prefix="₡" name="nightlyPriceCrc" inputMode="numeric" autoComplete="off" defaultValue={draft.nightlyPriceCrc ?? ""} placeholder="95 000" />}
       </Field>
       <MonthlyQuestion accepts={draft.acceptsMonthly} price={draft.monthlyPriceCrc} />
-      <span className="small muted">En colones; el cliente puede verlo en dólares. El precio final lo acuerda por WhatsApp.</span>
+      <span className="small muted">{FIELDS_COPY.priceNote}</span>
     </>
   );
 }
@@ -254,8 +255,8 @@ export function TitleField({ value }: { value: string }) {
   const [n, setN] = useState(charCount(value));
   const error = useFieldError("title");
   return (
-    <Field id="pub-title" label="Nombre de la casa" error={error} count={charCountOf(n, TITLE_MIN, TITLE_MAX, `mínimo ${TITLE_MIN}`)}>
-      {(control) => <TextInput {...control} name="title" maxLength={TITLE_MAX} defaultValue={value} autoComplete="off" placeholder="Casa Manzanillo, a pie de playa" onChange={(e) => setN(charCount(e.currentTarget.value))} />}
+    <Field id="pub-title" label={FIELDS_COPY.title} error={error} count={charCountOf(n, TITLE_MIN, TITLE_MAX, FIELDS_COPY.minimum({ min: TITLE_MIN }))}>
+      {(control) => <TextInput {...control} name="title" maxLength={TITLE_MAX} defaultValue={value} autoComplete="off" placeholder={FIELDS_COPY.titlePlaceholder} onChange={(e) => setN(charCount(e.currentTarget.value))} />}
     </Field>
   );
 }
@@ -275,7 +276,7 @@ export function DescriptionField({ value }: { value: string }) {
         ? { text: DESCRIPTION_MIN - n === 1 ? "Falta 1 carácter" : `Faltan ${DESCRIPTION_MIN - n} caracteres`, tone: "warn" }
         : charCountOf(n, DESCRIPTION_MIN, DESCRIPTION_MAX);
   return (
-    <Field id="pub-description" label="Descripción (opcional)" error={error} count={count} grow>
+    <Field id="pub-description" label={FIELDS_COPY.description} error={error} count={count} grow>
       {/* Tres preguntas guía que se van al escribir; sin texto de ejemplo, que acabaría copiado en todas las fichas. */}
       {(control) => (
         <TextArea
@@ -285,7 +286,7 @@ export function DescriptionField({ value }: { value: string }) {
           rows={3}
           maxLength={DESCRIPTION_MAX}
           defaultValue={value}
-          placeholder="¿Cómo es por dentro? ¿Qué hay cerca (playa, pulpería, parada de bus)? ¿Qué incluye o qué debe saber el cliente?"
+          placeholder={FIELDS_COPY.descriptionPlaceholder}
           onChange={(e) => setN(charCount(e.currentTarget.value))}
         />
       )}
@@ -332,7 +333,7 @@ function SendSummary({ draft, listing, userId }: { draft: ListingDraft; listing:
   ];
   return (
     <>
-      <Card as="nav" placement="review-list" aria-label="Lo que va a enviar">
+      <Card as="nav" placement="review-list" aria-label={FIELDS_COPY.summary}>
         {rows.map((r) => {
           const missing = required.some((p) => p.step === r.step);
           const warn = !missing && warned.some((w) => w.step === r.step);
@@ -348,7 +349,7 @@ function SendSummary({ draft, listing, userId }: { draft: ListingDraft; listing:
             >
               <span className="review-label">{r.label}</span>
               <span className="review-value">
-                <span className="review-text">{missing ? MISSING_ACTION[r.step] : warn ? (r.step === 6 && !d.description.trim() ? "Añadir una descripción" : WARN_ACTION[r.step]) : r.value}</span>
+                <span className="review-text">{missing ? MISSING_ACTION[r.step] : warn ? (r.step === 6 && !d.description.trim() ? FIELDS_COPY.addDescription : WARN_ACTION[r.step]) : r.value}</span>
               </span>
               <I.chevron size={16} />
             </Link>
@@ -356,18 +357,16 @@ function SendSummary({ draft, listing, userId }: { draft: ListingDraft; listing:
         })}
       </Card>
       <Button variant="secondary" block onClick={() => setPreview(true)}>
-        Ver cómo queda su ficha
+        {FIELDS_COPY.preview}
       </Button>
       <span className="small muted">
-        Los clientes le escriben al <b className="num ink">{formatPhone(listing.whatsappPhone)}</b> (verificado). No se muestra públicamente.
+        {FIELDS_COPY.phoneNote({ phone: <b key="phone" className="num ink">{formatPhone(listing.whatsappPhone)}</b> })}
       </span>
       <Card tone="solid" layout="row" gap={8} placement="offer-line">
         <span className="small">
-          {offer === null
-            ? `${fee} al mes desde que se apruebe, sin permanencia.`
-            : `Si está entre las próximas ${offer?.remaining ?? offer?.size ?? 50} casas. Después, ${fee} al mes. Sin tarjeta.`}
+          {offer === null ? FIELDS_COPY.feeNote({ fee }) : FIELDS_COPY.offerNote({ places: offer?.remaining ?? offer?.size ?? 50, fee })}
         </span>
-        <b className="num primary">{offer === null ? `${fee} al mes` : `₡0 · ${offer?.months ?? 12} meses`}</b>
+        <b className="num primary">{offer === null ? FIELDS_COPY.fee({ fee }) : FIELDS_COPY.free({ months: offer?.months ?? 12 })}</b>
       </Card>
       {preview ? <FichaPreview listing={listing} draft={d} ownerName={account.data?.name ?? ""} onClose={() => setPreview(false)} /> : null}
     </>
@@ -379,13 +378,13 @@ function SendSummary({ draft, listing, userId }: { draft: ListingDraft; listing:
 function FichaPreview({ listing, draft, ownerName, onClose }: { listing: Listing; draft: ListingDraft; ownerName: string; onClose: () => void }) {
   const closeButton = useRef<HTMLButtonElement>(null);
   return (
-    <FullScreen layout="preview" label="Vista previa de su ficha" initialFocus={closeButton} onClose={onClose}>
+    <FullScreen layout="preview" label={FIELDS_COPY.previewLabel} initialFocus={closeButton} onClose={onClose}>
       {({ close }) => (
         <>
           <div className="preview-bar">
-            <span className="small strong">Vista previa · así la verán los clientes</span>
+            <span className="small strong">{FIELDS_COPY.previewBar}</span>
             <Button ref={closeButton} variant="primary" onClick={close}>
-              Cerrar
+              {FIELDS_COPY.close}
             </Button>
           </div>
           <ListingPage listing={previewListing({ ...listing, ...draft }, ownerName)} base="" preview />
@@ -404,7 +403,7 @@ function CapacityFields({ draft, iconByValue }: { draft: ListingDraft; iconByVal
   );
   return (
     <>
-      <h2>¿Cuántos caben?</h2>
+      <h2>{FIELDS_COPY.capacityTitle}</h2>
       {iconByValue ? (
         <div className={draft.kind === "habitacion" ? "publish-room-capacity" : undefined}>{controls}</div>
       ) : controls}
@@ -422,8 +421,8 @@ export function StepFields({ step, draft, listing, userId, withCapacity = false 
         <>
           {/* Arriba del primer paso de un borrador recién creado, qué tener a mano (revisión UX C4). */}
           {!withCapacity && isFreshDraft(listing) ? (
-            <section className="stack gap-4" aria-label="Qué tener a mano">
-              <span className="small strong">Tenga a mano:</span>
+            <section className="stack gap-4" aria-label={FIELDS_COPY.ready}>
+              <span className="small strong">{FIELDS_COPY.readyTitle}</span>
               <ReadyList />
             </section>
           ) : null}
@@ -434,7 +433,7 @@ export function StepFields({ step, draft, listing, userId, withCapacity = false 
     case 2:
       return (
         <>
-          <h2>¿Dónde está su casa?</h2>
+          <h2>{FIELDS_COPY.locationTitle}</h2>
           <LocationStep listing={listing} draft={draft} fullWidth />
         </>
       );
@@ -443,30 +442,30 @@ export function StepFields({ step, draft, listing, userId, withCapacity = false 
     case 5:
       return (
         <>
-          <h2>Características</h2>
+          <h2>{FIELDS_COPY.featuresTitle}</h2>
           <FeatureChips selected={draft.features} parkingPaid={draft.parkingPaid} />
         </>
       );
     case 6:
       return (
         <>
-          <h2>Nombre y descripción</h2>
+          <h2>{FIELDS_COPY.textTitle}</h2>
           <TitleField value={draft.title} />
           <DescriptionField value={draft.description} />
-          <span className="xs muted">Sin enlaces, teléfonos ni publicidad. Se revisa antes de publicar.</span>
+          <span className="xs muted">{FIELDS_COPY.textNote}</span>
         </>
       );
     case 7:
       return (
         <>
           <PhotosStep listing={listing} userId={userId} />
-          <span className="xs muted">Horizontales, sin teléfonos ni marcas de agua.</span>
+          <span className="xs muted">{FIELDS_COPY.photosNote}</span>
         </>
       );
     case 8:
       return (
         <>
-          <h2>Precio</h2>
+          <h2>{FIELDS_COPY.priceTitle}</h2>
           <PriceFields draft={draft} />
         </>
       );

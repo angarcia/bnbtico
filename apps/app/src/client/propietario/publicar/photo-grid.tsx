@@ -18,6 +18,7 @@ import { photoReorderCallbacks, photosErrorMessage } from "./photo-reorder";
 import { usePhotoDrag } from "./use-photo-drag";
 import { IconButton } from "../../../shared/ui/button";
 import { useDesktop } from "../../../shared/desktop";
+import * as GRID_COPY from "./copy/photo-grid";
 
 export interface PhotoSource {
   listingId: string;
@@ -186,7 +187,7 @@ export function PhotoGrid({ source, userId, header }: { source: PhotoSource; use
   return (
     <div className="stack grow-col gap-12">
       {header}
-      {photos.length >= 2 ? <p className="small muted photos-help">{desktop ? PHOTOS_HELP_DESKTOP : "Mantenga pulsada una foto y arrástrela para cambiar el orden. La primera es la portada."}</p> : null}
+      {photos.length >= 2 ? <p className="small muted photos-help">{desktop ? PHOTOS_HELP_DESKTOP : GRID_COPY.dragHelp}</p> : null}
       <div className="photos-scroll" ref={scroller}>
         <div className={`photos-grid${drag.dragging ? " is-dragging" : ""}`} ref={drag.gridRef} aria-busy={busy || uploads.length > 0}>
           {photos.map((p, i) => (
@@ -198,15 +199,15 @@ export function PhotoGrid({ source, userId, header }: { source: PhotoSource; use
               onContextMenu={(e) => e.preventDefault()}
             >
               <img draggable={false} src={variantUrl(p, i === 0 ? 800 : 480)} alt="" loading="lazy" decoding="async" {...fadeIn} />
-              {i === 0 ? <span className="tag">Portada</span> : null}
-              <IconButton label={`Quitar foto ${i + 1}`} placement="remove" disabled={busy || drag.dragging} onClick={() => remove(p, false)}>
+              {i === 0 ? <span className="tag">{GRID_COPY.cover}</span> : null}
+              <IconButton label={GRID_COPY.remove({ n: i + 1 })} placement="remove" disabled={busy || drag.dragging} onClick={() => remove(p, false)}>
                 <I.x size={16} />
               </IconButton>
               <button type="button" className="sr-move" data-move="before" aria-disabled={busy || uploads.length > 0 || i === 0 ? true : undefined} onClick={() => move(p.id, i, "before")}>
-                Mover foto {i + 1} antes
+                {GRID_COPY.moveBefore({ n: i + 1 })}
               </button>
               <button type="button" className="sr-move" data-move="after" aria-disabled={busy || uploads.length > 0 || i === ids.length - 1 ? true : undefined} onClick={() => move(p.id, i, "after")}>
-                Mover foto {i + 1} después
+                {GRID_COPY.moveAfter({ n: i + 1 })}
               </button>
             </div>
           ))}
@@ -214,10 +215,10 @@ export function PhotoGrid({ source, userId, header }: { source: PhotoSource; use
             <div key={p.id} className="photo is-pending">
               <img draggable={false} src={variantUrl(p, 480)} alt="" loading="lazy" decoding="async" {...fadeIn} />
               {/* Cada foto nueva con su estado (revisión por dato, A5): en revisión o con cambios pedidos y la nota. */}
-              <span className="tag tag-pending">{"status" in p && p.status === "changes" ? "Cambios pedidos" : "En revisión"}</span>
+              <span className="tag tag-pending">{GRID_COPY.pending({ changes: "status" in p && p.status === "changes" })}</span>
               {"reviewNote" in p && p.reviewNote ? <span className="photo-note xs">{String(p.reviewNote)}</span> : null}
               {source.canAdd ? (
-                <IconButton label={`Quitar foto ${photos.length + j + 1}`} placement="remove" disabled={busy || drag.dragging} onClick={() => remove(p, true)}>
+                <IconButton label={GRID_COPY.remove({ n: photos.length + j + 1 })} placement="remove" disabled={busy || drag.dragging} onClick={() => remove(p, true)}>
                   <I.x size={16} />
                 </IconButton>
               ) : null}
@@ -229,7 +230,7 @@ export function PhotoGrid({ source, userId, header }: { source: PhotoSource; use
               <div
                 className="upload-bar"
                 role="progressbar"
-                aria-label={`Subiendo ${u.name}`}
+                aria-label={GRID_COPY.uploading({ name: u.name })}
                 aria-valuemin={0}
                 aria-valuemax={UPLOAD_STEPS}
                 aria-valuenow={progressOf(u)}
@@ -241,9 +242,9 @@ export function PhotoGrid({ source, userId, header }: { source: PhotoSource; use
           ))}
           {room ? (
             <label className="add">
-              <input type="file" accept="image/jpeg,image/png,image/webp" multiple className="sr-input" aria-label="Añadir fotos" onChange={pick} />
+              <input type="file" accept="image/jpeg,image/png,image/webp" multiple className="sr-input" aria-label={GRID_COPY.addPhotos} onChange={pick} />
               <I.plus />
-              Añadir
+              {GRID_COPY.add}
             </label>
           ) : null}
         </div>

@@ -16,6 +16,7 @@ import { ScreenHeader } from "../comun/screen-header";
 import { AdminBadge, NotAdmin, NoticeLink, message, titleOf, useIsAdmin, useUserId } from "./admin-shared";
 import { EmptyState, LoadError, Notice, Skeleton, StatusTag } from "../../shared/ui/structure";
 import { RouterCardLink } from "../comun/router-rows";
+import * as ADMIN_COPY from "./copy/admin";
 
 function priceText(l: Listing): string | null {
   const p = describe(l, { base: "" }).mainPrice;
@@ -43,7 +44,7 @@ export function AnunciosScreen() {
   if (isAdmin === false) {
     return (
       <>
-        <ScreenHeader kind="root" title="Anuncios" home="/explorar" />
+        <ScreenHeader kind="root" title={ADMIN_COPY.listingsTitle} home="/explorar" />
         <NotAdmin />
       </>
     );
@@ -58,22 +59,22 @@ export function AnunciosScreen() {
   ];
   return (
     <>
-      <ScreenHeader kind="root" title="Anuncios" home="/admin" action={<AdminBadge />} />
+      <ScreenHeader kind="root" title={ADMIN_COPY.listingsTitle} home="/admin" action={<AdminBadge />} />
       <div className="grid-3">
         <div className="tile tile-review">
           <b className="num ink">{q?.review.length ?? "–"}</b>
-          <span>por revisar</span>
+          <span>{ADMIN_COPY.toReview}</span>
         </div>
         <div className="tile tile-review">
           <b className="num ink">{q?.changes.length ?? "–"}</b>
-          <span>con cambios</span>
+          <span>{ADMIN_COPY.withChanges}</span>
         </div>
         <div className="tile tile-soft">
           <b className="num">{q?.active ?? "–"}</b>
-          <span>activas</span>
+          <span>{ADMIN_COPY.active}</span>
         </div>
       </div>
-      <nav className="chiprow" aria-label="Filtrar anuncios">
+      <nav className="chiprow" aria-label={ADMIN_COPY.filterListings}>
         {tabs.map((t) => (
           <Link
             key={t.key}
@@ -88,14 +89,14 @@ export function AnunciosScreen() {
       </nav>
       {outcome ? (
         <Notice tone={outcome.kind === "failed" ? "error" : "info"} small announce={outcome.kind !== "failed"}>
-          {outcome.kind === "failed" ? `No se guardó la decisión sobre «${outcome.title}»: ${outcome.text}` : `«${outcome.title}»: ${outcome.text}`}
+          {ADMIN_COPY.outcome({ title: outcome.title, text: outcome.text, failed: outcome.kind === "failed" })}
         </Notice>
       ) : null}
       {outcome?.notice ? <NoticeLink href={outcome.notice.href} name={outcome.notice.name} /> : null}
       {edits?.length ? (
         <section className="stack gap-12" aria-labelledby="ediciones-por-revisar">
           <h2 id="ediciones-por-revisar" className="small strong">
-            Ediciones por revisar
+            {ADMIN_COPY.editsToReview}
           </h2>
           {edits.map((item) => (
             <EditQueueCard key={item.listing.id} item={item} />
@@ -113,10 +114,10 @@ export function AnunciosScreen() {
         </LoadError>
       ) : null}
       {!q && !queue.isError ? (
-        <Skeleton shape="row" label="Cargando la cola" />
+        <Skeleton shape="row" label={ADMIN_COPY.loadingQueue} />
       ) : null}
       {q && shown.length === 0 ? (
-        <EmptyState text={<p className="muted">{tab === "review" ? "No hay anuncios pendientes." : "Nada por aquí."}</p>} />
+        <EmptyState text={<p className="muted">{tab === "review" ? ADMIN_COPY.noPending : ADMIN_COPY.nothingHere}</p>} />
       ) : null}
       {shown.length > 0 ? (
         <div className="stack gap-12">
@@ -125,7 +126,7 @@ export function AnunciosScreen() {
           ))}
         </div>
       ) : null}
-      <p className="xs muted queue-foot">Las más antiguas primero. El anfitrión ve la decisión en Mis casas; avísele por WhatsApp con el botón.</p>
+      <p className="xs muted queue-foot">{ADMIN_COPY.queueFoot}</p>
     </>
   );
 }
@@ -146,7 +147,7 @@ function QueueCard({ item: { listing: l, ownerName } }: { item: QueueItem }) {
           <StatusTag label={badge} tight />
         </span>
         <b className="display queue-title">{titleOf(l)}</b>
-        <span className="small muted">{ownerName} · WhatsApp verificado</span>
+        <span className="small muted">{ADMIN_COPY.verifiedOwner({ name: ownerName })}</span>
         <span className="small muted">{facts}</span>
       </span>
       <span className="chev">
@@ -170,7 +171,7 @@ function EditQueueCard({ item: { listing: l, ownerName } }: { item: QueueItem })
         </span>
         <b className="display queue-title">{titleOf(l)}</b>
         <span className="small muted">{ownerName}</span>
-        <span className="small">Edición: {editSummary(e)}</span>
+        <span className="small">{ADMIN_COPY.editSummary({ summary: editSummary(e) })}</span>
       </span>
       <span className="chev">
         <I.chevron />

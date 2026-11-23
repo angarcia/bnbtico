@@ -11,6 +11,7 @@ import { useFx } from "../../shared/fx";
 import { I } from "../../shared/ui/icons";
 import { afterPaint, whenIdle } from "../../shared/idle";
 import { IconButton } from "../../shared/ui/button";
+import * as MAP_COPY from "./copy/explore-map";
 
 // Los tipos del trozo de Leaflet sin importarlo (ni siquiera como tipo: la prueba de arquitectura lo vigila).
 type ExploreMapHandle = ReturnType<typeof import("./explore-map-leaflet")["drawExploreMap"]>;
@@ -145,14 +146,14 @@ export function ExploreMap({ listings, zone, nights, onOpen, onSelect, selected 
       )}
     </div>
     {onExpand && (
-      <div className="desktop-map-controls" role="group" aria-label="Controles del mapa">
-        <IconButton label={expanded ? "Reducir mapa" : "Ampliar mapa"} tone="float" aria-pressed={expanded} onClick={onExpand}>
+      <div className="desktop-map-controls" role="group" aria-label={MAP_COPY.mapControls}>
+        <IconButton label={MAP_COPY.mapSize({ expanded: !!expanded })} tone="float" aria-pressed={expanded} onClick={onExpand}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d={expanded ? "m5 19 6-6m-6 0h6v6m8-14-6 6m0-6v6h6" : "m5 19 6-6m-6 0v6h6m8-14-6 6m0-6h6v6"} />
           </svg>
         </IconButton>
-        <IconButton label="Acercar mapa" tone="float" disabled={!ready} onClick={() => handle.current?.zoomBy(1)}><I.plus size={20} /></IconButton>
-        <IconButton label="Alejar mapa" tone="float" disabled={!ready} onClick={() => handle.current?.zoomBy(-1)}>−</IconButton>
+        <IconButton label={MAP_COPY.zoomIn} tone="float" disabled={!ready} onClick={() => handle.current?.zoomBy(1)}><I.plus size={20} /></IconButton>
+        <IconButton label={MAP_COPY.zoomOut} tone="float" disabled={!ready} onClick={() => handle.current?.zoomBy(-1)}>−</IconButton>
       </div>
     )}
     </>
@@ -184,7 +185,7 @@ export function MapLabel({ target, onOpen, hidden = false }: { target: RefObject
     <>
       {sentinel}
       <button type="button" className="map-label" onClick={onOpen}>
-        Mapa
+        {MAP_COPY.map}
         <I.map size={20} />
       </button>
     </>

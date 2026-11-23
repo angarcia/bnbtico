@@ -7,6 +7,7 @@ import { useDesktop } from "../../shared/desktop";
 import { IconButton } from "../../shared/ui/button";
 import { EmptyState } from "../../shared/ui/structure";
 import { RouterIconLink } from "./router-buttons";
+import * as HEADER_COPY from "./copy/screen-header";
 
 /** En una pestaña sin barra de arriba (Favoritos, Mis casas, Calendario, Consultas, Cuenta): sin logo y con el título solo
  *  para lectores de pantalla. */
@@ -77,7 +78,7 @@ function BackLink({ back }: { back: HeaderBack }) {
       }
     : undefined;
   return (
-    <RouterIconLink to={to} search={search} label="Volver" onClick={click}>
+    <RouterIconLink to={to} search={search} label={HEADER_COPY.back} onClick={click}>
       <I.back />
     </RouterIconLink>
   );
@@ -126,8 +127,8 @@ function RootHeader({ title, home = "/explorar", action, aside }: { title: React
         action ? <div className="top">{action}</div> : null
       ) : (
         <div className="top">
-          <Link to={home} replace aria-label="3bstays, inicio">
-            <img className="logo" src="/logo-horizontal.png" alt="3bstays" width={109} height={38} />
+          <Link to={home} replace aria-label={HEADER_COPY.home}>
+            <img className="logo" src="/logo-horizontal.png" alt={HEADER_COPY.logo} width={109} height={38} />
           </Link>
           {action}
         </div>

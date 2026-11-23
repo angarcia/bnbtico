@@ -13,6 +13,7 @@ import { I } from "./ui/icons";
 import { ownListingsHint } from "./own-listings";
 import { ButtonLink } from "./ui/button";
 import { BrandLogo, NavBar, NavItemContent } from "./ui/structure";
+import * as TOP_BAR_COPY from "./copy/top-bar";
 
 type Navigate = (href: string) => void;
 
@@ -41,7 +42,7 @@ function Bar({ navigate, next }: { navigate?: Navigate; next?: string }) {
       desktop
       tabs={tabs.map(({ to, label, icon }) => ({ to, label, icon }))}
       brand={
-        <a className="desktop-brand" href="/explorar" aria-label="3bstays, inicio" onClick={go("/explorar")}>
+        <a className="desktop-brand" href="/explorar" aria-label={TOP_BAR_COPY.home} onClick={go("/explorar")}>
           <BrandLogo />
         </a>
       }
@@ -51,16 +52,16 @@ function Bar({ navigate, next }: { navigate?: Navigate; next?: string }) {
           <CurrencySwitch placement="desktop-currency" />
           {session ? null : (
             <ButtonLink href={signIn} variant="secondary" placement="desktop-sign-in" icon={<I.user size={22} />} onClick={go(signIn)}>
-              Ingresar
+              {TOP_BAR_COPY.signIn}
             </ButtonLink>
           )}
           {inquiries ? (
-            <a href="/propietario/actividad" className="nav desktop-inquiries" aria-label="Consultas" title="Consultas" onClick={go("/propietario/actividad")}>
-              <NavItemContent icon="chat" label="Consultas" labelHidden />
+            <a href="/propietario/actividad" className="nav desktop-inquiries" aria-label={TOP_BAR_COPY.inquiries} title={TOP_BAR_COPY.inquiries} onClick={go("/propietario/actividad")}>
+              <NavItemContent icon="chat" label={TOP_BAR_COPY.inquiries} labelHidden />
             </a>
           ) : null}
-          <a href="/ayuda" className="nav desktop-help" aria-label="Ayuda por WhatsApp" title="Ayuda por WhatsApp" onClick={go("/ayuda")}>
-            <NavItemContent icon="wa" label="Ayuda por WhatsApp" iconSize={24} />
+          <a href="/ayuda" className="nav desktop-help" aria-label={TOP_BAR_COPY.help} title={TOP_BAR_COPY.help} onClick={go("/ayuda")}>
+            <NavItemContent icon="wa" label={TOP_BAR_COPY.help} iconSize={24} />
           </a>
         </>
       }

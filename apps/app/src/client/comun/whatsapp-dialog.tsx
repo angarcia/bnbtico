@@ -4,6 +4,7 @@ import { authApi } from "./session";
 import { SignInForm } from "./sign-in";
 import { IconButton } from "../../shared/ui/button";
 import { Dialog } from "../../shared/ui/overlay";
+import * as DIALOG_COPY from "./copy/whatsapp-dialog";
 
 const DialogCodeForm = lazy(() => import("../cuenta/cuenta-codigo").then((m) => ({ default: m.DialogCodeForm })));
 
@@ -12,15 +13,15 @@ export function WhatsAppDialog({ mode, next, onClose }: { mode: "account" | "pub
   const [namePhone, setNamePhone] = useState<string | null>(null);
   // Ventana normal de escritorio; no se cierra con el fondo: se perdería el código a medias (inventario de superficies, 1).
   return (
-    <Dialog layout="sign-in" label={mode === "publish" ? "Verificar WhatsApp" : "Ingresar"} closeButton dismissible={{ backdrop: false }} onClose={onClose}
+    <Dialog layout="sign-in" label={DIALOG_COPY.title({ publish: mode === "publish" })} closeButton dismissible={{ backdrop: false }} onClose={onClose}
       headerStart={codeSent || namePhone ? (
-        <IconButton label="Volver al número" onClick={async () => {
+        <IconButton label={DIALOG_COPY.backToNumber} onClick={async () => {
           if (codeSent) (await authApi()).cancel();
           setNamePhone(null);
           setCodeSent(false);
         }}><I.back size={20} /></IconButton>
       ) : null}>
-      <Suspense fallback={<p role="status">Cargando…</p>}>
+      <Suspense fallback={<p role="status">{DIALOG_COPY.loading}</p>}>
         {codeSent ? (
           <DialogCodeForm next={next} onDone={onClose} />
         ) : (
