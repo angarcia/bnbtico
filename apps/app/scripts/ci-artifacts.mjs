@@ -44,6 +44,27 @@ function isolateReport(file, log) {
   writeFileSync(file, `${report}\n`, { mode: 0o600 });
 }
 
+// Qué casos fallaron, para el log de Actions: solo archivo, línea y título, que escribe el repositorio. Nunca el error,
+// la salida ni los adjuntos, que pueden llevar sesiones o tokens y siguen privados. Sin esto, un fallo cuyo diagnóstico
+// el saneador rechaza (p. ej. «credential-shape») no deja rastro de qué prueba fue (develop, 2026-11-23).
+function failedCases(file) {
+  let report;
+  try { report = JSON.parse(readFileSync(file, "utf8")); } catch { return ["No se pudo leer la lista de casos."]; }
+  const lines = [];
+  const clean = (text) => String(text).replace(/[\u0000-\u001f\u007f]+/g, " ").slice(0, 200);
+  const walk = (suite) => {
+    for (const spec of suite.specs ?? []) {
+      for (const test of spec.tests ?? []) {
+        const label = test.status === "unexpected" ? "Falló" : test.status === "flaky" ? "Inestable" : null;
+        if (label) lines.push(`${label}: ${clean(spec.file)}:${Number(spec.line) || 0} › ${clean(spec.title)}`);
+      }
+    }
+    for (const child of suite.suites ?? []) walk(child);
+  };
+  for (const suite of report.suites ?? []) walk(suite);
+  return lines;
+}
+
 async function publish(root, code, gateCode = 0) {
   await sanitizeRun({ root, input: "render", output: "publish" });
   const output = join(root, "publish");
@@ -77,6 +98,7 @@ async function e2e(root, current, total) {
   writeFileSync(join(raw, "e2e-exit.txt"), `${code}\n`, { mode: 0o600 });
   // Solo el código numérico; los logs y el contenido de los artefactos siguen privados.
   console.log(`Playwright: código de salida ${code}.`);
+  for (const line of failedCases(join(raw, "runner.json"))) console.log(line);
   await sanitizeRun({ root, output: "clean" });
   const clean = join(root, "clean");
   // El JSON nativo ya contiene el resultado completo del shard. Evita el ZIP blob

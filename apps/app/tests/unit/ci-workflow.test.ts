@@ -135,6 +135,12 @@ describe("CI aislada", () => {
     expect(jobs.report).toContain("name: playwright-1-of-1-attempt-${{ github.run_attempt }}");
     expect(jobs.report).toContain("path: ci-artifacts/playwright-1-of-1-attempt-${{ github.run_attempt }}");
     expect(jobs.report).toContain("CI_ARTIFACT_ATTEMPT: ${{ github.run_attempt }}");
+    // Los tiempos de preparación, también por nombre y con su carpeta: tras «Re-run failed jobs» no hay inventario de ese
+    // intento, el patrón `e2e-*-attempt-N` coincidía solo con la preparación, se extraía sin carpeta y el informe fallaba
+    // sin encontrarla (develop, 2026-11-23).
+    expect(jobs.report).toContain("name: e2e-preparation-1-of-1-attempt-${{ github.run_attempt }}");
+    expect(jobs.report).toContain("path: ci-artifacts/e2e-preparation-1-of-1-attempt-${{ github.run_attempt }}");
+    expect(jobs.report).not.toContain("pattern: e2e-*-attempt-${{ github.run_attempt }}");
   });
 
   it("el informe usa el inventario de su intento o, tras «Re-run failed jobs», el último anterior", () => {
@@ -150,7 +156,7 @@ describe("CI aislada", () => {
       }
       return spawnSync("bash", ["-e", "-c", script], { cwd: dir, encoding: "utf8", env: { PATH: process.env.PATH } }).stdout.trim();
     };
-    expect(run(["ci-artifacts/e2e-inventory-attempt-12/inventory.json"])).toBe("ci-artifacts/e2e-inventory-attempt-12/inventory.json");
+    expect(run(["ci-artifacts/inventarios/e2e-inventory-attempt-12/inventory.json", "ci-artifacts/inventarios/e2e-inventory-attempt-2/inventory.json"])).toBe("ci-artifacts/inventarios/e2e-inventory-attempt-12/inventory.json");
     expect(run([
       "ci-artifacts/inventarios/e2e-inventory-attempt-2/inventory.json",
       "ci-artifacts/inventarios/e2e-inventory-attempt-10/inventory.json",

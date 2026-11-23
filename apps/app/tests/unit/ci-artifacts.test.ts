@@ -165,7 +165,11 @@ describe("conexión privada de artefactos", () => {
       expect(readFileSync(join(publish, "e2e-normalized.json"), "utf8")).not.toContain(secret);
       expect(existsSync(join(publish, "html"))).toBe(false);
       expect(readdirSync(publish, { recursive: true }).some(name => String(name).endsWith(".html"))).toBe(false);
-      if (mode === "failing") expect(native.stats.unexpected).toBeGreaterThan(0);
+      if (mode === "failing") {
+        expect(native.stats.unexpected).toBeGreaterThan(0);
+        expect(result.stdout).toMatch(/\nFalló: (?:\S*\/)?a\.spec\.cjs:\d+ › diagnóstico a\n/);
+      }
+      if (mode === "passing") expect(result.stdout).not.toMatch(/Falló|Inestable/);
       if (mode === "incomplete") expect(readFileSync(join(publish, "gate-exit.txt"), "utf8").trim()).not.toBe("0");
     }, 60_000,
   );
@@ -196,7 +200,13 @@ describe("conexión privada de artefactos", () => {
         expect(readFileSync(join(root, "raw/e2e-exit.txt"), "utf8").trim()).toBe("0");
         expect(JSON.parse(readFileSync(join(root, "render/e2e.json"), "utf8")).stats.flaky).toBe(1);
       }
-      if (mode === "sanitize") expect(result.stdout).toContain("Playwright: código de salida 1.");
+      if (mode === "sanitize") {
+        expect(result.stdout).toContain("Playwright: código de salida 1.");
+        // Aunque el diagnóstico no se pueda publicar, el log de Actions dice qué casos fallaron: solo archivo, línea y
+        // título (los escribe el repositorio), nunca el error ni la salida de la prueba.
+        expect(result.stdout).toMatch(/\nFalló: (?:\S*\/)?a\.spec\.cjs:\d+ › diagnóstico a\n/);
+      }
+      if (mode === "flaky") expect(result.stdout).toMatch(/\nInestable: (?:\S*\/)?a\.spec\.cjs:\d+ › diagnóstico a\n/);
       if (mode === "publish-sanitize") expect(existsSync(join(root, "render/e2e-normalized.json"))).toBe(true);
     }, 60_000,
   );
