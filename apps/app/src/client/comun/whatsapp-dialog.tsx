@@ -5,7 +5,7 @@ import { SignInForm } from "./sign-in";
 import { IconButton } from "../../shared/ui/button";
 import { Dialog } from "../../shared/ui/overlay";
 
-const DialogCodeForm = lazy(() => import("../screens/cuenta-codigo").then((m) => ({ default: m.DialogCodeForm })));
+const DialogCodeForm = lazy(() => import("../cuenta/cuenta-codigo").then((m) => ({ default: m.DialogCodeForm })));
 
 export function WhatsAppDialog({ mode, next, onClose }: { mode: "account" | "publish"; next?: string; onClose: () => void }) {
   const [codeSent, setCodeSent] = useState(false);

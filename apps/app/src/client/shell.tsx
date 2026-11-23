@@ -29,7 +29,7 @@ import { RouterButtonLink } from "./comun/router-buttons";
 // En el JS inicial solo van Explorar y la ficha. Las demás pantallas se descargan al abrirlas, al apuntar o tocar
 // su enlace (defaultPreload "intent": en el móvil, touchstart) y, en reposo tras el primer pintado, las de las pestañas.
 const ownerScreens = () => import("./screens/propietario");
-const cuentaScreens = () => import("./screens/cuenta");
+const cuentaScreens = () => import("./cuenta/cuenta");
 const favoritosScreen = () => import("./screens/favoritos");
 const actividadScreen = () => import("./screens/actividad");
 const calendarioScreen = () => import("./screens/calendario");

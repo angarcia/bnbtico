@@ -13,7 +13,7 @@ import {
   waUrl,
   type OwnerInquiry,
 } from "../../src/domain/inquiry";
-import { waLink } from "../../src/client/support";
+import { waLink } from "../../src/client/cuenta/support";
 
 const TITLE = "Casa Manzanillo, a pie de playa";
 

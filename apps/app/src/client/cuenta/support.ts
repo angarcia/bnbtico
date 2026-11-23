@@ -1,6 +1,6 @@
 // Contacto con 3bstays: solo WhatsApp, un número por rol (variables VITE_WA_OWNERS y VITE_WA_GUESTS del build).
-import { waUrl } from "../domain/whatsapp";
-import { SUPPORT_NUMBERS } from "./comun/support-numbers";
+import { waUrl } from "../../domain/whatsapp";
+import { SUPPORT_NUMBERS } from "../comun/support-numbers";
 
 export const SUPPORT = {
   owner: {

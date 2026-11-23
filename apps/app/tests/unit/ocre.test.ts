@@ -54,12 +54,12 @@ describe("ocre solo para dinero y avisos de pago", () => {
 
   it("también la fila ocre de una lista (list-item-sun) fuera de la lista de permitidos", () => {
     const fixture = 'function Fila() {\n  return <Link className="list-item list-item-sun" />;\n}';
-    expect(offending(scan(fixture, "client/screens/cuenta.tsx"))).toEqual(["client/screens/cuenta.tsx#Fila"]);
+    expect(offending(scan(fixture, "client/cuenta/cuenta.tsx"))).toEqual(["client/cuenta/cuenta.tsx#Fila"]);
     expect(offending(scan(fixture, "client/screens/suscripcion.tsx"))).toEqual([]);
   });
 
   it("también el botón común en ocre (variant=\"pay\") fuera de la lista de permitidos", () => {
     const fixture = 'function Pie() {\n  return <Button variant="pay">Pagar</Button>;\n}\nfunction Otro() {\n  return <Button variant={x ? "secondary" : "pay"} />;\n}';
-    expect(offending(scan(fixture, "client/screens/cuenta.tsx"))).toEqual(["client/screens/cuenta.tsx#Pie", "client/screens/cuenta.tsx#Otro"]);
+    expect(offending(scan(fixture, "client/cuenta/cuenta.tsx"))).toEqual(["client/cuenta/cuenta.tsx#Pie", "client/cuenta/cuenta.tsx#Otro"]);
   });
 });

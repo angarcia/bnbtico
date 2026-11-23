@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { renderToString } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import * as screens from "../../src/client/screens/cuenta";
+import * as screens from "../../src/client/cuenta/cuenta";
 
 const state = vi.hoisted(() => ({
   search: {} as { next?: string; editar?: string },
