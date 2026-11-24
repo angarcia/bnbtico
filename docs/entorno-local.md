@@ -317,7 +317,7 @@ Antes de subir un cambio, lo mínimo es:
 pnpm typecheck && pnpm test
 ```
 
-Las E2E, siempre después de un build y con su Chrome:
+Las E2E, siempre después de un build y con su Chrome (sirven lo que haya en `dist/` y no compilan: si algo de `src/`, `public/` o la configuración es más nuevo que la compilación, fallan antes de empezar y dicen qué archivos):
 
 ```bash
 pnpm build && CHROMIUM_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" pnpm test:e2e

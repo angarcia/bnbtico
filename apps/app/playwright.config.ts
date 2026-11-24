@@ -8,6 +8,8 @@ const artifacts = process.env.PW_ARTIFACT_ROOT;
 
 export default defineConfig({
   testDir: "tests/e2e",
+  // En local, falla antes de empezar si dist/ no es la compilación del código de ahora (vite preview no compila).
+  globalSetup: "./tests/e2e/global-setup.ts",
   workers: 1,
   retries: 0,
   forbidOnly: !!process.env.CI,
