@@ -496,7 +496,9 @@ describe("artefactos Playwright publicables", () => {
     expect(await readdir(root)).not.toContain("publish");
   });
 
-  it("fragmentos: limita la cantidad de nodos antes de agregar", async () => {
+  // 30 s: en los Mac con Microsoft Defender, abrir un JSON recién escrito con 20 001 fragmentos tarda ~13 s (lo analiza al
+  // abrirlo; uno igual de grande sin esa forma abre en milisegundos). En CI tarda ~0,4 s (2026-11-24).
+  it("fragmentos: limita la cantidad de nodos antes de agregar", { timeout: 30_000 }, async () => {
     const artifact = await consoleArtifact("json-text", Array.from({ length: 20_001 }, () => "!"));
     await writeFile(join(root, "raw", artifact.name), artifact.bytes);
     await expect(sanitizeRun({ root })).rejects.toThrow("(limits)");

@@ -389,6 +389,7 @@ pnpm db:stop
 | `Port 5173 is in use` | Hay otra app corriendo. Ciérrela, o cierre la terminal donde la dejó abierta. |
 | `Cannot find package '…'` en las pruebas | Faltan dependencias: `pnpm install --frozen-lockfile`. |
 | `pnpm typecheck` falla en un archivo que no está en git | TypeScript revisa también archivos locales que no se suben (por ejemplo, scripts de capturas en `tests/capturas/`). No es un fallo del proyecto: en CI no existen. Arréglelos o apártelos de la carpeta. |
+| Pruebas lentas o que se agotan en local y en CI no (por ejemplo, «fragmentos» de `playwright-artifacts` tardaba 13 s frente a 0,4 s en CI) | Microsoft Defender analiza ciertos archivos al abrirlos (en «fragmentos», un JSON recién escrito con miles de trozos). No es un fallo del código: esa prueba tiene 30 s de margen. Si otra se agota igual, mida dónde espera (un `open` lento es Defender) antes de tocar el código. |
 | El código `123456` no funciona | Revise que el número sea uno de la tabla de la sección 4. Con otros números no llega ningún código. |
 | La app muestra datos viejos | Es la caché offline. En DevTools: **Application** → «Clear site data» y recargue. |
 | No sale ninguna casa en Explorar | La base está vacía o la casa no está aprobada. Siga la sección 5. |
