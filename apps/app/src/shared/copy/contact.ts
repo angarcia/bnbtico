@@ -18,3 +18,6 @@ export const open = "Abrir WhatsApp";
 export const needsCode = "Para escribirle necesita verificar su WhatsApp con un código. Lo que escribió se guarda.";
 export const hostSees = ({ name }: { name: string }) => `${name} verá su nombre y su WhatsApp.`;
 export const safety = "Por su seguridad, nunca envíe dinero antes de confirmar la casa. 3bstays no procesa ni pide pagos.";
+export const stayDates = "Fechas";
+export const stayNights = "Número de noches";
+export const pickDate = "Elegir fecha";

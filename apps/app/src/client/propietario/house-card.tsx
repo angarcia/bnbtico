@@ -23,7 +23,7 @@ export interface HouseCardTopProps {
 export function HouseCardTop({ listing: l, edit = null, eager = false, sizes = "100vw", link = false }: HouseCardTopProps) {
   const label = cardLabel(l, edit);
   const cover = l.photos[0];
-  const title = l.title || "Borrador sin título";
+  const title = l.title || OWNER_COPY.untitled;
   return (
     <>
       <div className="photo house-photo">

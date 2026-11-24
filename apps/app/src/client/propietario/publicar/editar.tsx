@@ -221,7 +221,7 @@ function EditFieldForm({ listing, field, userId, dialog = false }: { listing: Li
     edit.mutate(plan.reviewed, { onSuccess: done(admin ? EDIT_COPY.savedLive : EDIT_COPY.sentToReview), onError: failed });
   }
 
-  const action = reviewed ? "Enviar a revisión" : "Guardar";
+  const action = reviewed ? EDITAR_COPY.sendToReview : EDITAR_COPY.save;
   // El error de un campo va debajo de ese campo (aquí todos los datos de la pantalla están siempre a la vista); el resto,
   // en el aviso de arriba.
   const fieldProblem = listingFieldError(error);
@@ -323,7 +323,7 @@ function EditPhotosDialog({ listing, userId }: { listing: Listing; userId: strin
       <PhotoEditorDialog
         source={source}
         userId={userId}
-        notice={`El orden y las fotos que quite se guardan al momento y ya se ven en su ficha. ${EDIT_COPY.photosNotice}`}
+        notice={EDITAR_COPY.photosDialogNotice({ review: EDIT_COPY.photosNotice })}
         onClose={back}
         returnFocus={editTrigger("fotos")}
       />

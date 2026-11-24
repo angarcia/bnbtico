@@ -24,3 +24,9 @@ export const revoking = ({ busy }: { busy: boolean }) => (busy ? "Revocando…" 
 export const cancel = "Cancelar";
 export const revokeTitle = "¿Revocar este enlace?";
 export const revokeText = "El enlace actual dejará de funcionar. Retírelo también de Airbnb: los bloqueos que ya leyó pueden seguir apareciendo allí.";
+export const readFailed = "No pudimos consultar el enlace. Intente de nuevo.";
+export const generateFailed = "No pudimos generar el enlace. Intente de nuevo.";
+export const copied = "Enlace copiado";
+export const revokedToast = "Enlace revocado";
+export const changedMeanwhile = "El enlace cambió. Cancele y vuelva a abrir la confirmación.";
+export const revokeFailed = "No pudimos completar el cambio. Intente de nuevo.";

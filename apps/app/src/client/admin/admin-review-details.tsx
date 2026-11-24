@@ -13,7 +13,7 @@ function initials(name: string): string {
 }
 
 export const bathText = (l: Pick<Listing, "kind" | "bathroomShared">) =>
-  l.kind === "habitacion" && l.bathroomShared !== null ? (l.bathroomShared ? "baño compartido" : "baño privado") : null;
+  l.kind === "habitacion" && l.bathroomShared !== null ? ADMIN_COPY.bathShared({ shared: l.bathroomShared }) : null;
 
 /** «Alojamiento completo · Cahuita · Talamanca, Limón · 2 personas · 1 hab · 1 baño»; sin el tipo o la zona si cambian. */
 export function factsLine(l: Listing, skip: { kind?: boolean; location?: boolean } = {}): string {
@@ -22,9 +22,9 @@ export function factsLine(l: Listing, skip: { kind?: boolean; location?: boolean
     !skip.kind && l.kind ? KIND_LABELS[l.kind] : null,
     skip.kind ? null : bathText(l),
     skip.location ? null : locationLine(l),
-    l.capacity ? `${l.capacity} personas` : null,
-    l.bedrooms !== null ? `${l.bedrooms} hab` : null,
-    l.bathrooms ? `${l.bathrooms} ${l.bathrooms === 1 ? "baño" : "baños"}` : null,
+    l.capacity ? ADMIN_COPY.people({ count: l.capacity }) : null,
+    l.bedrooms !== null ? ADMIN_COPY.rooms({ count: l.bedrooms }) : null,
+    l.bathrooms ? ADMIN_COPY.baths({ count: l.bathrooms }) : null,
   ]
     .filter(Boolean)
     .join(" · ");

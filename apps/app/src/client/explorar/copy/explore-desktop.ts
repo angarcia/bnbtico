@@ -10,3 +10,7 @@ export const clearDates = "Quitar fechas";
 export const applyDates = "Aplicar fechas";
 export const people = "Personas";
 export const needs = "Qué necesitan";
+export const peopleUnset = "Sin indicar";
+export const place = "Lugar";
+export const dates = "Fechas";
+export const nights = "Noches";

@@ -5,6 +5,7 @@ import { useSyncExternalStore } from "react";
 import type { FavoritesApi } from "../domain/api";
 import { FAVORITES_KEY, addFavorite, isFavorite, mergeFavorites, parseFavorites, removeFavorite, serializeFavorites, type FavoriteEntry } from "../domain/favorites";
 import { toast } from "./toast";
+import { OFFLINE_MESSAGE } from "../domain/errors";
 
 /** = SESSION_STORAGE_KEY (data/storage): ese módulo no se importa aquí para no arrastrarlo al JS de la ficha SSR. */
 export const STORED_SESSION_KEY = "3bstays-auth";
@@ -87,7 +88,7 @@ function hasStoredSession(): boolean {
 /** Los adaptadores ya fallan con DomainError (mensaje en español); lo demás (no se pudo ni descargar el adaptador) es la
  *  red. Sin importar errors.ts: no hace falta en el JS de la ficha SSR. */
 export function favoriteErrorMessage(error: unknown): string {
-  return error instanceof Error && "kind" in error ? error.message : "Sin conexión. Revise su internet e intente de nuevo.";
+  return error instanceof Error && "kind" in error ? error.message : OFFLINE_MESSAGE;
 }
 
 export const favoritesStore = createFavoritesStore({

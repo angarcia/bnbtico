@@ -51,3 +51,10 @@ export const housePhoneLine = ({ phone }: { phone: string }) => `${phone} · ver
 export const notFoundTitle = "No encontramos esta casa";
 export const notFoundText = "Puede que la haya descartado o que el enlace no sea suyo.";
 export const noPhotos = "Aún sin fotos";
+export const untitled = "Borrador sin título";
+export const blockedMessage = ({ id, title }: { id: string; title: string }) => `Hola, mi casa ${id} (${title}) está bloqueada y quisiera hablar con ustedes.`;
+export const tileActive = ({ count }: { count: number }) => plural(count, { one: "activa", other: "activas" });
+export const tileDue = "por pagar";
+export const tileReview = "en revisión";
+export const tileDraft = ({ count }: { count: number }) => plural(count, { one: "borrador", other: "borradores" });
+export const idLoading = "…";

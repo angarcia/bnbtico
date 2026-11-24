@@ -118,24 +118,24 @@ type SheetMode = "detail" | "pause" | "block" | "delete";
 /** Lo que cada acción hace, dicho al admin antes de confirmarla. */
 const MODE_COPY: Record<Exclude<SheetMode, "detail">, { title: string; body: string; label: string; confirm: string; field: string }> = {
   pause: {
-    title: "Pausar casa",
-    body: "Sale de Explorar y su enlace deja de funcionar. El anfitrión la sigue viendo y editando, con el motivo; usted la reanuda cuando todo esté en orden. La suscripción no cambia.",
-    label: "Motivo (lo verá el anfitrión)",
-    confirm: "Pausar casa",
+    title: ADMIN_COPY.pauseTitle,
+    body: ADMIN_COPY.pauseBody,
+    label: ADMIN_COPY.reasonForHost,
+    confirm: ADMIN_COPY.pauseTitle,
     field: "pause-reason",
   },
   block: {
-    title: "Bloquear casa",
-    body: "Igual para el público. El anfitrión verá el motivo y «Escribir a 3bstays», no podrá editarla ni reactivarla y su suscripción se para: sin cobro ni avisos mientras esté bloqueada.",
-    label: "Motivo (lo verá el anfitrión)",
-    confirm: "Bloquear casa",
+    title: ADMIN_COPY.blockTitle,
+    body: ADMIN_COPY.blockBody,
+    label: ADMIN_COPY.reasonForHost,
+    confirm: ADMIN_COPY.blockTitle,
     field: "block-reason",
   },
   delete: {
-    title: "Eliminar casa",
-    body: "Desaparece para todos, también para el anfitrión y de los favoritos de los clientes. Los datos, fotos y consultas quedan guardados, ocultos. No hay «deshacer» en la app.",
-    label: "Motivo (queda en el registro)",
-    confirm: "Eliminar casa",
+    title: ADMIN_COPY.deleteTitle,
+    body: ADMIN_COPY.deleteBody,
+    label: ADMIN_COPY.reasonForLog,
+    confirm: ADMIN_COPY.deleteTitle,
     field: "delete-reason",
   },
 };

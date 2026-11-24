@@ -11,3 +11,7 @@ export const continueDraft = "Seguir con el borrador";
 export const intro = "Publique su casa en pocos pasos";
 export const introNote = "La revisamos a mano y queda visible con su enlace para compartir por WhatsApp.";
 export const wizardTitle = ({ admin }: { admin: boolean }) => (admin ? "Asistir casa" : "Publicar casa");
+export const notFound = "No encontramos ese anuncio.";
+export const verifyFirst = "Para esto hace falta verificar su WhatsApp.";
+export const savingDraft = "Guardando el borrador…";
+export const closeLater = "Cerrar y seguir después";

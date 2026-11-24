@@ -19,3 +19,4 @@ export const email = "Correo";
 export const emailHint = "Para recuperar su cuenta si pierde el acceso a su WhatsApp. Opcional.";
 export const saveEmail = "Guardar correo";
 export const skip = "Ahora no";
+export const emailMissing = "Escriba su correo o toque «Ahora no».";

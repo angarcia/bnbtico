@@ -98,7 +98,7 @@ function SideBySide({ before, after }: { before: string; after: string }) {
   );
 }
 
-const kindText = (l: Pick<Listing, "kind" | "bathroomShared">) => [l.kind ? KIND_LABELS[l.kind] : "Sin tipo", bathText(l)].filter(Boolean).join(" · ");
+const kindText = (l: Pick<Listing, "kind" | "bathroomShared">) => [l.kind ? KIND_LABELS[l.kind] : ADMIN_COPY.noKind, bathText(l)].filter(Boolean).join(" · ");
 
 /** Lo que cambia la edición, dato por dato («Antes» / «Ahora») y con su decisión, y lo demás plegado. */
 function EditDiff({ item, userId }: { item: QueueItem; userId: string }) {
@@ -190,7 +190,7 @@ function TwoPointsMap({ before, beforeZone, after }: { before: MapPoint | null; 
       dispose?.();
     };
   }, [before?.lat, before?.lng, before?.label, after.lat, after.lng, after.label]); // eslint-disable-line react-hooks/exhaustive-deps
-  const label = `Mapa con la ubicación de antes (${beforeZone}) y la de ahora (${after.label})`;
+  const label = ADMIN_COPY.mapLabel({ before: beforeZone, after: after.label });
   return failed || !before ? (
     <div className={`map-box map-box-listing ${cardClass({ tone: "solid" })} small`} role="img" aria-label={label}>
       {ADMIN_COPY.mapFallback({ before: beforeZone, after: after.label })}

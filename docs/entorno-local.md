@@ -210,6 +210,7 @@ pnpm dev --port 5173 --strictPort --host 127.0.0.1
 | --- | --- |
 | http://127.0.0.1:5173 | La app (Explorar). |
 | http://127.0.0.1:5173/?pronto=1 | La portada estática («Pronto»). |
+| http://127.0.0.1:5173/_componentes | El catálogo de componentes: cada botón, campo, aviso, hoja… en sus variantes (no existe en producción). |
 | http://127.0.0.1:5173/casa/CT-#### | Ficha de una casa (renderizada en el servidor). Ponga un número que exista: lo ve en la casa o en Studio, tabla `listings`, columna `public_id`. |
 | http://127.0.0.1:54323 | **Supabase Studio**: ver y editar las tablas a mano. |
 
@@ -308,6 +309,7 @@ Todas se ejecutan desde la raíz del repositorio, con Node 22.
 | `pnpm build` | Compila la app | — | < 1 min |
 | `pnpm size` | Peso del JS frente al presupuesto | `pnpm build` | segundos |
 | `pnpm test:e2e` | Flujos en un móvil simulado (Playwright) | `pnpm db:start` y `pnpm build` | 10–20 min |
+| `pnpm capturas:actualizar` | Regenera las capturas de referencia del catálogo de componentes con el navegador de Linux de CI (`--comparar` solo compara) | Docker Desktop abierto y `pnpm build` | 1–2 min (la primera vez baja la imagen, unos 3,5 GB) |
 | `pnpm lighthouse` | Velocidad (ficha y app instalada) | `pnpm db:start` y `pnpm build`, sin nada más abierto | varios min |
 
 Antes de subir un cambio, lo mínimo es:
@@ -316,7 +318,7 @@ Antes de subir un cambio, lo mínimo es:
 pnpm typecheck && pnpm test
 ```
 
-Las E2E, siempre después de un build y con su Chrome:
+Las E2E, siempre después de un build y con su Chrome (sirven lo que haya en `dist/` y no compilan: si algo de `src/`, `public/` o la configuración es más nuevo que la compilación, fallan antes de empezar y dicen qué archivos):
 
 ```bash
 pnpm build && CHROMIUM_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" pnpm test:e2e
@@ -389,6 +391,7 @@ pnpm db:stop
 | `Port 5173 is in use` | Hay otra app corriendo. Ciérrela, o cierre la terminal donde la dejó abierta. |
 | `Cannot find package '…'` en las pruebas | Faltan dependencias: `pnpm install --frozen-lockfile`. |
 | `pnpm typecheck` falla en un archivo que no está en git | TypeScript revisa también archivos locales que no se suben (por ejemplo, scripts de capturas en `tests/capturas/`). No es un fallo del proyecto: en CI no existen. Arréglelos o apártelos de la carpeta. |
+| Pruebas lentas o que se agotan en local y en CI no (por ejemplo, «fragmentos» de `playwright-artifacts` tardaba 13 s frente a 0,4 s en CI) | Microsoft Defender analiza ciertos archivos al abrirlos (en «fragmentos», un JSON recién escrito con miles de trozos). No es un fallo del código: esa prueba tiene 30 s de margen. Si otra se agota igual, mida dónde espera (un `open` lento es Defender) antes de tocar el código. |
 | El código `123456` no funciona | Revise que el número sea uno de la tabla de la sección 4. Con otros números no llega ningún código. |
 | La app muestra datos viejos | Es la caché offline. En DevTools: **Application** → «Clear site data» y recargue. |
 | No sale ninguna casa en Explorar | La base está vacía o la casa no está aprobada. Siga la sección 5. |

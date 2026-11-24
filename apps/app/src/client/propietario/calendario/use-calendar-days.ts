@@ -9,6 +9,7 @@ import type { Listing } from "../../../domain/listing";
 import { listingDaysKey, publicListingKey } from "../../../shared/listing-query";
 import { toast } from "../../../shared/toast";
 import { calendarApi, calendarQuery, saveCalendar } from "./calendar-days";
+import * as CAL_COPY from "./copy/calendar";
 
 /** El precio por noche de la casa, del que parten los precios especiales (null si no se alquila por noches). */
 export const baseOf = (l: Listing) => (l.acceptsNightly ? l.nightlyPriceCrc : null);
@@ -57,8 +58,8 @@ export function useCalendarDays(l: Listing, userId: string, today: string, cal: 
    *  Devuelve el motivo si no se puede. */
   function markBooked(nights: string[]): string | null {
     const current = client.getQueryData<CalendarDay[]>(key);
-    if (!current) return "No pudimos comprobar la disponibilidad. Intente de nuevo.";
-    if (current.some((d) => !d.available && nights.includes(d.day))) return "Hay noches ocupadas entre esas fechas.";
+    if (!current) return CAL_COPY.availabilityUnknown;
+    if (current.some((d) => !d.available && nights.includes(d.day))) return CAL_COPY.nightsTaken;
     return commit({ days: nights, available: false, requireFree: true });
   }
 

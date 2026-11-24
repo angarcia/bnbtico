@@ -98,7 +98,7 @@ export function ListingCalendar({ listing: l, currency, fx, onStay }: { listing:
     if (shared) write(NO_RANGE);
   };
   const warn = rejected || blocked;
-  const note = warn ? RANGE_BUSY_MESSAGE : stay && shared ? stayLine(stay, shared, currency, fx) : pending ? "Ahora elija la salida." : "";
+  const note = warn ? RANGE_BUSY_MESSAGE : stay && shared ? stayLine(stay, shared, currency, fx) : pending ? CALENDAR_COPY.pickCheckout : "";
   return (
     <>
       <MonthHead month={month} setMonth={setMonth} title={title} win={win} />

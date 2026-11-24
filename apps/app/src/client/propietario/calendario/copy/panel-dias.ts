@@ -10,3 +10,5 @@ export const manual = "Bloqueo manual";
 export const availability = "Disponibilidad";
 export const basePrice = ({ price }: { price: string }) => `Usar el precio base (${price})`;
 export const save = "Guardar cambios";
+export const free = "Disponible";
+export const busy = "Ocupado";

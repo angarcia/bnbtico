@@ -35,10 +35,10 @@ export function DesktopSearch({ filters, zoneName }: { filters: Filters; zoneNam
   const panelId = useId();
   const displayed = panel ? draft : filters;
   const fields: { key: SearchField; label: string; value: string | null; icon: typeof I.pin }[] = [
-    { key: "donde", label: "Lugar", value: filters.zone ? zoneName : filters.prov !== ALL_PROVINCES ? filters.prov : null, icon: I.pin },
+    { key: "donde", label: DESKTOP_COPY.place, value: filters.zone ? zoneName : filters.prov !== ALL_PROVINCES ? filters.prov : null, icon: I.pin },
     // Feature flags (#58): «Fechas» con fechas, «Noches» con número de noches (diseño #59), ninguno sin estancia.
-    ...(SEARCH_MODE === "dates" ? [{ key: "cuando" as const, label: "Fechas", value: stayLabel(displayed), icon: I.calendar }] : []),
-    ...(SEARCH_MODE === "nights" ? [{ key: "cuando" as const, label: "Noches", value: stayLabel(displayed), icon: I.moon }] : []),
+    ...(SEARCH_MODE === "dates" ? [{ key: "cuando" as const, label: DESKTOP_COPY.dates, value: stayLabel(displayed), icon: I.calendar }] : []),
+    ...(SEARCH_MODE === "nights" ? [{ key: "cuando" as const, label: DESKTOP_COPY.nights, value: stayLabel(displayed), icon: I.moon }] : []),
   ];
 
   // Escape vuelve al disparador; tocar fuera solo cierra.
@@ -110,7 +110,7 @@ export function DesktopSearch({ filters, zoneName }: { filters: Filters; zoneNam
       ))}
       <div className="desktop-search-people float-card" role="group" aria-label={DESKTOP_COPY.people}>
         <I.user size={20} />
-        <Stepper unit="Una persona" value={filters.ppl} min={0} max={SEARCH_MAX_PEOPLE} empty={!filters.ppl} valueLabel={peopleLabel(filters.ppl) ?? "Sin indicar"} onChange={changePeople} />
+        <Stepper unit="people" value={filters.ppl} min={0} max={SEARCH_MAX_PEOPLE} empty={!filters.ppl} valueLabel={peopleLabel(filters.ppl) ?? DESKTOP_COPY.peopleUnset} onChange={changePeople} />
       </div>
     </div>
   );

@@ -7,10 +7,10 @@ import { Stepper } from "./ui/stepper";
 import * as CALENDAR_COPY from "../domain/calendar-copy";
 
 const QUICK: readonly { label: string; nights: number }[] = [
-  { label: "Fin de semana", nights: 2 },
-  { label: "1 semana", nights: 7 },
-  { label: "2 semanas", nights: 14 },
-  { label: "1 mes", nights: 30 },
+  { label: CALENDAR_COPY.weekend, nights: 2 },
+  { label: CALENDAR_COPY.oneWeek, nights: 7 },
+  { label: CALENDAR_COPY.twoWeeks, nights: 14 },
+  { label: CALENDAR_COPY.oneMonth, nights: 30 },
 ];
 
 export function NightsPicker({ nights, onChange }: { nights: number; onChange(nights: number): void }) {
@@ -21,7 +21,7 @@ export function NightsPicker({ nights, onChange }: { nights: number; onChange(ni
           <b>{CALENDAR_COPY.nights}</b>
           <span className="small muted">{CALENDAR_COPY.nightsRange({ max: NIGHTS_MAX })}</span>
         </span>
-        <Stepper unit="Una noche" value={nights} min={1} max={NIGHTS_MAX} empty={!nights} onChange={onChange} />
+        <Stepper unit="nights" value={nights} min={1} max={NIGHTS_MAX} empty={!nights} onChange={onChange} />
       </div>
       {/* Como «Qué necesitan»: rejilla de dos columnas y el check en un hueco fijo, para que marcar no mueva nada. */}
       <ChoiceChips

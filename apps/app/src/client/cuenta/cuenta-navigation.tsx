@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { isContactNext, isPublishNext, listingInNext } from "../../domain/contact-return";
 import { firstName } from "../../domain/person";
 import { useReturnListing } from "../comun/sign-in";
+import * as ACCOUNT_COPY from "./copy/account";
 
 export function useGoTo() {
   const router = useRouter();
@@ -31,6 +32,6 @@ export function useContactMode(next?: string) {
   const publish = isPublishNext(next);
   const listing = useReturnListing(contact ? next : undefined);
   const owner = listing ? firstName(listing.ownerName) : null;
-  const header = contact ? `Escribirle a ${owner ?? "el anfitrión"}` : publish ? "Publicar casa" : "Ingresar";
+  const header = contact ? ACCOUNT_COPY.headerContact({ owner }) : publish ? ACCOUNT_COPY.headerPublish : ACCOUNT_COPY.headerSignIn;
   return { contact, publish, listing, header, owner };
 }

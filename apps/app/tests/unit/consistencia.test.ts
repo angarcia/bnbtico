@@ -6,6 +6,8 @@
 //    contador, tarjeta, aviso, etiqueta o cabecera): esa clase solo la pinta el archivo del componente.
 // 3. TSX: ningún `style={…}` con colores, fondos, bordes, radios o sombras.
 // 4. TSX: ningún archivo escribe texto suelto en el JSX: va en la carpeta `copy/` de su área.
+// 5. TS y TSX de client/ y shared/: tampoco fuera del JSX (avisos, errores, etiquetas en constantes): ninguna cadena que
+//    parezca una frase en español fuera de `copy/`. Excepciones técnicas en STRING_EXCEPTIONS, con su motivo.
 //
 // Cada fallo dice archivo:línea, qué encontró y qué usar. Para añadir una excepción: una entrada en CSS_EXCEPTIONS o en
 // CLASS_EXCEPTIONS, con su motivo en `why` (una línea). Ver docs/componentes.md, «Prueba de consistencia y sus excepciones».
@@ -321,8 +323,121 @@ function looseTexts(file: string): string[] {
   return out;
 }
 
+// ---------- 5. Cadenas en español fuera del JSX ----------
+
+/** Cadenas que parecen texto pero no se enseñan: archivo → texto → motivo. */
+const STRING_EXCEPTIONS: Record<string, Record<string, string>> = {
+  "client/comun/turnstile.ts": { "Turnstile sin API": "error interno; la persona ve CAPTCHA_FAILED", "No se pudo cargar Turnstile": "error interno; la persona ve CAPTCHA_FAILED" },
+  "client/explorar/hydrate-listing.tsx": { "Error de hidratación": "console.error para quien depura, no se enseña" },
+  "client/explorar/queries.ts": { "Revise las fechas.": "el mensaje que manda search_listings (P0001); se compara, no se enseña" },
+  "client/propietario/calendario/airbnb.tsx": { "La conexión cambió.": "lo captura la misma función y enseña disconnectFailed" },
+  "client/propietario/calendario/ical-export-card.tsx": { "El enlace cambió.": "lo captura la misma función y enseña changedMeanwhile o revokeFailed" },
+  "client/propietario/calendario/reservation-calendar.ts": { "Operación cancelada": "AbortError de la hoja al cerrarse; no se enseña" },
+  "client/propietario/suscripcion/suscripcion.tsx": { "Failed to fetch": "imita el error del navegador sin red para que toDomainError dé OFFLINE_MESSAGE" },
+  "shared/security.ts": { "# Generado en el build (src/shared/security.ts): CSP y cabeceras de seguridad del shell y los estáticos.": "comentario del archivo _headers" },
+  "shared/ui/card.tsx": { "between baseline offer-line": "clases CSS de la tarjeta" },
+};
+
+/** Una cadena que parece texto para personas: con tildes, eñe o signos del español, o con varias palabras en minúscula
+ *  (empezando o no por mayúscula). Los nombres de clase, rutas, claves y selectores no llevan espacios entre palabras. */
+const looksLikeText = (t: string) =>
+  /[áéíóúñÁÉÍÓÚÑ¿¡«»…]/.test(t) || /^[A-ZÁÉÍÓÚ¿¡][a-záéíóúñ]+ [a-záéíóúñ]/.test(t) || /[a-záéíóúñ]+ [a-záéíóúñ]+ [a-záéíóúñ]+/.test(t);
+
+const STRING_FILES = files(SRC, /\.tsx?$/)
+  .map((f) => relative(SRC, f))
+  .filter((f) => /^(?:client|shared)\//.test(f) && !/(?:^|\/)copy\//.test(f) && !f.endsWith(".d.ts"));
+
+/** Sitios donde una cadena se enseña aunque sea una palabra suelta en minúscula («por pagar», «activa»): propiedades de
+ *  texto de un objeto y los argumentos de avisos y errores. */
+const TEXT_KEYS = new Set(["label", "title", "text", "body", "message", "hint", "placeholder", "confirm", "action", "pending", "done", "line", "value", "name", "subtitle", "cancelLabel", "confirmLabel"]);
+const TEXT_CALLS = new Set(["toast", "setError", "setProblem", "setNotice", "DomainError", "announce"]);
+function shownAnyway(node: ts.Node): boolean {
+  let n: ts.Node = node;
+  // Sube por ternarios, `??`/`||` y paréntesis hasta el sitio donde se usa la cadena.
+  while (ts.isConditionalExpression(n.parent) || ts.isParenthesizedExpression(n.parent) || (ts.isBinaryExpression(n.parent) && [ts.SyntaxKind.QuestionQuestionToken, ts.SyntaxKind.BarBarToken].includes(n.parent.operatorToken.kind))) n = n.parent;
+  const p = n.parent;
+  if (ts.isPropertyAssignment(p) && p.initializer === n) return TEXT_KEYS.has(p.name.getText().replace(/["']/g, ""));
+  if ((ts.isCallExpression(p) || ts.isNewExpression(p)) && p.arguments?.[0] === n) return TEXT_CALLS.has(p.expression.getText().split(".").pop()!);
+  return false;
+}
+const aWord = (t: string) => /[a-záéíóúñ]{3,}/.test(t) && !/^[a-z0-9]+(?:[-_][a-z0-9]+)*$/.test(t);
+
+function inClassName(node: ts.Node): boolean {
+  for (let n: ts.Node | undefined = node.parent; n; n = n.parent) {
+    if (ts.isJsxAttribute(n)) return n.name.getText() === "className";
+    if (ts.isJsxElement(n) || ts.isJsxSelfClosingElement(n) || ts.isBlock(n) || ts.isSourceFile(n)) return false;
+  }
+  return false;
+}
+
+function looseStrings(file: string): string[] {
+  const text = readFileSync(join(SRC, file), "utf8");
+  const sf = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, file.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
+  const allowed = STRING_EXCEPTIONS[file] ?? {};
+  const found: string[] = [];
+  const visit = (node: ts.Node) => {
+    if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node) || ts.isTemplateHead(node) || ts.isTemplateMiddle(node) || ts.isTemplateTail(node)) {
+      const p = node.parent;
+      const module = ts.isImportDeclaration(p) || ts.isExportDeclaration(p) || (ts.isCallExpression(p) && p.expression.kind === ts.SyntaxKind.ImportKeyword);
+      // El texto suelto del JSX ya lo mira la regla 4; aquí, el resto. Las clases (`className={a ? "x y" : "z"}`) no son texto.
+      const jsx = ts.isJsxAttribute(p) || ts.isJsxText(node) || inClassName(node);
+      if (!module && !jsx && (looksLikeText(node.text) || (aWord(node.text) && shownAnyway(node))) && !(node.text in allowed)) {
+        found.push(`${file}:${sf.getLineAndCharacterOfPosition(node.getStart()).line + 1} «${node.text.slice(0, 60)}» (va en la carpeta copy/ del área)`);
+      }
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(sf);
+  return found;
+}
+
 describe("TSX: textos en el catálogo de su área", () => {
   it("ningún TSX escribe texto suelto en el JSX (use la carpeta `copy/` del área)", () => {
     expect(TEXT_FILES.flatMap(looseTexts)).toEqual([]);
+  });
+});
+
+// ---------- 6. Frases del dominio: un tope que solo baja ----------
+
+// El dominio (src/domain) tiene frases que se enseñan (estados, avisos, errores, mensajes de WhatsApp) desde antes de los
+// catálogos; muchas las comparte con el worker y la base. Hasta moverlas (cuando haya un segundo idioma), cada archivo no
+// puede sumar frases: los mensajes nuevos van en un catálogo `domain/*-copy.ts`. Si un archivo baja, se baja su tope en
+// tests/unit/textos-dominio.json (decisión del 2026-11-24).
+const DOMAIN_TEXT_LIMITS = JSON.parse(readFileSync(new URL("./textos-dominio.json", import.meta.url), "utf8")) as Record<string, number>;
+const DOMAIN_FILES = files(join(SRC, "domain"), /\.ts$/).map((f) => relative(SRC, f)).filter((f) => !/-copy\.ts$/.test(f));
+function domainTexts(file: string): number {
+  const text = readFileSync(join(SRC, file), "utf8");
+  const sf = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  let n = 0;
+  const visit = (node: ts.Node) => {
+    if ((ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node) || ts.isTemplateHead(node) || ts.isTemplateMiddle(node) || ts.isTemplateTail(node)) &&
+      !ts.isImportDeclaration(node.parent) && (looksLikeText(node.text) || (aWord(node.text) && shownAnyway(node)))) n++;
+    ts.forEachChild(node, visit);
+  };
+  visit(sf);
+  return n;
+}
+
+describe("dominio: frases para personas", () => {
+  it("ningún archivo de src/domain suma frases (las nuevas, en un catálogo `domain/*-copy.ts`)", () => {
+    const over = DOMAIN_FILES.map((f) => [f, domainTexts(f), DOMAIN_TEXT_LIMITS[f] ?? 0] as const).filter(([, n, max]) => n > max);
+    expect(over.map(([f, n, max]) => `${f}: ${n} frases (tope ${max})`)).toEqual([]);
+  });
+
+  it("el tope baja cuando un archivo tiene menos frases (actualice tests/unit/textos-dominio.json)", () => {
+    const stale = Object.entries(DOMAIN_TEXT_LIMITS).map(([f, max]) => [f, DOMAIN_FILES.includes(f) ? domainTexts(f) : 0, max] as const).filter(([, n, max]) => n < max);
+    expect(stale.map(([f, n, max]) => `${f}: ${n} frases, tope ${max}`)).toEqual([]);
+  });
+});
+
+describe("TS y TSX: cadenas en el catálogo de su área", () => {
+  it("ninguna cadena en español fuera de `copy/` en client/ y shared/ (avisos, errores, etiquetas en constantes)", () => {
+    expect(STRING_FILES.flatMap(looseStrings)).toEqual([]);
+  });
+
+  it("cada excepción de cadena sigue haciendo falta", () => {
+    const stale = Object.entries(STRING_EXCEPTIONS).flatMap(([file, texts]) =>
+      Object.keys(texts).filter((t) => !readFileSync(join(SRC, file), "utf8").includes(t)).map((t) => `${file}: «${t}»`));
+    expect(stale).toEqual([]);
   });
 });

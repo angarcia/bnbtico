@@ -9,7 +9,7 @@ import { EmptyState, StatusTag } from "../../shared/ui/structure";
 import * as ADMIN_COPY from "./copy/admin";
 
 export const message = (e: unknown) => toDomainError(e).message;
-export const titleOf = (l: Listing) => l.title || "Sin nombre";
+export const titleOf = (l: Listing) => l.title || ADMIN_COPY.untitled;
 
 export function useUserId(): string {
   return useSession().session?.userId ?? "";

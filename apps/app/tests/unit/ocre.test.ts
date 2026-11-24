@@ -22,6 +22,7 @@ const ALLOW = new Set([
   "client/propietario/suscripcion/suscripcion.tsx#*", // Promoción y suscripción, tarjeta y fila de Cuenta
   "shared/contact-sheet.tsx#*", // «no pague por adelantado»
   "client/comun/publish-promo.tsx#*", // la oferta de lanzamiento: publicar gratis (revisión UX 2026-10-29, A8)
+  "client/componentes/componentes.tsx#*", // el catálogo de componentes enseña todos los tonos, también el ocre
 ]);
 
 function files(dir: string): string[] {

@@ -156,7 +156,17 @@ test("versión nueva: espera, avisa al volver a la app, no se ofrece dentro del 
     await page.getByRole("button", { name: /Cerrar/ }).click();
     await expect(page).not.toHaveURL(/\/propietario\/publicar/);
     await expect(banner).toBeVisible();
-    await Promise.all([page.waitForEvent("load"), banner.getByRole("button", { name: "Actualizar" }).click()]);
+    // Si no recarga, que diga en qué se quedó el service worker (falló una vez en local con la suite entera, 2026-11-24, y no
+    // se reprodujo: ni en 20 intentos, 15 con la CPU cargada, ni en CI).
+    const reloaded = page.waitForEvent("load", { timeout: 15_000 }).catch(async () => {
+      const sw = await page.evaluate(async () => {
+        const r = await navigator.serviceWorker.getRegistration();
+        return { controller: !!navigator.serviceWorker.controller, active: r?.active?.state ?? null, waiting: r?.waiting?.state ?? null, installing: r?.installing?.state ?? null };
+      }).catch((e: unknown) => String(e));
+      throw new Error(`«Actualizar» no recargó en 15 s; service worker: ${JSON.stringify(sw)}`);
+    });
+    await banner.getByRole("button", { name: "Actualizar" }).click();
+    await reloaded;
     await expect.poll(() => page.evaluate(async () => (await navigator.serviceWorker.getRegistration())?.waiting ?? null)).toBe(null);
     await expect(page.getByText("Hay una versión nueva")).toHaveCount(0);
   } finally {

@@ -5,9 +5,16 @@ import { join } from "node:path";
 const PORT = Number(process.env.E2E_PORT ?? 4173);
 const chromium = process.env.CHROMIUM_PATH;
 const artifacts = process.env.PW_ARTIFACT_ROOT;
+// Navegador de Linux en Docker (scripts/capturas-linux.mjs): las capturas de referencia salen como en CI.
+const linuxBrowser = process.env.PW_LINUX_WS;
 
 export default defineConfig({
   testDir: "tests/e2e",
+  // En local, falla antes de empezar si dist/ no es la compilación del código de ahora (vite preview no compila).
+  globalSetup: "./tests/e2e/global-setup.ts",
+  // Capturas de referencia (toHaveScreenshot), sin el sistema en el nombre: solo se comparan en Linux, como en CI.
+  snapshotPathTemplate: "{testDir}/__capturas__/{testFileName}/{arg}{ext}",
+  expect: { toHaveScreenshot: { maxDiffPixelRatio: 0.002, animations: "disabled", caret: "hide" } },
   workers: 1,
   retries: 0,
   forbidOnly: !!process.env.CI,
@@ -32,7 +39,8 @@ export default defineConfig({
     trace: "retain-on-failure",
     // Con service worker, page.route no ve lo que pide el SW (fotos, teselas): solo app-instalada.spec.ts lo activa.
     serviceWorkers: "block",
-    ...(chromium ? { launchOptions: { executablePath: chromium } } : {}),
+    ...(chromium && !linuxBrowser ? { launchOptions: { executablePath: chromium } } : {}),
+    ...(linuxBrowser ? { connectOptions: { wsEndpoint: linuxBrowser, exposeNetwork: "<loopback>" } } : {}),
   },
   webServer: {
     command: `pnpm exec vite preview --port ${PORT} --strictPort --host 127.0.0.1`,

@@ -71,7 +71,7 @@ export function MyAccount({ editing, tab = false }: { editing: boolean; tab?: bo
       await (await authApi()).logout();
     } catch (e) {
       const err = toDomainError(e);
-      setLogoutError(err.kind === "unknown" ? "No pudimos cerrar la sesión. Intente de nuevo." : err.message);
+      setLogoutError(err.kind === "unknown" ? ACCOUNT_COPY.logoutFailed : err.message);
       return setLeaving(false);
     }
     await navigate({ to: isDesktop() ? "/explorar" : "/que-es-3bstays", replace: true });

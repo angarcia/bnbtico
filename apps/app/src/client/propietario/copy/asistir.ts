@@ -16,3 +16,4 @@ export const loadingDrafts = "Cargando los borradores";
 export const noDrafts = "No hay borradores sin enviar.";
 export const started = ({ date }: { date: string }) => `empezado el ${date}`;
 export const readyToSend = "Listo para enviar";
+export const notHere = "Ese dato no se puede cambiar aquí.";

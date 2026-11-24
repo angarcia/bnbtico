@@ -6,9 +6,10 @@ import { DomainError, toDomainError } from "../../../domain/errors";
 import { airbnbApi, airbnbQuery } from "./airbnb-queries";
 import { calendarApi, calendarQuery } from "./calendar-days";
 import { sessionState } from "../../comun/session";
+import * as RESERVATION_COPY from "./copy/reservation-calendar";
 
 const RECENT_MS = 60_000;
-const WARNING = "No pudimos actualizar Airbnb. Puede continuar con el último calendario válido; confirme la disponibilidad antes de marcar la reserva.";
+const WARNING = RESERVATION_COPY.airbnbStale;
 
 export async function prepareReservationCalendar(client: QueryClient, userId: string, listingId: string, publicId: string, signal: AbortSignal): Promise<{ warning: string | null }> {
   const current = () => {
@@ -37,13 +38,13 @@ export async function prepareReservationCalendar(client: QueryClient, userId: st
     const deadline = Date.now() + 25_000;
     const settle = async (data: AirbnbSummary) => {
       while (data.state === "running" && Date.now() < deadline) { await wait(); current(); data = await overview(); }
-      if (data.state === "running") throw new DomainError("La importación sigue en curso.", "conflict");
+      if (data.state === "running") throw new DomainError(RESERVATION_COPY.importRunning, "conflict");
       return data;
     };
     const wasRunning = summary.state === "running";
     summary = await settle(summary);
     imported = wasRunning && !summary.errorCode;
-    if (summary.state === "suspended") throw new DomainError("Esta casa no permite actualizar el calendario.", "forbidden");
+    if (summary.state === "suspended") throw new DomainError(RESERVATION_COPY.refreshForbidden, "forbidden");
     const age = summary.lastSuccessAt ? Date.now() - Date.parse(summary.lastSuccessAt) : Infinity;
     // Con el límite manual (2026-11-17) no se lee: vale la última lectura, de hace 15 minutos como mucho.
     const limited = airbnbManualHint(summary, Date.now()) !== null;
@@ -81,7 +82,7 @@ export async function prepareReservationCalendar(client: QueryClient, userId: st
   } catch (error) {
     current();
     if (toDomainError(error).kind !== "network" || client.getQueryData(daysOptions.queryKey) === undefined) throw error;
-    warning ??= "No pudimos comprobar los cambios del calendario. Puede continuar con la última disponibilidad guardada; confirme las fechas antes de marcar la reserva.";
+    warning ??= RESERVATION_COPY.daysStale;
   }
   current();
   if (imported) {

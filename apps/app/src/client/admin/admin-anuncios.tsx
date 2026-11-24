@@ -53,9 +53,9 @@ export function AnunciosScreen() {
 
   const shown: QueueItem[] = q ? q[tab] : [];
   const tabs: { key: QueueTab; label: string }[] = [
-    { key: "review", label: q?.review.length ? `Por revisar · ${q.review.length}` : "Por revisar" },
-    { key: "changes", label: "Cambios pedidos" },
-    { key: "rejected", label: "Rechazados" },
+    { key: "review", label: ADMIN_COPY.tabReview({ count: q?.review.length ?? 0 }) },
+    { key: "changes", label: ADMIN_COPY.tabChanges },
+    { key: "rejected", label: ADMIN_COPY.tabRejected },
   ];
   return (
     <>

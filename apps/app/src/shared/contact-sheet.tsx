@@ -56,8 +56,8 @@ import * as CONTACT_COPY from "./copy/contact";
 import * as CALENDAR_COPY from "../domain/calendar-copy";
 
 const STAY_OPTIONS = [
-  { value: "dates", label: "Fechas" },
-  { value: "nights", label: "Número de noches" },
+  { value: "dates", label: CONTACT_COPY.stayDates },
+  { value: "nights", label: CONTACT_COPY.stayNights },
 ] as const;
 
 /** Campos que sacan el teclado (las fechas abren el calendario de la hoja). */
@@ -310,7 +310,7 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend, inlin
           <Field id="contact-people" label={CONTACT_COPY.people} size="compact" error={error?.field === "people" ? error.message : null}>
             {(control) => (
               <Stepper
-                unit="Una persona"
+                unit="people"
                 value={people}
                 min={1}
                 max={maxPeople}
@@ -387,6 +387,6 @@ export function ContactSheet({ listing, days, onClose, navigate, autoSend, inlin
 /** Una casilla de fecha de la hoja: «Elegir fecha» o la elegida («8 nov»); abre y cierra el calendario. */
 function DateBox({ label, value, open, invalid, describedBy, onToggle }: { label: string; value: string | null; open: boolean; invalid?: true; describedBy?: string; onToggle: () => void }) {
   return (
-    <ClosedField kind="date" label={label} value={(value && shortDate(value)) || "Elegir fecha"} empty={!value} aria-expanded={open} aria-invalid={invalid} aria-describedby={describedBy} onClick={onToggle} />
+    <ClosedField kind="date" label={label} value={(value && shortDate(value)) || CONTACT_COPY.pickDate} empty={!value} aria-expanded={open} aria-invalid={invalid} aria-describedby={describedBy} onClick={onToggle} />
   );
 }

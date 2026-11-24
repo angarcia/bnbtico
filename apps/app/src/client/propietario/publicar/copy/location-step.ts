@@ -12,3 +12,4 @@ export const privacy = "Los clientes solo ven la zona, no su dirección.";
 export const otherZone = "Otra zona";
 export const otherPlaceholder = "Escriba el nombre de la zona";
 export const useName = ({ name }: { name: string }) => `Usar "${name}"`;
+export const notLand = "Ponga el punto sobre tierra, dentro de Costa Rica";

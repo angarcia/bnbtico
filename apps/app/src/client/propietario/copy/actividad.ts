@@ -15,3 +15,4 @@ export const untitled = "Casa sin título";
 export const isNew = "Nueva";
 export const bySupport = "Creada por 3bstays";
 export const openWhatsapp = "Abrir WhatsApp";
+export const empty = "Cuando alguien le escriba por WhatsApp desde la ficha de su casa, aparecerá aquí.";

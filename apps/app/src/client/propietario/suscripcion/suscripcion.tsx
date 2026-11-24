@@ -20,6 +20,7 @@ import {
   nextStatus,
   parsePayHash,
   payButtonDue,
+  paymentDueCard,
   promoRunning,
   reminderCard,
   reminderDaysLeft,
@@ -131,16 +132,13 @@ function useStopResume(userId: string, house: BillingHouse, hasMethod: boolean) 
 
 // ---------- Una casa ----------
 
-const REMINDER_LABEL: Record<number, string> = { 90: "de los 90 días", 30: "de los 30 días", 7: "de los 7 días", 0: "del último día" };
+const REMINDER_LABEL: Record<number, string> = { 90: SUB_COPY.reminder90, 30: SUB_COPY.reminder30, 7: SUB_COPY.reminder7, 0: SUB_COPY.reminderLast };
 
 function PayNotice({ hb, today }: { hb: HouseBilling; today: string }) {
   const { sub } = hb;
   const card =
     sub.status === "payment_due"
-      ? {
-          title: sub.promoEndsOn ? `Su oferta gratuita terminó el ${shortDate(sub.promoEndsOn, today)}` : "Falta el método de pago",
-          body: `La ficha está oculta y el enlace no funciona hasta que añada un método de pago. ${formatCRC(sub.monthlyPriceCrc)} al mes, sin permanencia; puede parar cuando quiera.`,
-        }
+      ? paymentDueCard(sub.promoEndsOn ? shortDate(sub.promoEndsOn, today) : null, sub.monthlyPriceCrc)
       : reminderCard(reminderDaysLeft(sub, today) ?? -1);
   if (!card) return null;
   return (
@@ -219,7 +217,7 @@ function HouseCard({ hb, today, userId, hasMethod, target, onAction }: { hb: Hou
           body={SUB_COPY.stopBody({ title: house.title })}
           confirmLabel={SUB_COPY.stop}
           tone={desktop ? "keep" : "destructive"}
-          cancelLabel={desktop ? "Mantener suscripción" : "Cancelar"}
+          cancelLabel={desktop ? SUB_COPY.keepSubscription : SUB_COPY.cancel}
           cancelFirst={desktop}
           returnFocus={ref}
           onClose={() => setConfirming(false)}
@@ -251,9 +249,9 @@ function HouseFigures({ userId, listingId }: { userId: string; listingId: string
 // ---------- La pantalla ----------
 
 const SAVING_TEXT: Record<Exclude<Saving, null>, string> = {
-  saving: "Guardando su método de pago…",
-  saved: "Método de pago guardado. No se cobra nada hasta que termine la oferta.",
-  late: "Lo estamos confirmando; aparecerá en unos minutos.",
+  saving: SUB_COPY.savingMethod,
+  saved: SUB_COPY.savedMethod,
+  late: SUB_COPY.lateMethod,
 };
 
 /** El método de pago guardado (o «Añadir método de pago» si toca pagar). `publicId`: la casa a la que vuelve la pasarela. */
@@ -416,7 +414,7 @@ export function CuentaSubscriptionCard({ fallback }: { fallback: ReactNode }) {
   const rows: { id: string; publicId?: string; title: string; status: ListingStatus; line: string; promo: boolean; blocked: boolean; attention: boolean }[] = billing.all.map(({ house, sub }) => ({ id: house.listingId, publicId: house.publicId, title: house.title, status: sub.status, line: subscriptionLine(sub, today) ?? statusLabel(sub.status).text, promo: sub.status === "active" && sub.plan === "promo", blocked: sub.hold === "blocked", attention: subscriptionNeedsAttention(sub, today) }));
   // Las casas en revisión que aún no tienen suscripción (nunca aprobadas): «En revisión», sin enlace.
   for (const l of (own.data ?? []) as Listing[]) {
-    if (l.status === "review" && !billing.of(l.id)) rows.push({ id: l.id, title: l.title, status: "review", line: "En revisión", promo: false, blocked: false, attention: false });
+    if (l.status === "review" && !billing.of(l.id)) rows.push({ id: l.id, title: l.title, status: "review", line: SUB_COPY.inReview, promo: false, blocked: false, attention: false });
   }
   const visible = rows.filter((r) => r.attention || r.blocked || r.status === "review");
   const summary = subscriptionSummary(billing.all.map((x) => x.sub));

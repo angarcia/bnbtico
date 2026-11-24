@@ -122,7 +122,7 @@ export function ExploreMap({ listings, zone, nights, onOpen, onSelect, selected 
     ? {
         role: "button",
         tabIndex: 0,
-        "aria-label": "Abrir el mapa de las casas",
+        "aria-label": MAP_COPY.openMap,
         onClick: (e: MouseEvent) => {
           // Los marcadores los atiende Leaflet (un grupo, «N casas», no: abre el mapa grande); la atribución es un enlace.
           if ((e.target as Element).closest(".leaflet-marker-icon:not(.is-group), .leaflet-control")) return;
@@ -134,7 +134,7 @@ export function ExploreMap({ listings, zone, nights, onOpen, onSelect, selected 
           onOpen(null);
         },
       }
-    : onSelect ? { role: "region", "aria-label": "Mapa de las casas" } : { "aria-hidden": true };
+    : onSelect ? { role: "region", "aria-label": MAP_COPY.mapRegion } : { "aria-hidden": true };
   return (
     <>
     {/* La clase permanece fija para conservar las clases que añade Leaflet. El estado va en un atributo. */}

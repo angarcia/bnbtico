@@ -26,7 +26,7 @@ export function HousePicker({ houses, currentId, onPick, allowAll = false, curre
   const trigger = useRef<HTMLButtonElement>(null);
   const id = useId();
   const title = zone ? PICKER_COPY.chooseZone : allowAll ? PICKER_COPY.filterHouse : PICKER_COPY.chooseHouse;
-  const name = houses.find((h) => h.id === currentId)?.name ?? currentName ?? (currentId === null && allowAll ? "Todas las casas" : "Casa seleccionada");
+  const name = houses.find((h) => h.id === currentId)?.name ?? currentName ?? (currentId === null && allowAll ? PICKER_COPY.allHouses : PICKER_COPY.selectedHouse);
   return (
     <div className="house-picker">
       <ClosedField kind="picker" ref={trigger} icon={zone ? <I.pin size={20} /> : <I.house size={20} />} value={name} data-testid={zone ? "zone-picker-trigger" : "house-picker-trigger"} aria-label={zone ? PICKER_COPY.zoneLabel({ name }) : undefined} aria-haspopup={desktop ? "listbox" : "dialog"} aria-expanded={open} aria-controls={open ? id : undefined} title={name}
@@ -50,7 +50,7 @@ function HousePickerPanel({ desktop, trigger, id, title, houses, currentId, allo
   onPick(id: string | null): void;
   onClose(): void;
 }) {
-  const options: { id: string | null; name: string }[] = allowAll ? [{ id: null, name: "Todas las casas" }, ...houses] : [...houses];
+  const options: { id: string | null; name: string }[] = allowAll ? [{ id: null, name: PICKER_COPY.allHouses }, ...houses] : [...houses];
   const [focused, setFocused] = useState(() => options.some((h) => h.id === currentId) ? currentId : (options[0]?.id ?? null));
   const list = (
     <div id={desktop ? id : undefined} className="house-picker-list" role="listbox" aria-label={desktop || title === PICKER_COPY.chooseZone ? title : PICKER_COPY.chooseHouse} onKeyDown={move}>

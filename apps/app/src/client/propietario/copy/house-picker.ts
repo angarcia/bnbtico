@@ -7,3 +7,5 @@ export const chooseZone = "Elegir zona";
 export const filterHouse = "Filtrar por casa";
 export const chooseHouse = "Elegir casa";
 export const zoneLabel = ({ name }: { name: string }) => `Zona, ${name}`;
+export const allHouses = "Todas las casas";
+export const selectedHouse = "Casa seleccionada";

@@ -81,11 +81,11 @@ export function MonthGrid({ month, today, days, base, prices = true, currency = 
             const cls = `day${off ? " is-past" : s.available ? "" : " is-busy"}${!off && s.special ? " is-special" : ""}${isEnd ? " range-end" : ""}${inside ? " in-range" : ""}${band}`;
             const name = [
               longDateWithYear(g.day),
-              off ? null : s.available ? "disponible" : "ocupado",
-              !off && (interactive || importedIcon) && !range && s.imported ? s.manualAvailable === false ? "bloqueo manual y Airbnb" : "ocupado por Airbnb" : null,
+              off ? null : s.available ? CALENDAR_COPY.dayFree : CALENDAR_COPY.dayBusy,
+              !off && (interactive || importedIcon) && !range && s.imported ? s.manualAvailable === false ? CALENDAR_COPY.dayManualAndAirbnb : CALENDAR_COPY.dayAirbnb : null,
               // Un día ocupado de la ficha no dice su precio, que no enseña; en el calendario del propietario, sí.
               prices && !off && ((interactive && !range) || s.available || imported) && s.priceCrc !== null ? formatMoney(s.priceCrc, currency, fx) : null,
-              prices && !off && s.special ? "precio distinto" : null,
+              prices && !off && s.special ? CALENDAR_COPY.daySpecial : null,
             ]
               .filter(Boolean)
               .join(", ");

@@ -197,6 +197,8 @@ const routeTree = rootRoute.addChildren([
       throw redirect({ to: session || isDesktop() ? "/explorar" : "/que-es-3bstays", replace: true });
     },
   }),
+  // Catálogo de componentes (paso 5 de la estructura del frontend): solo local y pruebas; en producción, 404 del worker.
+  createRoute({ getParentRoute: () => rootRoute, path: "/_componentes", component: lazyRouteComponent(() => import("../componentes/componentes"), "ComponentesScreen") }),
   // Inicio pasó a Mis casas y Mis consultas a Actividad: los enlaces ya enviados siguen funcionando.
   createRoute({ getParentRoute: () => rootRoute, path: "/propietario", beforeLoad: () => { throw redirect({ to: "/propietario/casas", replace: true }); } }),
   createRoute({ getParentRoute: () => rootRoute, path: "/propietario/consultas", beforeLoad: () => { throw redirect({ to: "/propietario/actividad", replace: true }); } }),

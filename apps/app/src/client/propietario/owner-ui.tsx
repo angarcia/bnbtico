@@ -2,9 +2,8 @@ import type { ReactNode } from "react";
 import { HOLD_COPY } from "../../domain/admin-actions";
 import { describe } from "../../domain/describe";
 import type { Listing } from "../../domain/listing";
-import { formatCRC } from "../../domain/money";
 import { formatPhone } from "../../domain/phone";
-import { cardDate, payButtonDue, reminderCard, reminderDaysLeft } from "../../domain/subscription";
+import { cardDate, payButtonDue, paymentDueCard, reminderCard, reminderDaysLeft } from "../../domain/subscription";
 import { waUrl } from "../../domain/whatsapp";
 import { I } from "../../shared/ui/icons";
 import { useShare } from "../../shared/share-button";
@@ -18,7 +17,7 @@ import { Card, ListRow } from "../../shared/ui/card";
 import * as OWNER_COPY from "./copy/owner";
 
 const base = () => window.location.origin;
-export const titleOf = (l: Listing) => l.title || "Borrador sin título";
+export const titleOf = (l: Listing) => l.title || OWNER_COPY.untitled;
 export const shareOf = (l: Listing) => {
   const d = describe(l, { base: base() });
   return { url: d.shareUrl, title: titleOf(l), text: d.previewText };
@@ -64,10 +63,7 @@ export function PayNotice({ hb, today, title }: { hb: HouseBilling; today: strin
   const { house, sub } = hb;
   const card =
     sub.status === "payment_due"
-      ? {
-          title: sub.promoEndsOn ? `Su oferta gratuita terminó el ${dayOf(sub.promoEndsOn, today)}` : "Falta el método de pago",
-          body: `La ficha está oculta y el enlace no funciona hasta que añada un método de pago. ${formatCRC(sub.monthlyPriceCrc)} al mes, sin permanencia; puede parar cuando quiera.`,
-        }
+      ? paymentDueCard(sub.promoEndsOn ? dayOf(sub.promoEndsOn, today) : null, sub.monthlyPriceCrc)
       : reminderCard(reminderDaysLeft(sub, today) ?? -1);
   if (!card) return null;
   return (
@@ -95,7 +91,7 @@ export function HoldNotice({ listing: l, card = false }: { listing: Listing; car
         variant="secondary"
         block
         icon={<WaIcon />}
-        href={waUrl(SUPPORT_NUMBERS.owner, `Hola, mi casa ${l.publicId} (${titleOf(l)}) está bloqueada y quisiera hablar con ustedes.`)}
+        href={waUrl(SUPPORT_NUMBERS.owner, OWNER_COPY.blockedMessage({ id: l.publicId, title: titleOf(l) }))}
         target="_blank"
         rel="noopener"
       >

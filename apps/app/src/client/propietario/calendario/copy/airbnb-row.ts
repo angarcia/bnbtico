@@ -28,3 +28,5 @@ export const failed = "No se pudo actualizar";
 export const lastImport = ({ at }: { at: string }) => `Última importación: ${at}`;
 export const exportReady = "Enlace de exportación disponible";
 export const saveFirst = "Guarde o cancele los días seleccionados antes de abrir la conexión.";
+export const refreshFailed = "No pudimos completar la actualización. Revise el estado.";
+export const refreshed = "Calendario actualizado";

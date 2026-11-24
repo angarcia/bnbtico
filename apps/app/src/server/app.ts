@@ -204,6 +204,9 @@ export function createApp(deps: Deps) {
 
   app.post("/_pruebas/oferta/:publicId", (c) => testClock(c, deps.reminders));
 
+  // Catálogo de componentes (estructura del frontend, paso 5): la SPA en local y en pruebas; en producción no existe.
+  app.get("/_componentes", (c) => (c.env.ENVIRONMENT === "production" ? c.text("No encontrado.", 404) : c.env.ASSETS.fetch(c.req.raw)));
+
   app.get("/robots.txt", (c) => c.text(robotsTxt(c.env.ENVIRONMENT)));
 
   // `/` es la portada en producción antes del lanzamiento y con `?pronto=1` en cualquier entorno; si no, el shell de la SPA

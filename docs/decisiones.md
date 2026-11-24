@@ -1,3 +1,25 @@
+## 2026-11-24 · El límite del JS inicial cuenta solo lo que se carga al arrancar
+
+El límite «JS inicial» de `.size-limit.json` se escribe como «todos los `.js` menos los trozos diferidos», y la lista de diferidos se había quedado atrás: contaba diez trozos que la SPA no carga al arrancar (`phone-draft`, `ical`, `stepper`, `hydrate-listing`, `dismiss`, `feature-choices`, `random-uuid`, `legacy-storage`, `account`, `chunk-error`), 4,2 KB en total. Marcaba 160,4 KB de 161 cuando al arrancar se cargan 156,2 KB.
+
+- **Excluidos esos diez.** El límite sigue en 161 KB; el JS inicial queda en 156,2 KB, con 4,8 KB de margen (la guía pide al menos 1 KB).
+- **Comprobación nueva en `pnpm size`** (local y CI): `scripts/js-inicial.mjs` sigue las importaciones estáticas desde la entrada de `index.html` y `start-shell` y falla si el límite cuenta un trozo que no se carga al arrancar o deja fuera uno que sí. Así la lista no puede volver a desfasarse en ninguno de los dos sentidos.
+
+Motivo: el presupuesto es del JS que se descarga al abrir la app; contar trozos diferidos lo hacía parecer al límite y habría llevado a recortar donde no hacía falta.
+
+## 2026-11-24 · Textos también fuera del JSX, y el trozo del Calendario a 9,2 KB
+
+Siguen el paso 3 (2026-11-23): la regla de `consistencia.test.ts` vigilaba solo el texto del JSX y quedaban unas 200 cadenas para personas en constantes, avisos y errores (`toast(…)`, `setError(…)`, `DomainError(…)`, etiquetas en objetos).
+
+- **Regla nueva de `consistencia.test.ts`** (la 6 de `docs/componentes.md`): en los TS y TSX de `client/` y `shared/`, fuera de `copy/`, ninguna cadena que parezca una frase en español (tildes, eñe, signos del español o varias palabras seguidas), ni una palabra suelta que vaya a un sitio que se enseña (`label:`, `title:`, `toast(…)`, `DomainError(…)`…). Las técnicas que no se enseñan (errores que el propio código captura, el mensaje de la base que se compara, un `console.error`, clases CSS) van en `STRING_EXCEPTIONS` con su motivo, y otra prueba avisa si una excepción sobra. El dominio, los adaptadores y el worker quedan fuera, como antes.
+- **Movidas a los catálogos de su área**, sin cambiar ningún texto. Repetidas, una sola vez: `GENERIC_MESSAGE` y el nuevo `OFFLINE_MESSAGE` en `domain/errors.ts`, y el aviso de una casa pendiente de pago en `paymentDueCard` (`domain/subscription.ts`, junto a `reminderCard`), que Mis casas y Suscripción escribían cada una.
+- **Contador:** las unidades de `Stepper` pasan a ser claves (`people`, `bedrooms`, `bathrooms`, `nights`); el texto («Una persona menos») sale de `shared/ui/copy/ui.ts`.
+- **Presupuesto:** el trozo del Calendario sube de 9,1 a 9,2 KB (`.size-limit.json`): con sus textos en el catálogo y los hooks del paso 4 pesaba 9,2 KB. Los demás límites no cambian; el JS inicial queda en 160,4 KB (límite 161).
+
+- **El dominio**, con 352 frases en 43 archivos (estados, avisos de la suscripción, errores, mensajes de WhatsApp; muchas las comparten el worker y la base), no se mueve todavía: `tests/unit/textos-dominio.json` guarda cuántas tiene cada archivo y `consistencia.test.ts` falla si uno suma (las nuevas van en un catálogo `domain/*-copy.ts`, como `calendar-copy.ts`) o si baja sin bajar su tope. Se moverán cuando haya fecha para un segundo idioma.
+
+Motivo: una frase en un `toast` o un error se traduce igual que una del JSX; sin la regla, cada pantalla nueva volvería a escribirlas en el código.
+
 ## 2026-11-23 · Textos en catálogos a mano, sin Paraglide (paso 3 de la estructura del frontend)
 
 Ana eligió **catálogos TypeScript a mano** tras la prueba de Paraglide JS 3.2.2 (rama local `prueba-paraglide`, resultado en `.scratch/estructura-frontend/propuesta.md`). Paraglide funcionó con Favoritos y con la ficha del worker en dos idiomas, pero su runtime suma unos 1,28 KB al JS inicial aunque solo haya español, y lo deja en 161,36 KB, por encima del límite de 161 KB; no se deja recortar.

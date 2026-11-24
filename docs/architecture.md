@@ -117,7 +117,7 @@ perdería siempre. Las pocas reglas que viven en otra capa que la de su archivo 
 se importa como espacio de nombres (`import * as X_COPY`) y que importan igual la SPA y el worker; el bundler acorta los
 nombres y deja fuera lo que no se usa, y los de una pieza diferida viajan con su trozo. Mensajes completos con los datos como parámetros con nombre y plurales con `domain/plural.ts`
 (`Intl.PluralRules`). Todas las áreas están pasadas; `consistencia.test.ts` vigila que ningún TSX vuelva a escribir
-texto suelto en el JSX. Sin librería de traducción: Paraglide se probó y su runtime no cabía en el límite del JS inicial
+texto suelto en el JSX ni, desde el 2026-11-24, frases en cadenas fuera del JSX (avisos, errores, etiquetas) en `client/` y `shared/`. Sin librería de traducción: Paraglide se probó y su runtime no cabía en el límite del JS inicial
 (`docs/decisiones.md`).
 
 ## Módulo de dominio

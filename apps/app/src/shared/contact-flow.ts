@@ -12,10 +12,11 @@ import { publicUrl } from "../domain/share";
 import { waUrl } from "../domain/whatsapp";
 import { hasStoredSession } from "../data/storage";
 import { track } from "./beacon";
+import { OFFLINE_MESSAGE } from "../domain/errors";
 
 export type ContactOutcome = { kind: "sent" } | { kind: "error"; message: string } | { kind: "leaving" };
 
-const OFFLINE = "Sin conexión. Revise su internet e intente de nuevo.";
+const OFFLINE = OFFLINE_MESSAGE;
 
 export interface ContactContext {
   publicId: string;

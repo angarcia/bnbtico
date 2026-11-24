@@ -10,7 +10,7 @@ import { ScreenHeader, type HeaderClose } from "../../comun/screen-header";
 import * as PARTS_COPY from "./copy/wizard-parts";
 
 /** Una cabecera para la entrada, los pasos y la verificación; conserva su sitio mientras carga el borrador. */
-export function WizardHeader({ title = "Publicar casa", step, lastInGroup, close, actions, missingSteps = [] }: { title?: string; step: Step | null; lastInGroup?: Step; close: HeaderClose; actions?: ReactNode; missingSteps?: readonly Step[] }) {
+export function WizardHeader({ title = PARTS_COPY.publishTitle, step, lastInGroup, close, actions, missingSteps = [] }: { title?: string; step: Step | null; lastInGroup?: Step; close: HeaderClose; actions?: ReactNode; missingSteps?: readonly Step[] }) {
   return (
     <ScreenHeader kind="wizard" title={title} action={actions} close={close} below={step ? (
         <>

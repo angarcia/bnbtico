@@ -35,7 +35,7 @@ import { ScreenHeader } from "../comun/screen-header";
 import * as FILTERS_COPY from "./copy/filters";
 
 const route = getRouteApi("/_tabs/explorar/filtros");
-const KIND_FILTER_LABEL = { completo: "Alojamiento completo", habitacion: "Habitación" } as const;
+const KIND_FILTER_LABEL = { completo: FILTERS_COPY.kindWhole, habitacion: FILTERS_COPY.kindRoom } as const;
 
 function FiltrosForm({
   provinces,
@@ -85,15 +85,15 @@ function FiltrosForm({
     // Una sola fila de zona que dice lo mismo que la búsqueda: «Todas las provincias» sin zona, «Todo Limón» con un ?prov= viejo (A7, ticket 06).
     {
       abrir: "donde",
-      label: "Zona",
+      label: FILTERS_COPY.zone,
       icon: I.pin,
-      value: f.zone ? (zoneName ?? "") : f.prov === ALL_PROVINCES ? "Todas las provincias" : `Todo ${f.prov}`,
+      value: f.zone ? (zoneName ?? "") : f.prov === ALL_PROVINCES ? FILTERS_COPY.allProvinces : FILTERS_COPY.wholeProvince({ province: f.prov }),
     },
     // Feature flags (#58): la fila de la estancia dice fechas o noches según el modo; sin estancia, no hay fila.
     ...(SEARCH_MODE === "dates"
-      ? [{ abrir: "cuando", label: "Fechas", icon: I.calendar, value: stayLabel(f)?.replace(/^desde/, "Desde") ?? "Sin fechas" } as const]
+      ? [{ abrir: "cuando", label: FILTERS_COPY.dates, icon: I.calendar, value: stayLabel(f)?.replace(/^desde/, "Desde") ?? FILTERS_COPY.noDates } as const]
       : SEARCH_MODE === "nights"
-        ? [{ abrir: "cuando", label: "Noches", icon: I.moon, value: stayLabel(f) ?? "Sin noches" } as const]
+        ? [{ abrir: "cuando", label: FILTERS_COPY.nights, icon: I.moon, value: stayLabel(f) ?? FILTERS_COPY.noNights } as const]
         : []),
   ];
   const setCount = (key: "ppl" | "beds", n: number) => set(key, n ? String(n) : undefined);
@@ -158,7 +158,7 @@ function FiltrosForm({
             <CounterRow
               label={FILTERS_COPY.people}
               icon={<I.users size={22} />}
-              unit="Una persona"
+              unit="people"
               value={f.ppl}
               min={0}
               max={SEARCH_MAX_PEOPLE}
@@ -177,7 +177,7 @@ function FiltrosForm({
                 layout="kind"
                 options={([null, ...KIND_FILTERS] as const).map((kind) => ({
                   value: kind ?? "cualquiera",
-                  name: kind === null ? "Cualquiera" : KIND_FILTER_LABEL[kind],
+                  name: kind === null ? FILTERS_COPY.kindAny : KIND_FILTER_LABEL[kind],
                   label: (
                     <>
                       {kind === null ? <I.list size={24} /> : kind === "completo" ? <I.house size={24} /> : <I.bed size={24} />}
@@ -196,13 +196,13 @@ function FiltrosForm({
             {f.kind === "completo" || !FLAGS.rooms ? <CounterRow
               label={FILTERS_COPY.bedrooms}
               icon={<I.bed size={22} />}
-              unit="Un dormitorio"
+              unit="bedrooms"
               value={f.beds}
               min={0}
               max={maxBeds}
               empty={!f.beds}
               display={`${f.beds}+`}
-              valueLabel={f.beds ? `${f.beds} o más` : "Cualquier cantidad"}
+              valueLabel={FILTERS_COPY.bedsAtLeast({ beds: f.beds })}
               onChange={(n) => setCount("beds", n)}
             /> : null}
           </div>

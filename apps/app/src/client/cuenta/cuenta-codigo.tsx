@@ -51,7 +51,7 @@ function CodeForm({ phone, mode, sentAt, next, inDialog = false, onDone }: { pho
 
   async function verify(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (code.length !== 6) return setError("El código tiene 6 dígitos.");
+    if (code.length !== 6) return setError(ACCOUNT_COPY.codeLength);
     setBusy(true);
     setError(null);
     try {
@@ -77,7 +77,7 @@ function CodeForm({ phone, mode, sentAt, next, inDialog = false, onDone }: { pho
       const [api, token] = await Promise.all([authApi(), captcha.token()]);
       await api.resend(token);
       setWait(RESEND_COOLDOWN_MS / 1000);
-      setResent("Le enviamos otro código por WhatsApp.");
+      setResent(ACCOUNT_COPY.codeResent);
     } catch (err) {
       setResent(message(err));
     }

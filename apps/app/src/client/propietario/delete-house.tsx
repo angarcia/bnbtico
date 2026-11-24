@@ -15,6 +15,7 @@ import { ownListingsKey } from "../comun/listing-keys";
 import { api, ownListingsQuery } from "./owner";
 import { TextButton } from "../../shared/ui/button";
 import { Notice } from "../../shared/ui/structure";
+import * as DELETE_COPY from "./copy/delete-house";
 
 // Aquí y no en owner.ts: así solo lo descarga quien abre el detalle de una casa (presupuesto de las pestañas).
 /** «Eliminar casa» (historia 28). Sin escritura optimista: no tiene vuelta, la tarjeta sale cuando la base lo confirma. Una
@@ -43,14 +44,6 @@ export function useDeleteOwn(userId: string) {
 export const freshOwnCount = async (client: QueryClient, userId: string): Promise<number> =>
   (await client.fetchQuery({ ...ownListingsQuery(userId), staleTime: 0 })).length;
 
-export const DELETE_HOUSE_COPY = {
-  action: "Eliminar casa",
-  pending: "Eliminando…",
-  done: "Casa eliminada.",
-  title: (name: string) => `¿Eliminar «${name}»?`,
-  body: "La casa deja de verse en 3bstays, su enlace deja de funcionar y no recibirá más consultas. Su suscripción termina sin reembolso del período ya pagado. Guardamos sus datos por seguridad, pero no podrá recuperarla desde la app.",
-  pauseHint: "Si solo quiere dejar de recibir clientes un tiempo, use «Pausar la casa» en el Calendario.",
-} as const;
 
 export function DeleteHouse({ listing: l, userId }: { listing: Listing; userId: string }) {
   const [open, setOpen] = useState(false);
@@ -69,26 +62,26 @@ export function DeleteHouse({ listing: l, userId }: { listing: Listing; userId: 
         // Sin red para releer la lista, Mis casas: allí se ve el estado real al volver la conexión.
         const left = await freshOwnCount(client, userId).catch(() => 1);
         setOpen(false);
-        toast(DELETE_HOUSE_COPY.done);
+        toast(DELETE_COPY.done);
         await navigate(left > 0 ? { to: "/propietario/casas", replace: true } : { to: "/explorar", replace: true });
       },
     });
   return (
     <>
       <TextButton tone="danger" placement="delete-house" onClick={() => setOpen(true)}>
-        {DELETE_HOUSE_COPY.action}
+        {DELETE_COPY.action}
       </TextButton>
       {open ? (
         <ConfirmSheet
-          title={DELETE_HOUSE_COPY.title(name)}
+          title={DELETE_COPY.title({ name })}
           body={
             <>
               <span className="sheet-line num muted">{[l.publicId, l.zone].filter(Boolean).join(" · ")}</span>
-              <span className="sheet-line">{DELETE_HOUSE_COPY.body}</span>
-              <Notice as="span" tone="solid" small placement="sheet-line">{DELETE_HOUSE_COPY.pauseHint}</Notice>
+              <span className="sheet-line">{DELETE_COPY.body}</span>
+              <Notice as="span" tone="solid" small placement="sheet-line">{DELETE_COPY.pauseHint}</Notice>
             </>
           }
-          confirmLabel={del.isPending ? DELETE_HOUSE_COPY.pending : DELETE_HOUSE_COPY.action}
+          confirmLabel={del.isPending ? DELETE_COPY.pending : DELETE_COPY.action}
           tone="destructive"
           pending={del.isPending}
           error={del.isError ? toDomainError(del.error).message : null}

@@ -141,3 +141,9 @@ Los **hooks con propósito** (§3.3) se hacen al tocar cada pantalla grande, una
 - **Editar un dato** (`editar.tsx`): `useFieldChanges` (si el formulario difiere de como se abrió) y `useScrollToAlert`.
 - **Explorar** (`explorar.tsx`): `useMapCloseFocus` (el foco al cerrar el mapa) y `useRememberStay` (personas, fechas y noches para la hoja de contacto); ya tenía `useReveal` y `usePrefetchSearch`.
 - Con esto quedan hechas las pantallas grandes de §3.3. Sin cambios de comportamiento ni de trozos; JS inicial 160,34 KB. Las cuatro van en la misma rama que el calendario y publicar, con la e2e completa al final.
+
+## Paso 5 y pendientes (2026-11-24, rama `pendientes-estructura`)
+
+- **Catálogo de componentes** (§3.5): `/_componentes` con cada componente de `shared/ui` en sus variantes y estados (`client/componentes/`, trozo `componentes-*` fuera del JS inicial). En producción el worker responde 404 aunque la app esté lanzada y el service worker la manda siempre a la red; `tests/unit/componentes-ruta.test.ts` lo vigila. `tests/e2e/componentes.spec.ts` la recorre en móvil y escritorio, comprueba que no hay errores en la consola y adjunta la captura de la página entera. Las casillas de fecha solo tienen estilo dentro de una hoja: se ven en la hoja de muestra. Desde el 2026-11-24 enseña también las piezas comunes de `client/comun` (cabeceras, enlaces sobre `Link`, `ConfirmSheet`, `CodeInput`); `ChoiceCards` vive en el área de publicar y queda fuera (un área no importa otra). Capturas en `capturas/`.
+- **Textos fuera del JSX:** regla 6 de `consistencia.test.ts` y unas 200 frases a los catálogos (decisión en `docs/decisiones.md`).
+- **Pruebas que fallaban en local:** «fragmentos» tarda 13 s por Microsoft Defender al abrir su JSON (30 s de margen); «versión nueva» dice el estado del service worker si no recarga.

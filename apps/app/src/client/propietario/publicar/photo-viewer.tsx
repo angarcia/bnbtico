@@ -15,16 +15,17 @@ import { ConfirmSheet } from "../../comun/confirm-sheet";
 import { UPLOAD_STEPS, progressOf } from "./photo-queue";
 import { PHOTOS_HELP_DESKTOP, PhotoCounter, usePhotoGrid, type PhotoSource } from "./photo-grid";
 import * as VIEWER_COPY from "./copy/photo-viewer";
+import * as GRID_COPY from "./copy/photo-grid";
 
-const PHASE = { preparing: "Preparando…", uploading: "Subiendo…", saving: "Guardando…" } as const;
-const SAVED = { order: "Orden guardado", removed: "Foto quitada" } as const;
-export const REMOVE_TITLE = "¿Quitar esta foto?";
-export const REMOVE_BODY = "Deja de verse en su ficha ahora. Si la vuelve a subir, la revisamos otra vez.";
+const PHASE = { preparing: GRID_COPY.phasePreparing, uploading: GRID_COPY.phaseUploading, saving: GRID_COPY.phaseSaving } as const;
+const SAVED = { order: VIEWER_COPY.orderSaved, removed: VIEWER_COPY.photoRemoved } as const;
+export const REMOVE_TITLE = VIEWER_COPY.removeTitle;
+export const REMOVE_BODY = VIEWER_COPY.removeBody;
 
 type Item = { photo: Photo; pending: boolean; n: number };
 
 function pendingLabel(p: Photo): string {
-  return "status" in p && p.status === "changes" ? "Cambios pedidos" : "En revisión";
+  return "status" in p && p.status === "changes" ? VIEWER_COPY.changesAsked : VIEWER_COPY.inReview;
 }
 function pendingNote(p: Photo): string | null {
   return "reviewNote" in p && typeof p.reviewNote === "string" && p.reviewNote ? p.reviewNote : null;
@@ -81,7 +82,7 @@ export function PhotoEditorDialog({ source, userId, notice, onClose, returnFocus
     if (selected.pending) grid.remove(selected.photo, true);
     else setAsking(selected.photo);
   };
-  const status = grid.busy ? "Guardando…" : grid.saved ? SAVED[grid.saved] : "";
+  const status = grid.busy ? GRID_COPY.phaseSaving : grid.saved ? SAVED[grid.saved] : "";
 
   return (
     <Dialog

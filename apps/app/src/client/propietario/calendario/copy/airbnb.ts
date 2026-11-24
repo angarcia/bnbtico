@@ -34,3 +34,9 @@ export const linkHint = "Solo importamos noches bloqueadas. No copiamos precios 
 export const submit = ({ saving, replacing }: { saving: boolean; replacing: boolean }) =>
   saving ? (replacing ? "Sustituyendo…" : "Conectando…") : replacing ? "Sustituir enlace" : "Conectar";
 export const cancel = "Cancelar";
+export const disconnected = "Airbnb desconectado";
+export const disconnectFailed = "No pudimos completar el cambio. Cancele y consulte el estado antes de intentar de nuevo.";
+export const connectRunning = "La conexión sigue en curso. Vuelva a consultar el estado en un momento.";
+export const connectFailed = "No pudimos completar la conexión. Intente de nuevo.";
+export const replaced = "Enlace de Airbnb sustituido";
+export const connectedToast = "Airbnb conectado";

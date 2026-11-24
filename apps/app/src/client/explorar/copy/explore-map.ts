@@ -7,3 +7,5 @@ export const mapSize = ({ expanded }: { expanded: boolean }) => (expanded ? "Red
 export const zoomIn = "Acercar mapa";
 export const zoomOut = "Alejar mapa";
 export const map = "Mapa";
+export const openMap = "Abrir el mapa de las casas";
+export const mapRegion = "Mapa de las casas";
