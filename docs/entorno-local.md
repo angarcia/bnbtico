@@ -309,6 +309,7 @@ Todas se ejecutan desde la raíz del repositorio, con Node 22.
 | `pnpm build` | Compila la app | — | < 1 min |
 | `pnpm size` | Peso del JS frente al presupuesto | `pnpm build` | segundos |
 | `pnpm test:e2e` | Flujos en un móvil simulado (Playwright) | `pnpm db:start` y `pnpm build` | 10–20 min |
+| `pnpm capturas:actualizar` | Regenera las capturas de referencia del catálogo de componentes con el navegador de Linux de CI (`--comparar` solo compara) | Docker Desktop abierto y `pnpm build` | 1–2 min (la primera vez baja la imagen, unos 3,5 GB) |
 | `pnpm lighthouse` | Velocidad (ficha y app instalada) | `pnpm db:start` y `pnpm build`, sin nada más abierto | varios min |
 
 Antes de subir un cambio, lo mínimo es:

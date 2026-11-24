@@ -34,7 +34,10 @@ pantallas no escriben sus clases ni redefinen su aspecto, y no llevan `className
 - **Catálogo vivo** en `/_componentes` (local y pruebas; en producción, 404 del worker y el service worker no la sirve):
   cada componente de esta guía en sus variantes y estados (también las piezas de `client/comun`; no `ChoiceCards`, del área de publicar), en una página (`client/componentes/componentes.tsx`, su propio
   trozo). Al añadir un componente o una variante, añádalo allí; `tests/e2e/componentes.spec.ts` lo recorre en móvil y
-  escritorio y deja la captura de la página entera en el informe de Playwright.
+  escritorio y deja la captura de la página entera en el informe de Playwright. En Linux (CI) compara además la página con
+  su captura de referencia (`tests/e2e/__capturas__/`): un cambio visual sin querer en cualquier componente hace fallar CI.
+  Si el cambio es a propósito, regenere las capturas con `pnpm capturas:actualizar` (Docker abierto y `pnpm build` hecho:
+  Playwright corre en el Mac y el navegador en la imagen de Linux de CI) y súbalas con el cambio.
 
 ## Botones
 
