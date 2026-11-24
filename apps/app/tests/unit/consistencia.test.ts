@@ -196,7 +196,7 @@ const CLASS_EXCEPTIONS: Record<string, Record<string, string>> = {
   "client/admin/admin-anuncios.tsx": { chip: "pestañas de la cola en chip: enlaces, no elección", "chip-sm": "pestañas de la cola, pequeñas" },
   "client/propietario/actividad.tsx": { "btn-link": "«Abrir WhatsApp» de una consulta: texto propio (inquiry-wa)" },
   "client/explorar/card-whatsapp.tsx": { "sheet-backdrop": "fondo atenuado mientras llega el trozo de la hoja de contacto" },
-  "client/propietario/calendario/calendario.tsx": { "sheet-backdrop": "fondo atenuado mientras llega el trozo de «Pausar la casa» y «Marcar una reserva»" },
+  "client/propietario/calendario/calendar-actions.tsx": { "sheet-backdrop": "fondo atenuado mientras llega el trozo de «Pausar la casa» y «Marcar una reserva»" },
   "shared/listing-page.tsx": { "sheet-backdrop": "fondo atenuado mientras llega el trozo de la hoja de contacto (ficha SSR)" },
   "shared/contact-sheet.tsx": { sheet: "la hoja de contacto en línea en la ficha de escritorio", "sheet-head": "cabecera de la hoja en línea" },
   "shared/status-pages.tsx": { "header-root": "páginas de estado de la ficha SSR: sin router, no pueden usar ScreenHeader" },

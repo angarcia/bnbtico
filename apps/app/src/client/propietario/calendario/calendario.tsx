@@ -8,124 +8,54 @@
 // calendario editable, «Marcar una reserva» abre una hoja con el calendario de rango de «¿Cuándo?» y guarda las noches de
 // llegada a salida − 1 como ocupadas por el mismo camino que «Guardar cambios»; en una casa activa, «Pausar la casa» (antes
 // «Cerrar la casa hasta…», set_listing_available) abre su hoja. Cada hoja, en su propio trozo diferido.
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getRouteApi, useNavigate, useRouter } from "@tanstack/react-router";
-import { Component, Suspense, lazy, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import {
-  addMonths,
-  applyChange,
-  calendarMonths,
-  changeFromSelection,
-  clearSelection,
-  effectiveDay,
-  emptySelection,
-  monthTitle,
-  selectDay,
-  validateChange,
-  type CalendarChange,
-  type CalendarDay,
-  type Selection,
-} from "../../../domain/calendar";
+import { useQueryClient } from "@tanstack/react-query";
+import { getRouteApi, useNavigate } from "@tanstack/react-router";
+import { Suspense, lazy, useCallback, useMemo, useState, type ReactNode } from "react";
+import { calendarMonths, changeFromSelection, clearSelection, effectiveDay, emptySelection, monthTitle, selectDay, type Selection } from "../../../domain/calendar";
 import { can, isBlocked } from "../../../domain/can";
-import { ignoreChromeScroll, showChrome } from "../../comun/hiding-chrome";
-import { shortDate } from "../../../domain/dates";
+import { showChrome } from "../../comun/hiding-chrome";
 import { toDomainError } from "../../../domain/errors";
-import { reportError } from "../../../shared/beacon";
 import { costaRicaToday } from "../../../domain/inquiry";
 import { type Listing } from "../../../domain/listing";
 import { resumeStep } from "../../../domain/publish-rules";
 import { formatMoney } from "../../../domain/money";
 import { FLAGS } from "../../../shared/flags";
 import { I } from "../../../shared/ui/icons";
-import { whenIdle } from "../../../shared/idle";
+import { usePreloadWhenIdle } from "../../../shared/idle";
 import { useCurrency } from "../../../shared/currency";
 import { CurrencySwitch } from "../../../shared/currency-switch";
 import { useFx } from "../../../shared/fx";
 import { MonthGrid, WeekdayRow } from "../../../shared/month-grid";
 import { toast } from "../../../shared/toast";
-import { calendarQuery, saveCalendar } from "./calendar-days";
-import { isChunkLoadError } from "../../comun/chunk-error";
 import { ScreenHeader } from "../../comun/screen-header";
 import { useDesktop } from "../../../shared/desktop";
 import { useEditor } from "../editor-port";
-import { ownListingsQuery, useSetAvailable } from "../owner";
 import { useSession } from "../../comun/session";
 import { HousePicker } from "../house-picker";
-
 import { AirbnbRow, AirbnbLegend, countCalendarOrigins } from "./airbnb-calendar-row";
-import { Button } from "../../../shared/ui/button";
-
 import { RouterButtonLink } from "../../comun/router-buttons";
-import { LoadError, Notice, Skeleton } from "../../../shared/ui/structure";
+import { LoadError, Skeleton } from "../../../shared/ui/structure";
 import { Card } from "../../../shared/ui/card";
 import * as CAL_COPY from "./copy/calendar";
-import { listingDaysKey, publicListingKey } from "../../../shared/listing-query";
+import { useCalendarHouse } from "./use-calendar-house";
+import { useCalendarDays } from "./use-calendar-days";
+import { CalendarMonths } from "./calendar-months";
+import { MarkRow, PauseRow } from "./calendar-actions";
 
 const route = getRouteApi("/_tabs/_private/_owner/propietario/calendario");
-const LAST_HOUSE = "3bstays-calendario-casa";
-const loadCloseSheet = () => import("./close-sheet");
-const lazyCloseSheet = () => lazy(() => loadCloseSheet().then((m) => ({ default: m.CloseSheet })));
-let CloseSheet = lazyCloseSheet();
-const loadMarkSheet = () => import("./mark-sheet");
-const lazyMarkSheet = () => lazy(() => loadMarkSheet().then((m) => ({ default: m.MarkSheet })));
 // El panel de los días elegidos, en su trozo (panel-dias-*): se pide en reposo al abrir el Calendario o al tocar un día
 // (historia 07, paso 5).
 const loadPanel = () => import("./panel-dias");
 const Panel = lazy(() => loadPanel().then((m) => ({ default: m.Panel })));
-let MarkSheet = lazyMarkSheet();
 
 const titleOf = (l: Listing) => l.title || "Borrador sin título";
-/** Casas con calendario (revisión UX A5): todo lo enviado alguna vez (en revisión, con cambios pedidos, activa, pausada) y
- *  las ya publicadas que se están editando. Fuera: los borradores nunca enviados y las rechazadas. */
-const hasCalendar = (l: Listing) => l.status !== "rejected" && !(l.status === "draft" && l.firstPublishedAt === null);
-const baseOf = (l: Listing) => (l.acceptsNightly ? l.nightlyPriceCrc : null);
-/** «95 000» en el campo (se edita con espacios; parseColones los quita). */
-
-function readLast(): string | null {
-  try {
-    return localStorage.getItem(LAST_HOUSE);
-  } catch {
-    return null;
-  }
-}
-function storeLast(id: string) {
-  try {
-    localStorage.setItem(LAST_HOUSE, id);
-  } catch {
-    /* sin almacenamiento: vale para esta visita */
-  }
-}
 
 export function CalendarioScreen() {
   const userId = useSession().session?.userId ?? "";
   const search = route.useSearch();
   const navigate = useNavigate();
   const go = (casa: string, mes: string | undefined) => void navigate({ to: "/propietario/calendario", search: mes ? { casa, mes } : { casa }, replace: true });
-  const listings = useQuery({ ...ownListingsQuery(userId), enabled: !!userId });
-  const houses = listings.data?.filter(hasCalendar);
-  const last = readLast();
-  // Los días de la casa de la URL o de la última usada salen a la vez que la lista, sin esperarla (auditoría de viajes
-  // 2026-11-05). Si al final se muestra otra, solo sobra esta petición.
-  const client = useQueryClient();
-  const guess = search.casa ?? last;
-  useEffect(() => {
-    if (userId && guess) void client.prefetchQuery(calendarQuery(userId, guess));
-  }, [client, userId, guess]);
-  // Por defecto, la elegida en la URL, la última usada o la primera activa; nunca un borrador (revisión UX A5).
-  const current =
-    houses?.find((l) => l.id === search.casa) ?? houses?.find((l) => l.id === last) ?? houses?.find((l) => l.status === "active") ?? houses?.[0];
-  // Para el estado vacío: el borrador sin enviar más reciente (la lista llega de la más nueva a la más vieja).
-  const draft = listings.data?.find((l) => l.status === "draft" && l.firstPublishedAt === null);
-
-  useEffect(() => {
-    if (current) storeLast(current.id);
-  }, [current]);
-  // `?casa=` de una casa sin calendario (un borrador) o que ya no existe: la URL pasa a la que se muestra.
-  const corrected = search.casa && current && search.casa !== current.id ? current.id : null;
-  useEffect(() => {
-    if (corrected) go(corrected, search.mes);
-    // `go` cambia en cada render: basta con depender de la casa corregida.
-  }, [corrected]);
+  const { listings, houses, current, draft } = useCalendarHouse(userId, search.casa, (id) => go(id, search.mes));
 
   return (
     <>
@@ -178,9 +108,7 @@ export function Calendar({ listing: l, userId, month, houseControl }: {
   month: string | undefined;
   houseControl?: ReactNode;
 }) {
-  useEffect(() => {
-    whenIdle(() => void loadPanel().catch(() => {}));
-  }, []);
+  usePreloadWhenIdle(loadPanel);
   const client = useQueryClient();
   const port = useEditor();
   const desktop = useDesktop();
@@ -190,46 +118,13 @@ export function Calendar({ listing: l, userId, month, houseControl }: {
   const target = month && months.includes(month) ? month : null;
   const currency = useCurrency();
   const fx = useFx(currency === "USD");
-  const options = calendarQuery(userId, l.id, port.calendar);
-  const key = options.queryKey;
-  const query = useQuery({ ...options, enabled: !!userId });
-  const days = useMemo(() => new Map((query.data ?? []).map((d) => [d.day, d])), [query.data]);
-  const base = baseOf(l);
+  const { query, days, base, commit, markBooked } = useCalendarDays(l, userId, today, port.calendar);
   const ctx = { days, base, today };
   const [sel, setSel] = useState<Selection>(emptySelection);
   const [problem, setProblem] = useState<string | null>(null);
   const closed = !l.available;
 
-  const save = useMutation({
-    mutationKey: ["calendar-save", l.id],
-    mutationFn: ({ change }: { change: CalendarChange; previous: CalendarDay[] | undefined }) => saveCalendar(l.id, change, port.calendar),
-    onError: (error, { previous }) => {
-      client.setQueryData(key, previous);
-      toast(toDomainError(error).message);
-    },
-    onSuccess: () => {
-      void client.invalidateQueries({ queryKey: publicListingKey(l.publicId) });
-      void client.invalidateQueries({ queryKey: listingDaysKey(l.publicId) });
-    },
-    // Con otro guardado en vuelo, releer ahora pisaría su cambio optimista: lee el último.
-    onSettled: () => {
-      if (client.isMutating({ mutationKey: ["calendar-save", l.id] }) <= 1) void client.invalidateQueries({ queryKey: key });
-    },
-  });
-
   const change = changeFromSelection(sel);
-  /** Aplica el cambio a la rejilla al instante y lo guarda; devuelve el motivo si las reglas lo rechazan (y no cambia nada). */
-  function commit(change: CalendarChange): string | null {
-    const refused = validateChange(change, { today, listing: { status: l.status, available: l.available, nightlyPriceCrc: base } });
-    if (refused) return refused;
-    const previous = client.getQueryData<CalendarDay[]>(key);
-    const apply = () => client.setQueryData<CalendarDay[]>(key, (d) => applyChange(d ?? [], base, change));
-    apply();
-    // Una lectura en vuelo traería los días de antes; al cancelarla vuelven y se aplica otra vez (es idempotente).
-    if (client.isFetching({ queryKey: key })) void client.cancelQueries({ queryKey: key }).then(apply);
-    save.mutate({ change, previous });
-    return null;
-  }
   function onSave() {
     if (!change) return;
     const refused = commit(change);
@@ -238,13 +133,9 @@ export function Calendar({ listing: l, userId, month, houseControl }: {
     setProblem(null);
     showChrome();
   }
-  /** «Marcar una reserva»: las noches ya vienen de llegada a salida − 1; se guardan como ocupadas, sin tocar los precios.
-   *  Una selección a medias del panel se descarta (la rejilla cambia debajo). */
+  /** «Marcar una reserva». Una selección a medias del panel se descarta (la rejilla cambia debajo). */
   function onMark(nights: string[], label: string): string | null {
-    const currentDays = client.getQueryData<CalendarDay[]>(key);
-    if (!currentDays) return "No pudimos comprobar la disponibilidad. Intente de nuevo.";
-    if (currentDays.some(d => !d.available && nights.includes(d.day))) return "Hay noches ocupadas entre esas fechas.";
-    const refused = commit({ days: nights, available: false, requireFree: true });
+    const refused = markBooked(nights);
     if (refused) return refused;
     setSel(clearSelection());
     setProblem(null);
@@ -327,241 +218,6 @@ export function Calendar({ listing: l, userId, month, houseControl }: {
           )}
         />
       </div>
-    </div>
-  );
-}
-
-/** «Marcar una reserva» (ticket 04 de la ronda del 2 nov), arriba del calendario editable: abre la hoja con el calendario
- *  de rango y, al confirmar, las noches quedan ocupadas (optimista, como «Guardar cambios») y lo dice un aviso. Si las
- *  reglas rechazan el cambio, se dice junto a la fila. */
-function MarkRow({ today, onMark, calendarDays, prepare }: {
-  today: string; onMark: (nights: string[], label: string) => string | null; calendarDays: CalendarDay[] | undefined;
-  prepare: (signal: AbortSignal) => Promise<{ warning: string | null }>;
-}) {
-  const [marking, setMarking] = useState(false);
-  const [problem, setProblem] = useState<string | null>(null);
-  const button = useRef<HTMLButtonElement>(null);
-  // El foco vuelve al botón de la fila cuando la hoja ya se desmontó (la página dejó de estar inerte).
-  const refocus = useRef(false);
-  useEffect(() => {
-    whenIdle(() => void loadMarkSheet().catch(() => {}));
-  }, []);
-  useEffect(() => {
-    if (marking || !refocus.current) return;
-    refocus.current = false;
-    button.current?.focus();
-  }, [marking]);
-  const end = () => {
-    refocus.current = true;
-    setMarking(false);
-  };
-  return (
-    <>
-      <button ref={button} type="button" className="cal-action" aria-haspopup="dialog" onClick={() => (setProblem(null), setMarking(true))}>
-        <span className="cal-action-icon">
-          <I.calendar size={20} />
-        </span>
-        <span className="body">
-          <b>{CAL_COPY.mark}</b>
-        </span>
-        <I.chevron />
-      </button>
-      {problem ? (
-        <Notice tone="error">
-          {problem}
-        </Notice>
-      ) : null}
-      {marking ? (
-        <SheetBoundary name="Marcar una reserva" onRetry={() => (MarkSheet = lazyMarkSheet())}>
-          {() => (
-            <Suspense fallback={<div className="sheet-backdrop" />}>
-              <MarkSheet
-                today={today}
-                calendarDays={calendarDays}
-                prepare={prepare}
-                onClose={end}
-                onConfirm={(nights, label) => {
-                  setProblem(onMark(nights, label));
-                  end();
-                }}
-              />
-            </Suspense>
-          )}
-        </SheetBoundary>
-      ) : null}
-    </>
-  );
-}
-
-/** «Pausar la casa» (antes «Cerrar la casa hasta…»; ticket 04 de la ronda del 2 nov), en una casa activa
- *  (can(l,"available")): sin pausar, la fila abre la hoja «Pausar la casa»; pausada, dice hasta cuándo y «Volver a
- *  publicarla» la abre en un toque. Las dos escrituras son optimistas (useSetAvailable); mientras la base no contesta,
- *  «Volver a publicarla» no hace nada (sigue enfocable, con aria-disabled). */
-function PauseRow({ listing: l, userId }: { listing: Listing; userId: string }) {
-  const available = useSetAvailable(userId, l);
-  const [closing, setClosing] = useState(false);
-  const button = useRef<HTMLButtonElement>(null);
-  // El foco va al botón de la fila cuando la hoja ya se desmontó (la página dejó de estar inerte) y la fila muestra el
-  // estado esperado: al cancelar, la misma; al confirmar, «Volver a publicarla»; al volver a publicarla, «Pausar la casa».
-  const focusWhen = useRef<boolean | null>(null);
-  useEffect(() => {
-    whenIdle(() => void loadCloseSheet().catch(() => {}));
-  }, []);
-  useEffect(() => {
-    if (closing || focusWhen.current !== l.available) return;
-    focusWhen.current = null;
-    button.current?.focus();
-  }, [closing, l.available]);
-  const endClosing = (next: boolean) => {
-    focusWhen.current = next;
-    setClosing(false);
-  };
-  const pending = available.isPending;
-  return (
-    <>
-      {l.available ? (
-        <button ref={button} type="button" className="cal-action" aria-haspopup="dialog" onClick={() => setClosing(true)}>
-          <span className="cal-action-icon">
-            <PauseIcon />
-          </span>
-          <span className="body">
-            <b>{CAL_COPY.pause}</b>
-          </span>
-          <I.chevron />
-        </button>
-      ) : (
-        <div className="cal-action is-paused">
-          <span className="cal-action-icon">
-            <PauseIcon />
-          </span>
-          <span className="body">
-            <b>{CAL_COPY.paused({ until: l.reopenAt ? shortDate(l.reopenAt) : null })}</b>
-            <span className="small muted">{CAL_COPY.pausedNote}</span>
-          </span>
-          <Button
-            ref={button}
-            variant="secondary"
-            aria-disabled={pending || undefined}
-            onClick={() => {
-              if (pending) return;
-              focusWhen.current = true;
-              available.mutate({ available: true });
-            }}
-          >
-            {CAL_COPY.republish}
-          </Button>
-        </div>
-      )}
-      {available.error ? (
-        <Notice tone="error">
-          {toDomainError(available.error).message}
-        </Notice>
-      ) : null}
-      {closing ? (
-        <SheetBoundary name="Pausar la casa" onRetry={() => (CloseSheet = lazyCloseSheet())}>
-          {() => (
-            <Suspense fallback={<div className="sheet-backdrop" />}>
-              <CloseSheet
-                onClose={() => endClosing(true)}
-                onConfirm={(reopenAt) => {
-                  endClosing(false);
-                  available.mutate({ available: false, reopenAt });
-                }}
-              />
-            </Suspense>
-          )}
-        </SheetBoundary>
-      ) : null}
-    </>
-  );
-}
-
-/** Pausa: dos barras, con el trazo de los iconos de línea (shared/icons). Va en este trozo, no en el JS inicial. */
-function PauseIcon() {
-  return (
-    <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true">
-      <path d="M9 6v12M15 6v12" />
-    </svg>
-  );
-}
-
-/** Si el trozo de una hoja no llega (sin red, o un despliegue nuevo cambió su nombre) o falla al pintarse, se dice junto a
- *  la fila (lo segundo, además, a /errors). «Reintentar» crea otro componente (`onRetry`), que vuelve a pedir el trozo
- *  (por eso la hoja llega como función: se pinta con el componente nuevo). */
-class SheetBoundary extends Component<{ name: string; onRetry: () => void; children: () => ReactNode }, { failed: boolean }> {
-  override state = { failed: false };
-  static getDerivedStateFromError() {
-    return { failed: true };
-  }
-  override componentDidCatch(error: unknown) {
-    if (!isChunkLoadError(error)) reportError(error);
-  }
-  override render() {
-    if (!this.state.failed) return this.props.children();
-    return (
-      <div className="row gap-8 baseline cal-action-error">
-        <p className="field-error" role="alert">
-          {CAL_COPY.openError({ name: this.props.name })}
-        </p>
-        <Button
-          variant="secondary"
-          onClick={() => {
-            this.props.onRetry();
-            this.setState({ failed: false });
-          }}
-        >
-          {CAL_COPY.retry}
-        </Button>
-      </div>
-    );
-  }
-}
-
-/** Los meses uno debajo de otro, cada uno con su título fijo arriba. Una rejilla se monta al acercarse su mes a la vista
- *  (a una pantalla) y ya no se desmonta; los dos primeros meses y el pedido (`?mes=`) van montados desde el principio, para
- *  que nada crezca encima del pedido. Con mes pedido, se lleva arriba; sin él, la pantalla abre arriba del todo. Desplazarse
- *  no cambia la URL. */
-function CalendarMonths({ months, target, render }: { months: string[]; target: string | null; render: (month: string) => ReactNode }) {
-  const [mounted, setMounted] = useState(() => new Set([months[0]!, months[1]!, ...(target ? [target, addMonths(target, 1)] : [])].filter((m) => months.includes(m))));
-  const box = useRef<HTMLDivElement>(null);
-  const router = useRouter();
-  useLayoutEffect(() => {
-    if (!target || target === months[0]) return;
-    const toTarget = () => {
-      ignoreChromeScroll(300);
-      box.current?.querySelector(`[data-month="${target}"]`)?.scrollIntoView({ block: "start" });
-    };
-    toTarget();
-    // Al llegar desde la app, la restauración del desplazamiento del router corre en su onRendered, después de este
-    // efecto, y devuelve la página arriba: se lleva el mes otra vez justo después (una sola vez; luego manda el dedo).
-    const stop = router.subscribe("onRendered", () => {
-      stop();
-      toTarget();
-    });
-    return stop;
-    // Solo al abrir.
-  }, []);
-  useEffect(() => {
-    const blocks = box.current?.querySelectorAll<HTMLElement>(".cal-month-block");
-    if (!blocks) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const seen = entries.filter((e) => e.isIntersecting).map((e) => (observer.unobserve(e.target), (e.target as HTMLElement).dataset.month!));
-        if (seen.length) setMounted((prev) => (seen.every((m) => prev.has(m)) ? prev : new Set([...prev, ...seen])));
-      },
-      { rootMargin: "100% 0px" },
-    );
-    blocks.forEach((b) => observer.observe(b));
-    return () => observer.disconnect();
-  }, []);
-  return (
-    <div className="cal-months" ref={box}>
-      {months.map((m) => (
-        <section key={m} className="cal-month-block" data-month={m} aria-label={monthTitle(m)}>
-          <h2 className="cal-month-title">{monthTitle(m)}</h2>
-          {mounted.has(m) ? render(m) : <div className="cal-month-placeholder" aria-hidden="true" />}
-        </section>
-      ))}
     </div>
   );
 }
