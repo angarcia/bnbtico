@@ -16,6 +16,8 @@ Siguen el paso 3 (2026-11-23): la regla de `consistencia.test.ts` vigilaba solo 
 - **Contador:** las unidades de `Stepper` pasan a ser claves (`people`, `bedrooms`, `bathrooms`, `nights`); el texto («Una persona menos») sale de `shared/ui/copy/ui.ts`.
 - **Presupuesto:** el trozo del Calendario sube de 9,1 a 9,2 KB (`.size-limit.json`): con sus textos en el catálogo y los hooks del paso 4 pesaba 9,2 KB. Los demás límites no cambian; el JS inicial queda en 160,4 KB (límite 161).
 
+- **El dominio**, con 352 frases en 43 archivos (estados, avisos de la suscripción, errores, mensajes de WhatsApp; muchas las comparten el worker y la base), no se mueve todavía: `tests/unit/textos-dominio.json` guarda cuántas tiene cada archivo y `consistencia.test.ts` falla si uno suma (las nuevas van en un catálogo `domain/*-copy.ts`, como `calendar-copy.ts`) o si baja sin bajar su tope. Se moverán cuando haya fecha para un segundo idioma.
+
 Motivo: una frase en un `toast` o un error se traduce igual que una del JSX; sin la regla, cada pantalla nueva volvería a escribirlas en el código.
 
 ## 2026-11-23 · Textos en catálogos a mano, sin Paraglide (paso 3 de la estructura del frontend)

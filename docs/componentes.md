@@ -222,6 +222,8 @@ Un token nuevo va primero en `tokens.json` (con su entrada en `changelog`) y des
    etiquetas en constantes u objetos; y también una palabra suelta («Lugar», «por pagar») si va a un sitio que se enseña
    (`label:`, `title:`, `text:`, `value:`, `name:`… o el primer argumento de `toast`, `setError` o `DomainError`). Van al catálogo del área igual que las del JSX; un mensaje que se repite en varias
    áreas y no es de pantalla va en el dominio (`GENERIC_MESSAGE` y `OFFLINE_MESSAGE` en `domain/errors.ts`).
+7. un archivo de `src/domain` tiene más frases que su tope en `tests/unit/textos-dominio.json` (las de antes de los
+   catálogos; un mensaje nuevo del dominio va en un `domain/*-copy.ts`). Si quita frases de un archivo, baje su tope.
 
 **Añadir una excepción** (solo si de verdad no cabe en un token o un componente):
 

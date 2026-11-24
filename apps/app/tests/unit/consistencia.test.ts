@@ -397,6 +397,39 @@ describe("TSX: textos en el catálogo de su área", () => {
   });
 });
 
+// ---------- 6. Frases del dominio: un tope que solo baja ----------
+
+// El dominio (src/domain) tiene frases que se enseñan (estados, avisos, errores, mensajes de WhatsApp) desde antes de los
+// catálogos; muchas las comparte con el worker y la base. Hasta moverlas (cuando haya un segundo idioma), cada archivo no
+// puede sumar frases: los mensajes nuevos van en un catálogo `domain/*-copy.ts`. Si un archivo baja, se baja su tope en
+// tests/unit/textos-dominio.json (decisión del 2026-11-24).
+const DOMAIN_TEXT_LIMITS = JSON.parse(readFileSync(new URL("./textos-dominio.json", import.meta.url), "utf8")) as Record<string, number>;
+const DOMAIN_FILES = files(join(SRC, "domain"), /\.ts$/).map((f) => relative(SRC, f)).filter((f) => !/-copy\.ts$/.test(f));
+function domainTexts(file: string): number {
+  const text = readFileSync(join(SRC, file), "utf8");
+  const sf = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  let n = 0;
+  const visit = (node: ts.Node) => {
+    if ((ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node) || ts.isTemplateHead(node) || ts.isTemplateMiddle(node) || ts.isTemplateTail(node)) &&
+      !ts.isImportDeclaration(node.parent) && (looksLikeText(node.text) || (aWord(node.text) && shownAnyway(node)))) n++;
+    ts.forEachChild(node, visit);
+  };
+  visit(sf);
+  return n;
+}
+
+describe("dominio: frases para personas", () => {
+  it("ningún archivo de src/domain suma frases (las nuevas, en un catálogo `domain/*-copy.ts`)", () => {
+    const over = DOMAIN_FILES.map((f) => [f, domainTexts(f), DOMAIN_TEXT_LIMITS[f] ?? 0] as const).filter(([, n, max]) => n > max);
+    expect(over.map(([f, n, max]) => `${f}: ${n} frases (tope ${max})`)).toEqual([]);
+  });
+
+  it("el tope baja cuando un archivo tiene menos frases (actualice tests/unit/textos-dominio.json)", () => {
+    const stale = Object.entries(DOMAIN_TEXT_LIMITS).map(([f, max]) => [f, DOMAIN_FILES.includes(f) ? domainTexts(f) : 0, max] as const).filter(([, n, max]) => n < max);
+    expect(stale.map(([f, n, max]) => `${f}: ${n} frases, tope ${max}`)).toEqual([]);
+  });
+});
+
 describe("TS y TSX: cadenas en el catálogo de su área", () => {
   it("ninguna cadena en español fuera de `copy/` en client/ y shared/ (avisos, errores, etiquetas en constantes)", () => {
     expect(STRING_FILES.flatMap(looseStrings)).toEqual([]);
