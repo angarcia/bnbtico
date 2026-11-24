@@ -12,7 +12,7 @@
     "test:watch": "vitest --project unit",
     "test:e2e": "node scripts/base-local.mjs && playwright test",
     "lighthouse": "playwright test -c playwright.lighthouse.config.ts",
-    "size": "size-limit",
+    "size": "size-limit && node scripts/js-inicial.mjs",
     "deploy": "wrangler deploy",
     "test:db": "node scripts/base-local.mjs && vitest run --project db",
     "db:types": "cd ../.. && supabase gen types typescript --local --schema public > apps/app/src/domain/database.types.ts",

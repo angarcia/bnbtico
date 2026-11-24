@@ -30,7 +30,7 @@ pantallas no escriben sus clases ni redefinen su aspecto, y no llevan `className
   colocación o un tono, se añade al componente con su caso de uso, no se escribe la clase en la pantalla.
 - **JS inicial** (`.size-limit.json`, 161 KB con al menos 1 KB de margen, decisión del 2026-11-20): lo que no hace falta en la
   primera pantalla del teléfono va en su trozo (`card-*`, `closed-field-*`, `router-rows-*`, `status-label-*`,
-  `explorar-escritorio-*`, `panel-dias-*`). Antes de importar un componente diferido desde el arranque, mire `pnpm size`.
+  `explorar-escritorio-*`, `panel-dias-*`). Antes de importar un componente diferido desde el arranque, mire `pnpm size`: además del peso, comprueba (`scripts/js-inicial.mjs`) que el límite cuenta justo los trozos que se cargan al arrancar; un trozo diferido nuevo se añade a sus exclusiones.
 - **Catálogo vivo** en `/_componentes` (local y pruebas; en producción, 404 del worker y el service worker no la sirve):
   cada componente de esta guía en sus variantes y estados, en una página (`client/componentes/componentes.tsx`, su propio
   trozo). Al añadir un componente o una variante, añádalo allí; `tests/e2e/componentes.spec.ts` lo recorre en móvil y
