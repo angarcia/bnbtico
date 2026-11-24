@@ -42,11 +42,11 @@ import { Button, ButtonPlaceholder } from "../../../shared/ui/button";
 import { RouterButtonLink } from "../../comun/router-buttons";
 import { Notice } from "../../../shared/ui/structure";
 import * as STEP_COPY from "./copy/step-form";
+import { ownListingKey, ownResumableKey } from "../../comun/listing-keys";
 
 const GENERIC = "No pudimos guardar. Intente de nuevo.";
 const WhatsAppDialog = lazy(() => import("../../comun/whatsapp-dialog").then((m) => ({ default: m.WhatsAppDialog })));
 const messageOf = (e: unknown) => (e instanceof DomainError ? e.message : GENERIC);
-const detailKey = (userId: string, id: string) => ["own-listing", userId, id] as const;
 
 // ---------- Fallo de guardado: la pantalla que falló, su mensaje y lo escrito ----------
 
@@ -116,8 +116,8 @@ export function useSaveStep(userId: string, listingId: string) {
     mutationFn: ({ request }: SaveVars) => request,
     onMutate: async ({ patch, seq }) => {
       latestSave.set(listingId, seq);
-      await client.cancelQueries({ queryKey: detailKey(userId, listingId) });
-      const previous = client.getQueryData<Listing | null>(detailKey(userId, listingId));
+      await client.cancelQueries({ queryKey: ownListingKey(userId, listingId) });
+      const previous = client.getQueryData<Listing | null>(ownListingKey(userId, listingId));
       if (previous) patchCached(client, userId, listingId, normalize({ ...previous, ...patch, photoCount: previous.photoCount }));
     },
     onSuccess: (saved, { seq }) => {
@@ -127,7 +127,7 @@ export function useSaveStep(userId: string, listingId: string) {
     onError: (error, { step, patch, volver }) => {
       if (isLostDraft(listingId)) return; // la base no creó el borrador: la entrada ya enseña por qué (new-draft.ts)
       setFailure({ listingId, step, patch, message: messageOf(error) });
-      void client.invalidateQueries({ queryKey: detailKey(userId, listingId) });
+      void client.invalidateQueries({ queryKey: ownListingKey(userId, listingId) });
       void toStep(router, port.step, listingId, step, volver);
     },
   });
@@ -143,7 +143,7 @@ async function sendForReview(client: QueryClient, router: ReturnType<typeof useR
   if (failure?.listingId === id) return null; // un guardado falló: ya volvimos a esa pantalla con su mensaje
   const fresh = await (await port.listings()).getOwn(id);
   if (!fresh) return "No encontramos ese anuncio.";
-  client.setQueryData(detailKey(userId, id), fresh);
+  client.setQueryData(ownListingKey(userId, id), fresh);
   // Solo lo obligatorio manda a otra pantalla (2026-10-30); los avisos no bloquean.
   const invalid = validateAll(fresh);
   if (invalid) {
@@ -170,7 +170,7 @@ async function sendForReview(client: QueryClient, router: ReturnType<typeof useR
   await router.navigate({ to: ask ? "/propietario/casas/$id/correo" : "/propietario/casas/$id/enviada", params: { id }, replace: true });
   patchCached(client, userId, id, { status: "review", reviewNote: null });
   refresh(client, userId, fresh);
-  void client.invalidateQueries({ queryKey: ["own-resumable", userId] });
+  void client.invalidateQueries({ queryKey: ownResumableKey(userId) });
   return null;
 }
 

@@ -27,6 +27,7 @@ import { RouterButtonLink } from "../../comun/router-buttons";
 import { Notice, Skeleton } from "../../../shared/ui/structure";
 import { Card } from "../../../shared/ui/card";
 import * as ENTRY_COPY from "./copy/publicar-entrada";
+import { ownListingKey, ownListingsKey, ownResumableKey } from "../../comun/listing-keys";
 
 const message = (e: unknown) => (e instanceof DomainError ? e.message : "Algo salió mal. Intente de nuevo en un momento.");
 /** Un borrador vacío de hace menos de esto es el de una visita anterior que se cortó (recarga entre crear y guardar). */
@@ -132,10 +133,10 @@ export function ContinuarScreen() {
       return owner.saveStep(created.current, 1, patch);
     },
     onSuccess: async (saved: Listing) => {
-      client.setQueryData(["own-listing", userId, saved.id], saved);
+      client.setQueryData(ownListingKey(userId, saved.id), saved);
       addOwnCached(client, userId, saved); // la barra crece al instante, antes de releer la lista
-      void client.invalidateQueries({ queryKey: ["own-listings", userId] });
-      void client.invalidateQueries({ queryKey: ["own-resumable", userId] });
+      void client.invalidateQueries({ queryKey: ownListingsKey(userId) });
+      void client.invalidateQueries({ queryKey: ownResumableKey(userId) });
       clearStored();
       await navigate({ to: "/propietario/publicar/$id/$paso", params: { id: saved.id, paso: String(next) }, replace: true });
     },

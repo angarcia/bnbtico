@@ -9,9 +9,12 @@ export const LISTING_DAYS_STALE_MS = 60_000;
 
 const api = async () => (await import("./supabase-data")).publicListings();
 
+export const publicListingKey = (publicId: string) => ["listing", publicId] as const;
+export const listingDaysKey = (publicId: string) => ["listing-days", publicId] as const;
+
 export const listingQuery = (publicId: string) =>
   queryOptions({
-    queryKey: ["listing", publicId] as const,
+    queryKey: publicListingKey(publicId),
     queryFn: async () => (await api()).getPublic(publicId),
     staleTime: LISTING_STALE_MS,
   });
@@ -21,7 +24,7 @@ export const listingQuery = (publicId: string) =>
  *  quita pronto en vez de quedarse como caja vacía. */
 export const listingDaysQuery = (publicId: string) =>
   queryOptions({
-    queryKey: ["listing-days", publicId] as const,
+    queryKey: listingDaysKey(publicId),
     queryFn: async (): Promise<CalendarDay[] | null> => (await api()).getPublicDays(publicId),
     staleTime: LISTING_DAYS_STALE_MS,
     retry: 1,

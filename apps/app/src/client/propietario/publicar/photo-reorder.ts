@@ -3,6 +3,7 @@ import type { QueryClient } from "@tanstack/react-query";
 import { DomainError } from "../../../domain/errors";
 import type { Listing } from "../../../domain/listing";
 import { applyOrder } from "../../../domain/photo-order";
+import { ownListingKey, ownListingsKey } from "../../comun/listing-keys";
 
 export const PHOTOS_ERROR = "No pudimos cambiar las fotos. Intente de nuevo.";
 
@@ -14,10 +15,10 @@ export function photosErrorMessage(e: unknown): string {
 type Ctx = { previous: Listing | null | undefined };
 
 export function photoReorderCallbacks(client: QueryClient, userId: string, listingId: string, reread: () => Promise<void>) {
-  const key = ["own-listing", userId, listingId] as const;
+  const key = ownListingKey(userId, listingId);
   return {
     async onMutate(order: string[]): Promise<Ctx> {
-      await Promise.all([client.cancelQueries({ queryKey: ["own-listing"] }), client.cancelQueries({ queryKey: ["own-listings", userId] })]);
+      await Promise.all([client.cancelQueries({ queryKey: key }), client.cancelQueries({ queryKey: ownListingsKey(userId) })]);
       const previous = client.getQueryData<Listing | null>(key);
       client.setQueryData<Listing | null | undefined>(key, (l) => (l ? { ...l, photos: applyOrder(l.photos, order) } : l));
       return { previous };

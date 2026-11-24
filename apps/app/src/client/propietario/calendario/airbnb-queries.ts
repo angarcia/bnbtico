@@ -5,6 +5,8 @@ import { airbnbManualHint, type AirbnbSummary } from "../../../domain/airbnb";
 import { authApi } from "../../comun/session";
 import { DomainError, toDomainError } from "../../../domain/errors";
 import { toast } from "../../../shared/toast";
+import { airbnbKey, calendarKey, listingsKey } from "../../comun/listing-keys";
+import { listingDaysKey, publicListingKey } from "../../../shared/listing-query";
 
 const subscribeOnline = (listener: () => void) => onlineManager.subscribe(listener);
 const onlineSnapshot = () => onlineManager.isOnline();
@@ -19,7 +21,7 @@ export const airbnbApi = async () => (await calendarData()).airbnbApi();
 export const icalExportApi = async () => (await calendarData()).icalExportApi();
 
 export const airbnbQuery = (userId: string, listingId: string) => queryOptions({
-  queryKey: ["airbnb", userId, listingId] as const,
+  queryKey: airbnbKey(userId, listingId),
   queryFn: async () => (await airbnbApi()).overview(listingId),
   staleTime: 30_000,
   refetchInterval: query => query.state.data?.state === "running" ? 1500 : false,
@@ -27,11 +29,11 @@ export const airbnbQuery = (userId: string, listingId: string) => queryOptions({
 
 export async function refreshAirbnbCalendar(client: QueryClient, userId: string, listingId: string, publicId: string) {
   await Promise.all([
-    client.invalidateQueries({ queryKey: ["airbnb", userId, listingId] }),
-    client.invalidateQueries({ queryKey: ["calendar", userId, listingId] }),
-    client.invalidateQueries({ queryKey: ["listing-days", publicId] }),
-    client.invalidateQueries({ queryKey: ["listing", publicId] }),
-    client.invalidateQueries({ queryKey: ["listings"] }),
+    client.invalidateQueries({ queryKey: airbnbKey(userId, listingId) }),
+    client.invalidateQueries({ queryKey: calendarKey(userId, listingId) }),
+    client.invalidateQueries({ queryKey: listingDaysKey(publicId) }),
+    client.invalidateQueries({ queryKey: publicListingKey(publicId) }),
+    client.invalidateQueries({ queryKey: listingsKey }),
   ]);
 }
 

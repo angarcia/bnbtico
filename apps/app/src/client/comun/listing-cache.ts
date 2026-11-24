@@ -1,6 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 import type { Listing } from "../../domain/listing";
-import { adminEditKey, billingKey, adminEditsKey, adminHousesKey, adminListingKey, adminQueueKey, listingsKey, offerTakenKey, ownListingKey, ownListingsKey, publicListingKey } from "./listing-keys";
+import { adminEditKey, billingKey, adminEditsKey, adminHousesKey, adminListingKey, adminQueueKey, listingsKey, offerTakenKey, ownListingKey, ownListingsKey } from "./listing-keys";
+import { publicListingKey } from "../../shared/listing-query";
 
 type Target = Pick<Listing, "id" | "publicId">;
 
