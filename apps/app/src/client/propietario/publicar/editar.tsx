@@ -11,7 +11,7 @@
 // tiene su URL). El admin y el teléfono siguen con la pantalla del dato.
 import { useQueryClient } from "@tanstack/react-query";
 import { Navigate, useBlocker, useCanGoBack, useNavigate, useParams, useRouter } from "@tanstack/react-router";
-import { lazy, Suspense, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { lazy, Suspense, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type FormEvent, type RefObject } from "react";
 import { enterToNext, useEnterKeyHints, useFormKeyboard } from "./form-keyboard";
 import { FieldErrorContext, useFieldError } from "./field-error";
 import { listingFieldError } from "../../../domain/field-errors";
@@ -118,6 +118,50 @@ function editFieldValue(form: HTMLFormElement, field: FormField) {
   return JSON.stringify(patch, (_key, value: unknown) => typeof value === "number" && Number.isNaN(value) ? "NaN" : value);
 }
 
+/**
+ * ¿Difiere el formulario de como se abrió? Compara al escribir (en el fotograma siguiente) y cuando los contadores o el mapa
+ * cambian campos ocultos sin emitir input. Mientras el propietario no toque nada (`interacted`), lo que llega del servidor
+ * pasa a ser el valor de partida. Empieza de nuevo con cada versión del formulario (`formVersion`).
+ */
+function useFieldChanges(form: RefObject<HTMLFormElement | null>, field: FormField, formVersion: string, interacted: RefObject<boolean>) {
+  const initialValue = useRef("");
+  const [hasChanges, setHasChanges] = useState(false);
+  useLayoutEffect(() => {
+    const element = form.current;
+    if (!element) return;
+    initialValue.current = editFieldValue(element, field);
+    setHasChanges(false);
+    const compare = () => {
+      const value = editFieldValue(element, field);
+      if (!interacted.current) initialValue.current = value;
+      setHasChanges(value !== initialValue.current);
+    };
+    let frame = 0;
+    const afterInput = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(compare);
+    };
+    const observer = new MutationObserver(compare);
+    observer.observe(element, { subtree: true, attributes: true, attributeFilter: ["value"], childList: true });
+    element.addEventListener("input", afterInput);
+    element.addEventListener("change", afterInput);
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+      element.removeEventListener("input", afterInput);
+      element.removeEventListener("change", afterInput);
+    };
+  }, [field, formVersion]);
+  return { hasChanges, initialValue };
+}
+
+/** Sube hasta el aviso (`role="alert"`) del formulario cada vez que cambia su mensaje, para que se vea. */
+function useScrollToAlert(form: RefObject<HTMLFormElement | null>, message: string | null) {
+  useEffect(() => {
+    if (message) form.current?.querySelector('[role="alert"]')?.scrollIntoView({ block: "nearest" });
+  }, [message]);
+}
+
 function EditFieldForm({ listing, field, userId, dialog = false }: { listing: Listing; field: FormField; userId: string; dialog?: boolean }) {
   const form = useRef<HTMLFormElement>(null);
   const formId = useId();
@@ -143,9 +187,8 @@ function EditFieldForm({ listing, field, userId, dialog = false }: { listing: Li
   const version = JSON.stringify(draft);
   const [frozen, setFrozen] = useState<string | null>(null);
   const formVersion = frozen ?? version;
-  const initialValue = useRef("");
   const interacted = useRef(false);
-  const [hasChanges, setHasChanges] = useState(false);
+  const { hasChanges, initialValue } = useFieldChanges(form, field, formVersion, interacted);
   const touch = () => {
     interacted.current = true;
     setFrozen((f) => f ?? version);
@@ -157,34 +200,6 @@ function EditFieldForm({ listing, field, userId, dialog = false }: { listing: Li
   // Atrás del navegador (o cualquier salida de la ruta) con cambios en la ventana: «¿Descartar los cambios?».
   const blocker = useBlocker({ shouldBlockFn: () => !leaving.current && dirty(), withResolver: true, enableBeforeUnload: false, disabled: !dialog });
   const failed = (e: unknown) => setError(toDomainError(e).message);
-
-  useLayoutEffect(() => {
-    const element = form.current;
-    if (!element) return;
-    initialValue.current = editFieldValue(element, field);
-    setHasChanges(false);
-    const compare = () => {
-      const value = editFieldValue(element, field);
-      if (!interacted.current) initialValue.current = value;
-      setHasChanges(value !== initialValue.current);
-    };
-    let frame = 0;
-    const afterInput = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(compare);
-    };
-    // Los contadores y el mapa actualizan campos ocultos sin emitir input.
-    const observer = new MutationObserver(compare);
-    observer.observe(element, { subtree: true, attributes: true, attributeFilter: ["value"], childList: true });
-    element.addEventListener("input", afterInput);
-    element.addEventListener("change", afterInput);
-    return () => {
-      observer.disconnect();
-      cancelAnimationFrame(frame);
-      element.removeEventListener("input", afterInput);
-      element.removeEventListener("change", afterInput);
-    };
-  }, [field, formVersion]);
 
   function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -211,9 +226,7 @@ function EditFieldForm({ listing, field, userId, dialog = false }: { listing: Li
   // en el aviso de arriba.
   const fieldProblem = listingFieldError(error);
   // El error de guardado va arriba del cuerpo de la ventana: se sube hasta él para que se vea.
-  useEffect(() => {
-    if (dialog && error && !fieldProblem) form.current?.querySelector('[role="alert"]')?.scrollIntoView({ block: "nearest" });
-  }, [dialog, error, fieldProblem]);
+  useScrollToAlert(form, dialog && !!error && !fieldProblem ? error : null);
   const editor = (
     <form id={formId} ref={form} key={formVersion} onSubmit={onSubmit} onKeyDown={enterToNext} onInputCapture={touch} onChangeCapture={touch} onPointerDownCapture={touch} onClickCapture={touch} {...(dialog ? {} : keyboard)} className="publish-form" noValidate>
       {/* De qué casa es el cambio, bajo el título (en la ventana, en su cabecera). */}
