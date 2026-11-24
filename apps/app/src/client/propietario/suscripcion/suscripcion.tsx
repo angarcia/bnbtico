@@ -3,8 +3,8 @@
 // importa de aquí su tarjeta y su fila, para que las pestañas no crezcan. Todo sale de owner_billing (billing.ts); si esa
 // lectura falla (base sin la migración), Cuenta sale como antes y esta pantalla solo explica la oferta.
 // Parar y reactivar son optimistas con vuelta atrás; «Añadir método de pago» pide al worker la página de la pasarela.
-import { useIsRestoring, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, getRouteApi, useLocation, useNavigate } from "@tanstack/react-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link, getRouteApi } from "@tanstack/react-router";
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { DomainError, toDomainError } from "../../../domain/errors";
 import { type Listing, type ListingStatus } from "../../../domain/listing";
@@ -12,7 +12,7 @@ import { holdLabel, statusLabel } from "../../../domain/status-label";
 import { formatCRC } from "../../../domain/money";
 import { PAYMENT_MESSAGES } from "../../../domain/payments";
 import { orderSubscriptions, subscriptionNeedsAttention, subscriptionSummary } from "../../../domain/subscription-presentation";
-import { scopeBilling, scopeFix, type SuscripcionSearch } from "../../../domain/subscription-scope";
+import { type SuscripcionSearch } from "../../../domain/subscription-scope";
 import {
   MONTHLY_FEE_CRC,
   launchOffer,
@@ -41,12 +41,11 @@ import { LoadError, Notice, Skeleton, StatusTag } from "../../../shared/ui/struc
 import { Card } from "../../../shared/ui/card";
 import { RouterListRow } from "../../comun/router-rows";
 import * as SUB_COPY from "./copy/subscription";
-import { listingsKey, ownListingsKey } from "../../comun/listing-keys";
+import { useSavingMethod, useSubscriptionScope, type Saving } from "./use-subscription";
 
 const route = getRouteApi("/_flow/_privateFlow/propietario/suscripcion");
 const message = (e: unknown) => toDomainError(e).message;
 const fee = () => formatCRC(MONTHLY_FEE_CRC);
-const SAVE_WAIT_MS = 10_000;
 
 const CardIcon = () => (
   <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -157,12 +156,7 @@ function HouseCard({ hb, today, userId, hasMethod, target, onAction }: { hb: Hou
   const { house, sub } = hb;
   const [confirming, setConfirming] = useState(false);
   const change = useStopResume(userId, house, hasMethod);
-  const ref = useRef<HTMLElement>(null);
-  useEffect(() => {
-    if (!target || !ref.current) return;
-    ref.current.scrollIntoView({ block: "center" });
-    ref.current.focus({ preventScroll: true });
-  }, [target]);
+  const ref = useFocusWhenTarget(target);
   // Bloqueada por 3bstays: la suscripción está parada; no hay nada que pagar, parar ni reactivar.
   const blocked = sub.hold === "blocked";
   const label = blocked ? holdLabel("blocked", "row") : statusLabel(sub.status);
@@ -256,44 +250,59 @@ function HouseFigures({ userId, listingId }: { userId: string; listingId: string
 
 // ---------- La pantalla ----------
 
-type Saving = "saving" | "saved" | "late" | null;
-
-/** Vuelta de la pasarela con `?pago=ok` (la pantalla lo quita de la URL): se vuelve a leer owner_billing hasta ~10 s. */
-function useSavingMethod(userId: string, pago: "ok" | undefined): [Saving, () => void] {
-  const client = useQueryClient();
-  const [saving, setSaving] = useState<Saving>(() => (pago === "ok" ? "saving" : null));
-  useEffect(() => {
-    if (saving !== "saving" || !userId) return;
-    let stopped = false;
-    const started = Date.now();
-    void (async () => {
-      while (!stopped) {
-        const o = await client.fetchQuery({ ...billingQuery(userId), staleTime: 0 }).catch(() => null);
-        if (stopped) return;
-        if (o?.method) {
-          setSaving("saved");
-          void client.invalidateQueries({ queryKey: ownListingsKey(userId) });
-          void client.invalidateQueries({ queryKey: listingsKey });
-          return;
-        }
-        if (Date.now() - started >= SAVE_WAIT_MS) return setSaving("late");
-        await new Promise((r) => setTimeout(r, 1000));
-      }
-    })();
-    return () => {
-      stopped = true;
-    };
-  }, [saving, userId, client]);
-  // El aviso de la vuelta se retira en cuanto el propietario hace otra cosa (parar o reactivar una casa).
-  const dismiss = () => setSaving((s) => (s === "saving" ? s : null));
-  return [saving, dismiss];
-}
-
 const SAVING_TEXT: Record<Exclude<Saving, null>, string> = {
   saving: "Guardando su método de pago…",
   saved: "Método de pago guardado. No se cobra nada hasta que termine la oferta.",
   late: "Lo estamos confirmando; aparecerá en unos minutos.",
 };
+
+/** El método de pago guardado (o «Añadir método de pago» si toca pagar). `publicId`: la casa a la que vuelve la pasarela. */
+function MethodCard({ method, due, publicId }: { method: PaymentMethodSummary | null; due: boolean; publicId: string | undefined }) {
+  return (
+    <Card layout="stack" gap={8} data-testid="method-card">
+      <h2 className="card-title">{SUB_COPY.method}</h2>
+      {method ? (
+        <div className="row between baseline gap-8">
+          <span className="row gap-8 num">
+            <CardIcon /> {SUB_COPY.methodLine({ name: methodName(method), expiry: expiry(method) })}
+          </span>
+          <PayButton label={SUB_COPY.change} ghost publicId={publicId} />
+        </div>
+      ) : (
+        <>
+          <span className="row gap-8">
+            <CardIcon /> {SUB_COPY.noMethod}
+          </span>
+          {due ? <PayButton publicId={publicId} /> : <span className="small muted">{SUB_COPY.addLater}</span>}
+        </>
+      )}
+      <span className="xs muted">{SUB_COPY.methodNote}</span>
+    </Card>
+  );
+}
+
+/** «Cómo funciona», plegado y en blanco (revisión UX A2, A6). */
+function HowItWorks() {
+  return (
+    <Card as="details" placement="how-it-works" data-testid="how-it-works">
+      <summary className="strong">{SUB_COPY.howTitle}</summary>
+      <span>
+        {SUB_COPY.howText({ fee: fee() })}
+      </span>
+    </Card>
+  );
+}
+
+/** Al abrir desde un aviso (`#pago=CT-…`), la tarjeta de esa casa se centra y recibe el foco. */
+function useFocusWhenTarget(target: boolean) {
+  const ref = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!target || !ref.current) return;
+    ref.current.scrollIntoView({ block: "center" });
+    ref.current.focus({ preventScroll: true });
+  }, [target]);
+  return ref;
+}
 
 export function SuscripcionScreen() {
   return <SubscriptionContent search={route.useSearch()} />;
@@ -309,27 +318,11 @@ export function AccountSubscriptionDetails() {
 
 function SubscriptionContent({ search, panelBack, inAccount = false }: { search: SuscripcionSearch; panelBack?: string; inAccount?: boolean }) {
   const userId = useSession().session?.userId ?? "";
-  // Con `?casa=` se vuelve a leer siempre al abrir: una casa aprobada hace un momento aún no está en la caché.
-  const billing = useQuery({ ...billingQuery(userId), enabled: !!userId, refetchOnMount: search.casa ? "always" : true });
-  const restoring = useIsRestoring();
-  const indexed = useBilling(userId);
-  const hash = useLocation({ select: (l) => l.hash });
-  const navigate = useNavigate();
-  const target = parsePayHash(hash ? `#${hash}` : "");
   const [saving, dismissSaving] = useSavingMethod(userId, search.pago);
-  const scope = indexed ? scopeBilling(indexed.all, search.casa) : null;
-  // Asentado = leído de la base tras abrir la pantalla y sin error: sin red (o si falló), `casa` se queda y no se ven las demás.
-  const settled = !!indexed && billing.isFetchedAfterMount && billing.isSuccess && !billing.isFetching && !restoring;
-  // Una sola corrección de la URL: fuera `pago=ok` siempre y `casa` si no es suya (con los datos ya leídos); el hash se queda.
-  useEffect(() => {
-    const fix = scopeFix(search, { unknown: !!scope?.unknown, settled });
-    if (fix && !panelBack) void navigate({ to: "/propietario/suscripcion", search: fix, hash, replace: true });
-  }, [search, scope?.unknown, settled, panelBack]); // eslint-disable-line react-hooks/exhaustive-deps
+  const { billing, indexed, scoped, settled, single, hash } = useSubscriptionScope(userId, search, panelBack);
+  const target = parsePayHash(hash ? `#${hash}` : "");
   const today = indexed?.today ?? "";
   const method = indexed?.method ?? null;
-  const scoped = scope?.scoped ?? null;
-  // Con casa: «Suscripción» desde el primer pintado (y mientras se confirma una casa que aún no está en la caché).
-  const single = !!panelBack || (!!search.casa && (scoped !== null || (indexed ? !settled : billing.isPending)));
   const due = scoped ? payButtonDue(scoped.sub, today) : (indexed?.all.some((x) => payButtonDue(x.sub, today)) ?? false);
   const card = (hb: HouseBilling) => (
     <HouseCard key={hb.house.listingId} hb={hb} today={today} userId={userId} hasMethod={!!method} target={hb.house.publicId === target} onAction={dismissSaving} />
@@ -347,36 +340,8 @@ function SubscriptionContent({ search, panelBack, inAccount = false }: { search:
       {ordered.length ? ordered.map(card) : <p className="small muted">{SUB_COPY.firstHouse}</p>}
     </section>
   ) : null;
-  const methodCard = (
-    <Card layout="stack" gap={8} data-testid="method-card">
-      <h2 className="card-title">{SUB_COPY.method}</h2>
-      {method ? (
-        <div className="row between baseline gap-8">
-          <span className="row gap-8 num">
-            <CardIcon /> {SUB_COPY.methodLine({ name: methodName(method), expiry: expiry(method) })}
-          </span>
-          <PayButton label={SUB_COPY.change} ghost publicId={scoped?.house.publicId} />
-        </div>
-      ) : (
-        <>
-          <span className="row gap-8">
-            <CardIcon /> {SUB_COPY.noMethod}
-          </span>
-          {due ? <PayButton publicId={scoped?.house.publicId} /> : <span className="small muted">{SUB_COPY.addLater}</span>}
-        </>
-      )}
-      <span className="xs muted">{SUB_COPY.methodNote}</span>
-    </Card>
-  );
-  // «Cómo funciona», plegado y en blanco (A2, A6).
-  const howItWorks = (
-    <Card as="details" placement="how-it-works" data-testid="how-it-works">
-      <summary className="strong">{SUB_COPY.howTitle}</summary>
-      <span>
-        {SUB_COPY.howText({ fee: fee() })}
-      </span>
-    </Card>
-  );
+  const methodCard = <MethodCard method={method} due={due} publicId={scoped?.house.publicId} />;
+  const howItWorks = <HowItWorks />;
 
   return (
     <>
