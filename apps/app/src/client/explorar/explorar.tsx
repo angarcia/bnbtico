@@ -3,7 +3,7 @@
 // filtros en la URL, una casa por fila; con llegada y salida, cada tarjeta y su marcador dicen el total orientativo de esas noches.
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, getRouteApi, useCanGoBack, useNavigate, useRouter } from "@tanstack/react-router";
-import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { webStore } from "../../data/storage";
 import { DATES_FILTER_KEY, NIGHTS_FILTER_KEY, PEOPLE_FILTER_KEY, searchDatesValue } from "../../domain/contact-return";
 import { costaRicaToday } from "../../domain/dates";
@@ -142,6 +142,34 @@ function useReveal(loading: boolean, filtersKey: string): string {
   return revealClass({ loading, waited: waited.current, firstFilters: filtersKey === firstKey });
 }
 
+/** Al cerrar el mapa (botón, «N casas» o Atrás), el foco vuelve a «Mapa» si está a la vista o, si no, a la caja del mapa;
+ *  `onClose` corre a la vez. */
+function useMapCloseFocus(mapOpen: boolean, mapBox: RefObject<HTMLDivElement | null>, onClose: () => void) {
+  const wasOpen = useRef(mapOpen);
+  useEffect(() => {
+    if (wasOpen.current && !mapOpen) {
+      onClose();
+      (document.querySelector<HTMLElement>(".map-label") ?? mapBox.current)?.focus({ preventScroll: true });
+    }
+    wasOpen.current = mapOpen;
+    // `onClose` cambia en cada render: basta con depender de si el mapa está abierto.
+  }, [mapOpen]);
+}
+
+/** La hoja de contacto de la ficha arranca con estas personas, fechas y noches (revisión UX A3): se guardan en la pestaña
+ *  (sessionStorage), no en la URL de la ficha. */
+function useRememberStay(people: number, dates: string | null, nights: number) {
+  useEffect(() => {
+    const store = webStore("session");
+    if (people > 0) store.setItem(PEOPLE_FILTER_KEY, String(people));
+    else store.removeItem(PEOPLE_FILTER_KEY);
+    if (dates) store.setItem(DATES_FILTER_KEY, dates);
+    else store.removeItem(DATES_FILTER_KEY);
+    if (nights > 0) store.setItem(NIGHTS_FILTER_KEY, String(nights));
+    else store.removeItem(NIGHTS_FILTER_KEY);
+  }, [people, dates, nights]);
+}
+
 function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; provinces: string[]; zoneName: string | null; zone: LatLng | null }) {
   const navigate = useNavigate();
   const router = useRouter();
@@ -154,16 +182,8 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
   const mapBox = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
-  // Al cerrar el mapa (botón, «N casas» o Atrás) el foco vuelve a «Mapa» si está a la vista o, si no, a la caja.
-  const wasOpen = useRef(mapOpen);
-  useEffect(() => {
-    if (wasOpen.current && !mapOpen) {
-      // También con Atrás del navegador: la próxima vez el mapa se abre sin casa elegida.
-      setSelected(null);
-      (document.querySelector<HTMLElement>(".map-label") ?? mapBox.current)?.focus({ preventScroll: true });
-    }
-    wasOpen.current = mapOpen;
-  }, [mapOpen]);
+  // También con Atrás del navegador: la próxima vez el mapa se abre sin casa elegida.
+  useMapCloseFocus(mapOpen, mapBox, () => setSelected(null));
   const currency = useCurrency();
   const { data, isError, error, refetch, hasNextPage, fetchNextPage, isFetchingNextPage, isFetchNextPageError } = useInfiniteQuery(listingsQuery(f));
   // Todas las páginas ya cargadas («Ver más casas»): la lista y el mapa enseñan las mismas casas.
@@ -174,18 +194,8 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
   }, [data, f.nights]);
   const selectedHouse = desktop ? listings?.find((listing) => listing.publicId === selected) : undefined;
   const reveal = useReveal(!listings, searchToString(searchFor(f)));
-  // La hoja de contacto de la ficha arranca con estas personas y fechas (revisión UX A3); en la pestaña, no en la URL de la ficha.
   const stay = stayRange(f);
-  const dates = searchDatesValue(stay);
-  useEffect(() => {
-    const store = webStore("session");
-    if (f.ppl > 0) store.setItem(PEOPLE_FILTER_KEY, String(f.ppl));
-    else store.removeItem(PEOPLE_FILTER_KEY);
-    if (dates) store.setItem(DATES_FILTER_KEY, dates);
-    else store.removeItem(DATES_FILTER_KEY);
-    if (f.nights > 0) store.setItem(NIGHTS_FILTER_KEY, String(f.nights));
-    else store.removeItem(NIGHTS_FILTER_KEY);
-  }, [f.ppl, dates, f.nights]);
+  useRememberStay(f.ppl, searchDatesValue(stay), f.nights);
   const go = (next: Filters) => navigate({ to: "/explorar", search: searchFor(next), replace: true });
   const extras = extrasCount(f);
   // Con llegada y salida, las tarjetas y el mapa enseñan el total orientativo de esas noches (lo calcula la búsqueda); en

@@ -104,12 +104,11 @@ function NewHouseLink({ userId }: { userId: string }) {
   );
 }
 
-export function CasasScreen() {
-  const userId = useUserId();
-  usePreloadPublish();
+/** Lo que enseña Mis casas: la lista, las consultas nuevas de cada casa (la misma caché privada que Consultas y la pestaña:
+ *  sin peticiones por tarjeta ni contadores de WhatsApp), el aviso del pago, la vista (lista o una sola casa) y las cifras. */
+function useMyHouses(userId: string) {
   const listings = useQuery({ ...ownListingsQuery(userId), enabled: !!userId });
   const list = listings.data;
-  // La misma caché privada que Consultas y la pestaña: sin peticiones por tarjeta ni contadores de WhatsApp.
   const inquiries = useQuery({ ...inquiriesQuery(userId), enabled: !!userId });
   const freshByHouse = new Map<string, number>();
   for (const inquiry of inquiries.data ?? []) {
@@ -129,6 +128,13 @@ export function CasasScreen() {
     { n: count("review"), label: "en revisión", cls: "tile-review" },
     { n: count("draft"), label: count("draft") === 1 ? "borrador" : "borradores", cls: "tile-draft", to: firstDraft?.id },
   ].filter((t) => t.n > 0);
+  return { listings, list, freshByHouse, billing, notice, view, tiles };
+}
+
+export function CasasScreen() {
+  const userId = useUserId();
+  usePreloadPublish();
+  const { listings, list, freshByHouse, billing, notice, view, tiles } = useMyHouses(userId);
   // Una sola casa: su gestión en la propia pestaña, con la barra de abajo y sin flecha (no hay lista a la que volver).
   // El aviso del pago de la lista (90/30/7 días) sigue arriba; la pendiente de pago y la parada ya los pone la ficha.
   if (view === "detail") {
@@ -250,13 +256,9 @@ export function CasaPropietarioScreen() {
   return <OwnerHouseDetail id={id} showSubscription={desktop && panel === "suscripcion"} />;
 }
 
-/** `newHouse`: la gestión va en la pestaña «Mi casa» (una sola casa): cabecera de pestaña con el «+», sin flecha, y
- *  `notice` (el aviso del pago de la lista) debajo. */
-export function OwnerHouseDetail({ id, rightPanel, showSubscription, newHouse, notice }: { id: string; rightPanel?: ReactNode; showSubscription?: boolean; newHouse?: ReactNode; notice?: ReactNode }) {
-  const { userId, query } = useOwnListing(id);
-  const desktop = useDesktop();
-  // Suscripción, actividad y el JS de la ficha editable no dependen de la casa: salen a la vez que ella, no después
-  // (auditoría de viajes 2026-11-05: los avisos y las cifras llegaban ~0,6 s más tarde).
+/** Suscripción, actividad y el JS de la ficha editable no dependen de la casa: salen a la vez que ella, no después
+ *  (auditoría de viajes 2026-11-05: los avisos y las cifras llegaban ~0,6 s más tarde). */
+function usePrefetchHouseExtras(userId: string) {
   const client = useQueryClient();
   useEffect(() => {
     if (!userId) return;
@@ -264,6 +266,14 @@ export function OwnerHouseDetail({ id, rightPanel, showSubscription, newHouse, n
     void client.prefetchQuery(activityQuery(userId));
     void import("./casa-editable").catch(() => undefined);
   }, [client, userId]);
+}
+
+/** `newHouse`: la gestión va en la pestaña «Mi casa» (una sola casa): cabecera de pestaña con el «+», sin flecha, y
+ *  `notice` (el aviso del pago de la lista) debajo. */
+export function OwnerHouseDetail({ id, rightPanel, showSubscription, newHouse, notice }: { id: string; rightPanel?: ReactNode; showSubscription?: boolean; newHouse?: ReactNode; notice?: ReactNode }) {
+  const { userId, query } = useOwnListing(id);
+  const desktop = useDesktop();
+  usePrefetchHouseExtras(userId);
   const l = query.data;
   // En escritorio, «Ver ficha» va en la cabecera: flotando tapaba la fila que se edita (revisión 2026-11-13, A1).
   const viewListing = l && can(l, "share") ? (desktop ? (
