@@ -77,3 +77,5 @@ export const rowPhotos = "Fotos";
 export const rowPhotosValue = ({ count }: { count: number }) => (count ? plural(count, { one: `${count} foto`, other: `${count} fotos` }) : "Ninguna todavía");
 export const rowPrice = "Precio";
 export const rowPriceMissing = "Falta el precio";
+export const bathPrivate = "Privado";
+export const bathShared = "Compartido";

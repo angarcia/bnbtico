@@ -145,8 +145,8 @@ export function FeatureChips({ selected, parkingPaid }: { selected: Feature[]; p
 }
 
 const BATHROOM_OPTIONS = [
-  { value: "private", label: "Privado" },
-  { value: "shared", label: "Compartido" },
+  { value: "private", label: FIELDS_COPY.bathPrivate },
+  { value: "shared", label: FIELDS_COPY.bathShared },
 ] as const;
 
 /** Baño privado o compartido (solo habitaciones), como segmento (D8). */

@@ -219,7 +219,8 @@ Un token nuevo va primero en `tokens.json` (con su entrada en `changelog`) y des
    pasar Explorar, un solo catálogo para la lista y la tarjeta sacó la tarjeta a su propio trozo: +1,4 KB). Si el archivo de la pieza está en un grupo de trozos de `vite.config.ts`, su catálogo entra en el mismo grupo.
 6. un TS o TSX de `src/client` o `src/shared`, fuera de `copy/`, tiene una cadena que parece una frase en español (con tildes,
    eñe o signos del español, o varias palabras seguidas) fuera del JSX: avisos (`toast`), errores (`setError`, `DomainError`),
-   etiquetas en constantes u objetos. Van al catálogo del área igual que las del JSX; un mensaje que se repite en varias
+   etiquetas en constantes u objetos; y también una palabra suelta («Lugar», «por pagar») si va a un sitio que se enseña
+   (`label:`, `title:`, `text:`, `value:`, `name:`… o el primer argumento de `toast`, `setError` o `DomainError`). Van al catálogo del área igual que las del JSX; un mensaje que se repite en varias
    áreas y no es de pantalla va en el dominio (`GENERIC_MESSAGE` y `OFFLINE_MESSAGE` en `domain/errors.ts`).
 
 **Añadir una excepción** (solo si de verdad no cabe en un token o un componente):

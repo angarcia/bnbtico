@@ -34,3 +34,4 @@ export const noDates = "Sin fechas";
 export const nights = "Noches";
 export const noNights = "Sin noches";
 export const bedsAtLeast = ({ beds }: { beds: number }) => (beds ? `${beds} o más` : "Cualquier cantidad");
+export const kindAny = "Cualquiera";

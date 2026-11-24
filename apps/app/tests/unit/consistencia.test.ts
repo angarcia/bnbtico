@@ -347,6 +347,21 @@ const STRING_FILES = files(SRC, /\.tsx?$/)
   .map((f) => relative(SRC, f))
   .filter((f) => /^(?:client|shared)\//.test(f) && !/(?:^|\/)copy\//.test(f) && !f.endsWith(".d.ts"));
 
+/** Sitios donde una cadena se enseña aunque sea una palabra suelta en minúscula («por pagar», «activa»): propiedades de
+ *  texto de un objeto y los argumentos de avisos y errores. */
+const TEXT_KEYS = new Set(["label", "title", "text", "body", "message", "hint", "placeholder", "confirm", "action", "pending", "done", "line", "value", "name", "subtitle", "cancelLabel", "confirmLabel"]);
+const TEXT_CALLS = new Set(["toast", "setError", "setProblem", "setNotice", "DomainError", "announce"]);
+function shownAnyway(node: ts.Node): boolean {
+  let n: ts.Node = node;
+  // Sube por ternarios, `??`/`||` y paréntesis hasta el sitio donde se usa la cadena.
+  while (ts.isConditionalExpression(n.parent) || ts.isParenthesizedExpression(n.parent) || (ts.isBinaryExpression(n.parent) && [ts.SyntaxKind.QuestionQuestionToken, ts.SyntaxKind.BarBarToken].includes(n.parent.operatorToken.kind))) n = n.parent;
+  const p = n.parent;
+  if (ts.isPropertyAssignment(p) && p.initializer === n) return TEXT_KEYS.has(p.name.getText().replace(/["']/g, ""));
+  if ((ts.isCallExpression(p) || ts.isNewExpression(p)) && p.arguments?.[0] === n) return TEXT_CALLS.has(p.expression.getText().split(".").pop()!);
+  return false;
+}
+const aWord = (t: string) => /[a-záéíóúñ]{3,}/.test(t) && !/^[a-z0-9]+(?:[-_][a-z0-9]+)*$/.test(t);
+
 function inClassName(node: ts.Node): boolean {
   for (let n: ts.Node | undefined = node.parent; n; n = n.parent) {
     if (ts.isJsxAttribute(n)) return n.name.getText() === "className";
@@ -366,7 +381,7 @@ function looseStrings(file: string): string[] {
       const module = ts.isImportDeclaration(p) || ts.isExportDeclaration(p) || (ts.isCallExpression(p) && p.expression.kind === ts.SyntaxKind.ImportKeyword);
       // El texto suelto del JSX ya lo mira la regla 4; aquí, el resto. Las clases (`className={a ? "x y" : "z"}`) no son texto.
       const jsx = ts.isJsxAttribute(p) || ts.isJsxText(node) || inClassName(node);
-      if (!module && !jsx && looksLikeText(node.text) && !(node.text in allowed)) {
+      if (!module && !jsx && (looksLikeText(node.text) || (aWord(node.text) && shownAnyway(node))) && !(node.text in allowed)) {
         found.push(`${file}:${sf.getLineAndCharacterOfPosition(node.getStart()).line + 1} «${node.text.slice(0, 60)}» (va en la carpeta copy/ del área)`);
       }
     }

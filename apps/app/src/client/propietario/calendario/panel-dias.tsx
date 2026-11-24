@@ -11,8 +11,8 @@ import { AirbnbAvailability } from "./airbnb-calendar-row";
 import * as PANEL_COPY from "./copy/panel-dias";
 
 const AVAILABILITY = [
-  { value: "free", label: "Disponible" },
-  { value: "busy", label: "Ocupado" },
+  { value: "free", label: PANEL_COPY.free },
+  { value: "busy", label: PANEL_COPY.busy },
 ] as const;
 const KB_RELEASE_MS = 400;
 const grouped = (digits: string) => digits.replace(/\B(?=(\d{3})+(?!\d))/g, " ");

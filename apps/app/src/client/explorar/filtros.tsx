@@ -177,7 +177,7 @@ function FiltrosForm({
                 layout="kind"
                 options={([null, ...KIND_FILTERS] as const).map((kind) => ({
                   value: kind ?? "cualquiera",
-                  name: kind === null ? "Cualquiera" : KIND_FILTER_LABEL[kind],
+                  name: kind === null ? FILTERS_COPY.kindAny : KIND_FILTER_LABEL[kind],
                   label: (
                     <>
                       {kind === null ? <I.list size={24} /> : kind === "completo" ? <I.house size={24} /> : <I.bed size={24} />}
