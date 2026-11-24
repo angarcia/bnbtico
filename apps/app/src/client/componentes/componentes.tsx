@@ -13,6 +13,11 @@ import { I } from "../../shared/ui/icons";
 import { Dialog, Sheet } from "../../shared/ui/overlay";
 import { CounterRow, Stepper } from "../../shared/ui/stepper";
 import { CountBadge, EmptyState, LoadError, Notice, Skeleton, StatusTag, type NoticeTone, type SkeletonShape } from "../../shared/ui/structure";
+import { CodeInput } from "../comun/code-input";
+import { ConfirmSheet } from "../comun/confirm-sheet";
+import { RouterButtonLink, RouterIconLink, RouterTextLink } from "../comun/router-buttons";
+import { RouterCardLink, RouterListRow } from "../comun/router-rows";
+import { ScreenHeader } from "../comun/screen-header";
 import * as COPY from "./copy/componentes";
 
 const VARIANTS: readonly ButtonVariant[] = ["primary", "secondary", "pay", "whatsapp", "danger"];
@@ -39,6 +44,8 @@ export function ComponentesScreen() {
   const [people, setPeople] = useState(2);
   const [bedrooms, setBedrooms] = useState(1);
   const [surface, setSurface] = useState<"sheet" | "dialog" | null>(null);
+  const [confirm, setConfirm] = useState<"default" | "destructive" | "keep" | null>(null);
+  const [code, setCode] = useState("12");
   const toggle = (value: string) => setChips((now) => (now.includes(value) ? now.filter((v) => v !== value) : [...now, value]));
 
   return (
@@ -139,6 +146,7 @@ export function ComponentesScreen() {
         <ChoiceChips as="input" type="checkbox" name="catalog-chips" label={COPY.chips} options={COPY.chipOptions} selected={chips} onToggle={toggle} />
         <Segmented label={COPY.segmented} options={COPY.segmentOptions} value={currency} onChange={setCurrency} />
         <Segmented label={COPY.segmented} options={COPY.segmentOptions} value={currency} onChange={setCurrency} fill />
+        <p className="small muted">{COPY.choiceCardsNote}</p>
       </Section>
 
       <Section title={COPY.counters}>
@@ -174,6 +182,44 @@ export function ComponentesScreen() {
             <p>{COPY.surfaceBody}</p>
           </Dialog>
         ) : null}
+      </Section>
+
+      <Section title={COPY.headers}>
+        <ScreenHeader kind="flow" title={COPY.headerFlow} back={{ to: "/_componentes" }} />
+        <ScreenHeader kind="flow" title={COPY.headerFlowClose} close={{ onClick: () => undefined, label: COPY.close }} />
+        <ScreenHeader kind="wizard" title={COPY.headerWizard} close={{ onClick: () => undefined, label: COPY.close }} />
+      </Section>
+
+      <Section title={COPY.routerLinks}>
+        <div className="row wrap gap-8">
+          <RouterButtonLink to="/_componentes" variant="primary">{COPY.routerButton}</RouterButtonLink>
+          <RouterTextLink to="/_componentes" tone="link">{COPY.routerText}</RouterTextLink>
+          <RouterIconLink to="/_componentes" label={COPY.routerIcon}><I.chevron size={20} /></RouterIconLink>
+        </div>
+        <RouterCardLink to="/_componentes" layout="row" gap={12}>
+          <I.house size={22} />
+          <span>{COPY.routerCard}</span>
+        </RouterCardLink>
+        <RouterListRow to="/_componentes">
+          <span>{COPY.routerRow}</span>
+          <I.chevron size={20} />
+        </RouterListRow>
+      </Section>
+
+      <Section title={COPY.confirmations}>
+        <div className="row wrap gap-8">
+          <Button variant="secondary" onClick={() => setConfirm("default")}>{COPY.confirmDefault}</Button>
+          <Button variant="danger" onClick={() => setConfirm("destructive")}>{COPY.confirmDestructive}</Button>
+          <Button variant="secondary" onClick={() => setConfirm("keep")}>{COPY.confirmKeep}</Button>
+        </div>
+        {confirm ? (
+          <ConfirmSheet tone={confirm} title={COPY.confirmTitle} body={COPY.confirmBody} confirmLabel={COPY.confirmLabel} onConfirm={() => setConfirm(null)} onClose={() => setConfirm(null)} />
+        ) : null}
+      </Section>
+
+      <Section title={COPY.codeTitle}>
+        <CodeInput id="catalog-code" value={code} onChange={setCode} error={null} />
+        <CodeInput id="catalog-code-error" value="123" onChange={() => undefined} error={COPY.codeError} />
       </Section>
 
       <Section title={COPY.icons}>

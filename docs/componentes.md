@@ -32,7 +32,7 @@ pantallas no escriben sus clases ni redefinen su aspecto, y no llevan `className
   primera pantalla del teléfono va en su trozo (`card-*`, `closed-field-*`, `router-rows-*`, `status-label-*`,
   `explorar-escritorio-*`, `panel-dias-*`). Antes de importar un componente diferido desde el arranque, mire `pnpm size`: además del peso, comprueba (`scripts/js-inicial.mjs`) que el límite cuenta justo los trozos que se cargan al arrancar; un trozo diferido nuevo se añade a sus exclusiones.
 - **Catálogo vivo** en `/_componentes` (local y pruebas; en producción, 404 del worker y el service worker no la sirve):
-  cada componente de esta guía en sus variantes y estados, en una página (`client/componentes/componentes.tsx`, su propio
+  cada componente de esta guía en sus variantes y estados (también las piezas de `client/comun`; no `ChoiceCards`, del área de publicar), en una página (`client/componentes/componentes.tsx`, su propio
   trozo). Al añadir un componente o una variante, añádalo allí; `tests/e2e/componentes.spec.ts` lo recorre en móvil y
   escritorio y deja la captura de la página entera en el informe de Playwright.
 
