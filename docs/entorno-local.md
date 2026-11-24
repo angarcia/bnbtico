@@ -210,6 +210,7 @@ pnpm dev --port 5173 --strictPort --host 127.0.0.1
 | --- | --- |
 | http://127.0.0.1:5173 | La app (Explorar). |
 | http://127.0.0.1:5173/?pronto=1 | La portada estática («Pronto»). |
+| http://127.0.0.1:5173/_componentes | El catálogo de componentes: cada botón, campo, aviso, hoja… en sus variantes (no existe en producción). |
 | http://127.0.0.1:5173/casa/CT-#### | Ficha de una casa (renderizada en el servidor). Ponga un número que exista: lo ve en la casa o en Studio, tabla `listings`, columna `public_id`. |
 | http://127.0.0.1:54323 | **Supabase Studio**: ver y editar las tablas a mano. |
 

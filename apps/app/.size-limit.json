@@ -38,7 +38,7 @@
       "!dist/client/assets/delete-house-*.js",
       "!dist/client/assets/filtros-*.js",
       "!dist/client/assets/house-picker-*.js",
-      "!dist/client/assets/que-es-3bstays-*.js",
+      "!dist/client/assets/que-es-3bstays-*.js", "!dist/client/assets/componentes-*.js",
       "!dist/client/assets/reservation-calendar-*.js",
       "!dist/client/assets/whatsapp-dialog-*.js",
       "!dist/client/assets/buscar-*.js",
