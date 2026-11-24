@@ -15,3 +15,4 @@ export const lastStepNote = "último paso";
 export const stageLabel = ({ name, position, size, step, total }: { name: string; position: number; size: number; step: number; total: number }) =>
   `${name}, ${position} de ${size}. Paso ${step} de ${total}.`;
 export const stagePosition = ({ position, size }: { position: number; size: number }) => `${position} de ${size}`;
+export const publishTitle = "Publicar casa";

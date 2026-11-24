@@ -6,7 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Navigate, useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { PUBLISH_NEXT } from "../../../domain/contact-return";
-import { DomainError } from "../../../domain/errors";
+import { DomainError, GENERIC_MESSAGE } from "../../../domain/errors";
 import { emptyDraft, isFreshDraft, normalize, type Listing, type ListingDraft } from "../../../domain/listing";
 import { validateStep } from "../../../domain/listing-rules";
 import { resumeStep } from "../../../domain/publish-rules";
@@ -29,7 +29,7 @@ import { Card } from "../../../shared/ui/card";
 import * as ENTRY_COPY from "./copy/publicar-entrada";
 import { ownListingKey, ownListingsKey, ownResumableKey } from "../../comun/listing-keys";
 
-const message = (e: unknown) => (e instanceof DomainError ? e.message : "Algo salió mal. Intente de nuevo en un momento.");
+const message = (e: unknown) => (e instanceof DomainError ? e.message : GENERIC_MESSAGE);
 /** Un borrador vacío de hace menos de esto es el de una visita anterior que se cortó (recarga entre crear y guardar). */
 const ORPHAN_MS = 10 * 60_000;
 /** Lo escrito sin cuenta (los pasos 1–6, o solo el tipo de una visita del flujo anterior). */
@@ -230,7 +230,7 @@ export function CorreoScreen() {
     e.preventDefault();
     if (busy) return;
     const email = String(new FormData(e.currentTarget).get("email") ?? "").trim();
-    if (!email) return setError({ message: "Escriba su correo o toque «Ahora no».", field: true });
+    if (!email) return setError({ message: ENTRY_COPY.emailMissing, field: true });
     setBusy(true);
     setError(null);
     try {

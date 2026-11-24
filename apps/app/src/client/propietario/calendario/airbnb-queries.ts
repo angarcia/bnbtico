@@ -7,6 +7,7 @@ import { DomainError, toDomainError } from "../../../domain/errors";
 import { toast } from "../../../shared/toast";
 import { airbnbKey, calendarKey, listingsKey } from "../../comun/listing-keys";
 import { listingDaysKey, publicListingKey } from "../../../shared/listing-query";
+import * as AIRBNB_ROW_COPY from "./copy/airbnb-row";
 
 const subscribeOnline = (listener: () => void) => onlineManager.subscribe(listener);
 const onlineSnapshot = () => onlineManager.isOnline();
@@ -47,10 +48,10 @@ export async function updateAirbnbCalendar(
     if (!current()) return;
     client.setQueryData(airbnbQuery(userId, listingId).queryKey, data);
     if (data.state === "running") return;
-    if (!data.connected || data.errorCode) throw new DomainError("No pudimos completar la actualización. Revise el estado.", "validation");
+    if (!data.connected || data.errorCode) throw new DomainError(AIRBNB_ROW_COPY.refreshFailed, "validation");
     request.current = randomUuid();
     await refreshAirbnbCalendar(client, userId, listingId, publicId);
-    if (current()) toast("Calendario actualizado");
+    if (current()) toast(AIRBNB_ROW_COPY.refreshed);
   } catch (error) {
     if (!current()) return;
     const problem = toDomainError(error);

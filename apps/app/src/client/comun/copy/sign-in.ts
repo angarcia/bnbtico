@@ -32,3 +32,7 @@ export const terms = "Al continuar acepta los Términos. 3bstays nunca le pedir�
 export const phoneHintOther = "Escriba el número completo con «+» y el código de su país.";
 export const phoneHintCr = "¿Su número no es de Costa Rica? Toque +506 para elegir su país.";
 export const phoneHintNoCode = "Escriba su número sin el código de país.";
+export const nameMissing = "Escriba su nombre.";
+export const phoneMissing = "Escriba su número de WhatsApp.";
+export const phoneIntlInvalid = "Escriba el número completo con «+» y el código de su país.";
+export const phoneInvalid = "Ese número no parece válido para el país elegido.";

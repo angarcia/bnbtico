@@ -391,7 +391,7 @@
       "dist/client/assets/calendar-*.js",
       "dist/client/assets/month-grid-*.js"
     ],
-    "limit": "9.1 kB",
+    "limit": "9.2 kB",
     "gzip": true
   },
   {

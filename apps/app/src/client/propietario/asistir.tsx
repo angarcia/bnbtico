@@ -34,7 +34,7 @@ const adminEdit = async (): Promise<AdminEditApi> => {
   return (edit ??= (await import("../../shared/supabase-data")).adminEditApi());
 };
 /** Lo pendiente del anfitrión no lo toca el admin desde aquí: lo decide en la revisión de siempre. */
-const notHere = () => Promise.reject(new DomainError("Ese dato no se puede cambiar aquí.", "validation"));
+const notHere = () => Promise.reject(new DomainError(ASSIST_COPY.notHere, "validation"));
 
 const listingsOf = (a: AdminEditApi): EditorListings => ({
   getOwn: (id) => a.get(id),

@@ -54,7 +54,7 @@ function SecondCodeForm({ userId, next }: { userId: string; next: string }) {
 
   async function verify(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (code.length !== 6) return setError("El código tiene 6 dígitos.");
+    if (code.length !== 6) return setError(ADMIN_COPY.codeLength);
     setBusy(true);
     setError(null);
     try {

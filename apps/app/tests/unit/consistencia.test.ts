@@ -6,6 +6,8 @@
 //    contador, tarjeta, aviso, etiqueta o cabecera): esa clase solo la pinta el archivo del componente.
 // 3. TSX: ningún `style={…}` con colores, fondos, bordes, radios o sombras.
 // 4. TSX: ningún archivo escribe texto suelto en el JSX: va en la carpeta `copy/` de su área.
+// 5. TS y TSX de client/ y shared/: tampoco fuera del JSX (avisos, errores, etiquetas en constantes): ninguna cadena que
+//    parezca una frase en español fuera de `copy/`. Excepciones técnicas en STRING_EXCEPTIONS, con su motivo.
 //
 // Cada fallo dice archivo:línea, qué encontró y qué usar. Para añadir una excepción: una entrada en CSS_EXCEPTIONS o en
 // CLASS_EXCEPTIONS, con su motivo en `why` (una línea). Ver docs/componentes.md, «Prueba de consistencia y sus excepciones».
@@ -321,8 +323,73 @@ function looseTexts(file: string): string[] {
   return out;
 }
 
+// ---------- 5. Cadenas en español fuera del JSX ----------
+
+/** Cadenas que parecen texto pero no se enseñan: archivo → texto → motivo. */
+const STRING_EXCEPTIONS: Record<string, Record<string, string>> = {
+  "client/comun/turnstile.ts": { "Turnstile sin API": "error interno; la persona ve CAPTCHA_FAILED", "No se pudo cargar Turnstile": "error interno; la persona ve CAPTCHA_FAILED" },
+  "client/explorar/hydrate-listing.tsx": { "Error de hidratación": "console.error para quien depura, no se enseña" },
+  "client/explorar/queries.ts": { "Revise las fechas.": "el mensaje que manda search_listings (P0001); se compara, no se enseña" },
+  "client/propietario/calendario/airbnb.tsx": { "La conexión cambió.": "lo captura la misma función y enseña disconnectFailed" },
+  "client/propietario/calendario/ical-export-card.tsx": { "El enlace cambió.": "lo captura la misma función y enseña changedMeanwhile o revokeFailed" },
+  "client/propietario/calendario/reservation-calendar.ts": { "Operación cancelada": "AbortError de la hoja al cerrarse; no se enseña" },
+  "client/propietario/suscripcion/suscripcion.tsx": { "Failed to fetch": "imita el error del navegador sin red para que toDomainError dé OFFLINE_MESSAGE" },
+  "shared/security.ts": { "# Generado en el build (src/shared/security.ts): CSP y cabeceras de seguridad del shell y los estáticos.": "comentario del archivo _headers" },
+  "shared/ui/card.tsx": { "between baseline offer-line": "clases CSS de la tarjeta" },
+};
+
+/** Una cadena que parece texto para personas: con tildes, eñe o signos del español, o con varias palabras en minúscula
+ *  (empezando o no por mayúscula). Los nombres de clase, rutas, claves y selectores no llevan espacios entre palabras. */
+const looksLikeText = (t: string) =>
+  /[áéíóúñÁÉÍÓÚÑ¿¡«»…]/.test(t) || /^[A-ZÁÉÍÓÚ¿¡][a-záéíóúñ]+ [a-záéíóúñ]/.test(t) || /[a-záéíóúñ]+ [a-záéíóúñ]+ [a-záéíóúñ]+/.test(t);
+
+const STRING_FILES = files(SRC, /\.tsx?$/)
+  .map((f) => relative(SRC, f))
+  .filter((f) => /^(?:client|shared)\//.test(f) && !/(?:^|\/)copy\//.test(f) && !f.endsWith(".d.ts"));
+
+function inClassName(node: ts.Node): boolean {
+  for (let n: ts.Node | undefined = node.parent; n; n = n.parent) {
+    if (ts.isJsxAttribute(n)) return n.name.getText() === "className";
+    if (ts.isJsxElement(n) || ts.isJsxSelfClosingElement(n) || ts.isBlock(n) || ts.isSourceFile(n)) return false;
+  }
+  return false;
+}
+
+function looseStrings(file: string): string[] {
+  const text = readFileSync(join(SRC, file), "utf8");
+  const sf = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, file.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
+  const allowed = STRING_EXCEPTIONS[file] ?? {};
+  const found: string[] = [];
+  const visit = (node: ts.Node) => {
+    if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node) || ts.isTemplateHead(node) || ts.isTemplateMiddle(node) || ts.isTemplateTail(node)) {
+      const p = node.parent;
+      const module = ts.isImportDeclaration(p) || ts.isExportDeclaration(p) || (ts.isCallExpression(p) && p.expression.kind === ts.SyntaxKind.ImportKeyword);
+      // El texto suelto del JSX ya lo mira la regla 4; aquí, el resto. Las clases (`className={a ? "x y" : "z"}`) no son texto.
+      const jsx = ts.isJsxAttribute(p) || ts.isJsxText(node) || inClassName(node);
+      if (!module && !jsx && looksLikeText(node.text) && !(node.text in allowed)) {
+        found.push(`${file}:${sf.getLineAndCharacterOfPosition(node.getStart()).line + 1} «${node.text.slice(0, 60)}» (va en la carpeta copy/ del área)`);
+      }
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(sf);
+  return found;
+}
+
 describe("TSX: textos en el catálogo de su área", () => {
   it("ningún TSX escribe texto suelto en el JSX (use la carpeta `copy/` del área)", () => {
     expect(TEXT_FILES.flatMap(looseTexts)).toEqual([]);
+  });
+});
+
+describe("TS y TSX: cadenas en el catálogo de su área", () => {
+  it("ninguna cadena en español fuera de `copy/` en client/ y shared/ (avisos, errores, etiquetas en constantes)", () => {
+    expect(STRING_FILES.flatMap(looseStrings)).toEqual([]);
+  });
+
+  it("cada excepción de cadena sigue haciendo falta", () => {
+    const stale = Object.entries(STRING_EXCEPTIONS).flatMap(([file, texts]) =>
+      Object.keys(texts).filter((t) => !readFileSync(join(SRC, file), "utf8").includes(t)).map((t) => `${file}: «${t}»`));
+    expect(stale).toEqual([]);
   });
 });

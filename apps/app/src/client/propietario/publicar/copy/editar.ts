@@ -8,3 +8,6 @@ export const needsPhoto = "Necesita al menos una foto para enviarla a revisión.
 export const photosNotice = ({ admin, reviewNotice }: { admin: boolean; reviewNotice: string }) =>
   admin ? "Las fotos nuevas, el orden y las que quite se guardan al momento." : `El orden y las fotos que quite se guardan al momento. ${reviewNotice}`;
 export const done = "Listo";
+export const sendToReview = "Enviar a revisión";
+export const save = "Guardar";
+export const photosDialogNotice = ({ review }: { review: string }) => `El orden y las fotos que quite se guardan al momento y ya se ven en su ficha. ${review}`;

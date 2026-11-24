@@ -13,6 +13,7 @@ import { ownerNoticeUrl, firstName } from "../../domain/owner-notice";
 import { authApi } from "../comun/session";
 import { refreshAdminEdit, refreshAdminHouse, refreshAdminReview } from "../comun/listing-cache";
 import { adminEditKey, adminEditReviewKey, adminEditsKey, adminHousesKey, adminListingKey, adminQueueKey, adminReviewKey } from "../comun/listing-keys";
+import * as ADMIN_COPY from "./copy/admin";
 
 export const adminApi = async (): Promise<AdminListingsApi> => {
   await authApi();
@@ -66,8 +67,8 @@ export function useReviewOutcome(): ReviewOutcome {
 }
 
 const SAVED: Record<ReviewDecision, string> = {
-  approve: "Aprobada y publicada. El enlace ya funciona.",
-  changes: "Cambios pedidos. El anfitrión verá su mensaje.",
+  approve: ADMIN_COPY.savedApprove,
+  changes: ADMIN_COPY.savedChanges,
 };
 
 export interface ReviewInput {
@@ -137,11 +138,11 @@ export type HouseAction =
 
 /** Lo que dice la lista al terminar la acción. */
 export const HOUSE_ACTION_DONE: Record<HouseAction["kind"], string> = {
-  pause: "Casa pausada",
-  resume: "Casa reanudada",
-  block: "Casa bloqueada",
-  unblock: "Casa desbloqueada",
-  delete: "Casa eliminada",
+  pause: ADMIN_COPY.donePause,
+  resume: ADMIN_COPY.doneResume,
+  block: ADMIN_COPY.doneBlock,
+  unblock: ADMIN_COPY.doneUnblock,
+  delete: ADMIN_COPY.doneDelete,
 };
 
 /** Una acción del admin sobre una casa: sin optimismo (el motivo y el código los comprueba la base), y al terminar se piden de

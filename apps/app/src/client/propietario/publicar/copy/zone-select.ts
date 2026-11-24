@@ -4,3 +4,6 @@
 // pieza con marcado en medio, la función la recibe y devuelve la frase entera en trozos.
 
 export const zone = "Zona";
+export const other = "Otra…";
+export const pickZone = "Elija la zona";
+export const markPoint = "Marque el punto en el mapa";

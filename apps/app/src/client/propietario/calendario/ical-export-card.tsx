@@ -46,7 +46,7 @@ export function IcalExportCard({ id, userId, inlineConfirmation = false }: { id:
         setData(result);
         client.setQueryData<AirbnbSummary>(airbnbQuery(userId, id).queryKey, current => current ? { ...current, exportGenerated: result.generated } : current);
       } catch {
-        if (!cancelled && sessionState().session?.userId === userId) setProblem("No pudimos consultar el enlace. Intente de nuevo.");
+        if (!cancelled && sessionState().session?.userId === userId) setProblem(EXPORT_COPY.readFailed);
       } finally {
         if (!cancelled) setBusy(null);
       }
@@ -64,7 +64,7 @@ export function IcalExportCard({ id, userId, inlineConfirmation = false }: { id:
       setData(result);
       rememberPresence(result);
     } catch {
-      if (alive.current && sessionState().session?.userId === userId) setProblem("No pudimos generar el enlace. Intente de nuevo.");
+      if (alive.current && sessionState().session?.userId === userId) setProblem(EXPORT_COPY.generateFailed);
     } finally {
       if (alive.current) setBusy(null);
     }
@@ -76,7 +76,7 @@ export function IcalExportCard({ id, userId, inlineConfirmation = false }: { id:
     setCopyProblem(false);
     try {
       await navigator.clipboard.writeText(url);
-      if (alive.current && sessionState().session?.userId === userId) toast("Enlace copiado");
+      if (alive.current && sessionState().session?.userId === userId) toast(EXPORT_COPY.copied);
     } catch {
       if (alive.current && sessionState().session?.userId === userId) {
         setCopyProblem(true);
@@ -97,7 +97,7 @@ export function IcalExportCard({ id, userId, inlineConfirmation = false }: { id:
     }
     function confirmed() {
       setConfirmGeneration(null); setRevoked(true); setCopyProblem(false);
-      toast("Enlace revocado");
+      toast(EXPORT_COPY.revokedToast);
     }
     try {
       await (await icalExportApi()).revoke(id, confirmGeneration);
@@ -113,8 +113,8 @@ export function IcalExportCard({ id, userId, inlineConfirmation = false }: { id:
       if (!current()) return;
       if (result && !result.generated) confirmed();
       else setRevokeError(result?.generation !== undefined && result.generation !== confirmGeneration
-        ? "El enlace cambió. Cancele y vuelva a abrir la confirmación."
-        : "No pudimos completar el cambio. Intente de nuevo.");
+        ? EXPORT_COPY.changedMeanwhile
+        : EXPORT_COPY.revokeFailed);
     } finally { revoking.current = false; if (current()) setBusy(null); }
   }
 

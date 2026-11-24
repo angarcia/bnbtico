@@ -181,6 +181,14 @@ export const BLOCKED_LINE = "Parada mientras la casa esté bloqueada · no se co
 
 const FEE_LINE = () => `${formatCRC(MONTHLY_FEE_CRC)} al mes por casa, sin permanencia`;
 
+/** Tarjeta de una casa pendiente de pago: la oferta terminó (`promoEnded`, la fecha ya escrita) o falta el método. */
+export function paymentDueCard(promoEnded: string | null, monthlyPriceCrc: number): { title: string; body: string } {
+  return {
+    title: promoEnded ? `Su oferta gratuita terminó el ${promoEnded}` : "Falta el método de pago",
+    body: `La ficha está oculta y el enlace no funciona hasta que añada un método de pago. ${formatCRC(monthlyPriceCrc)} al mes, sin permanencia; puede parar cuando quiera.`,
+  };
+}
+
 /** Tarjeta de aviso en la app durante los 90 días; null fuera de la ventana. Nunca lleva el texto del WhatsApp. */
 export function reminderCard(days: number): { title: string; body: string } | null {
   if (reminderThreshold(days) === null) return null;

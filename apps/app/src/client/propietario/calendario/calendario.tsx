@@ -48,7 +48,7 @@ const route = getRouteApi("/_tabs/_private/_owner/propietario/calendario");
 const loadPanel = () => import("./panel-dias");
 const Panel = lazy(() => loadPanel().then((m) => ({ default: m.Panel })));
 
-const titleOf = (l: Listing) => l.title || "Borrador sin título";
+const titleOf = (l: Listing) => l.title || CAL_COPY.untitled;
 
 export function CalendarioScreen() {
   const userId = useSession().session?.userId ?? "";

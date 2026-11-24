@@ -213,12 +213,18 @@ Un token nuevo va primero en `tokens.json` (con su entrada en `changelog`) y des
    textos lo importan solo los archivos que viajan en el mismo trozo (la pantalla, o la tarjeta y sus piezas): si lo comparten
    una pieza del JS inicial y otra diferida, Rolldown parte el código en un trozo más y el JS inicial pierde compresión (al
    pasar Explorar, un solo catálogo para la lista y la tarjeta sacó la tarjeta a su propio trozo: +1,4 KB). Si el archivo de la pieza está en un grupo de trozos de `vite.config.ts`, su catálogo entra en el mismo grupo.
+6. un TS o TSX de `src/client` o `src/shared`, fuera de `copy/`, tiene una cadena que parece una frase en español (con tildes,
+   eñe o signos del español, o varias palabras seguidas) fuera del JSX: avisos (`toast`), errores (`setError`, `DomainError`),
+   etiquetas en constantes u objetos. Van al catálogo del área igual que las del JSX; un mensaje que se repite en varias
+   áreas y no es de pantalla va en el dominio (`GENERIC_MESSAGE` y `OFFLINE_MESSAGE` en `domain/errors.ts`).
 
 **Añadir una excepción** (solo si de verdad no cabe en un token o un componente):
 
 - CSS: una entrada en `CSS_EXCEPTIONS` con `file` (relativo a `src/`), `selector` (expresión sobre el selector entero), `rule`
   (`color`, `radius`, `z-index`, `font-size` o `shadow`) y `why` en una línea.
 - Clase en un TSX: en `CLASS_EXCEPTIONS`, `"archivo": { "clase": "motivo" }`.
+- Cadena técnica que no se enseña (un error que el propio código captura, un mensaje de la base que se compara): en
+  `STRING_EXCEPTIONS`, `"archivo": { "texto": "motivo" }`.
 - Las excepciones que dejan de coincidir hacen fallar la prueba «cada excepción sigue haciendo falta»: quítelas.
 
 Hoy quedan como excepción los tamaños de letra de un solo uso (títulos y cifras fuera de la escala), los blancos y sombras sobre

@@ -14,3 +14,5 @@ export const photoAlt = ({ title, n }: { title: string; n: number }) => `${title
 export const photoPosition = ({ n, total }: { n: number; total: number }) => `Foto ${n} de ${total}`;
 export const share = ({ copied }: { copied: boolean }) => (copied ? "Enlace copiado" : "Compartir ficha");
 export const monthly = <T,>({ amount }: { amount: T }) => ["Mensual: ", amount, " / mes"] as const;
+export const colones = "Colones";
+export const dollars = "Dólares";

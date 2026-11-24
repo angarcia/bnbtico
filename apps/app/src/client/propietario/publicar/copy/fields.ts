@@ -3,6 +3,8 @@
 // de nombres (`import * as X_COPY`). Mensajes completos; los datos, como parámetros con nombre. Donde la frase lleva una
 // pieza con marcado en medio, la función la recibe y devuelve la frase entera en trozos.
 
+import { plural } from "../../../../domain/plural";
+
 export const photos = "Fotos";
 export const photosFailed = ({ chunk }: { chunk: boolean }) => (chunk ? "No pudimos cargar las fotos. Revise su conexión." : "Algo falló al mostrar las fotos. Inténtelo de nuevo.");
 export const retry = "Reintentar";
@@ -16,11 +18,8 @@ export const acceptsMonthly = "¿Acepta alquiler por meses?";
 export const monthlyPrice = "Precio al mes (opcional)";
 export const monthlyHint = "Si lo deja vacío, en su ficha dirá «Precio a negociar con el anfitrión».";
 export const people = "Personas";
-export const onePerson = "Una persona";
 export const bedrooms = "Dormitorios";
-export const oneBedroom = "Un dormitorio";
 export const bathrooms = "Baños";
-export const oneBathroom = "Un baño";
 export const nightlyPrice = "Precio por noche";
 export const priceNote = "En colones; el cliente puede verlo en dólares. El precio final lo acuerda por WhatsApp.";
 export const title = "Nombre de la casa";
@@ -48,3 +47,33 @@ export const textTitle = "Nombre y descripción";
 export const textNote = "Sin enlaces, teléfonos ni publicidad. Se revisa antes de publicar.";
 export const photosNote = "Horizontales, sin teléfonos ni marcas de agua.";
 export const priceTitle = "Precio";
+export const no = "No";
+export const yes = "Sí";
+export const descriptionLater = "Puede añadirla después";
+export const charsMissing = ({ count }: { count: number }) => plural(count, { one: "Falta 1 carácter", other: `Faltan ${count} caracteres` });
+export const missingKind = "Elegir el tipo";
+export const missingLocation = "Añadir la ubicación";
+export const missingName = "Añadir el nombre";
+export const missingPhoto = "Añadir una foto";
+export const missingPrice = "Añadir precio";
+export const warnCapacity = "Completar la capacidad";
+export const warnParking = "Indicar si se paga";
+export const warnDescription = "Revisar la descripción";
+export const warnMonthly = "Revisar el precio mensual";
+export const perNight = ({ price }: { price: string }) => `${price} / noche`;
+export const perMonth = ({ price }: { price: string }) => `${price} / mes`;
+export const monthlyNegotiable = "mensual a negociar";
+export const rowKind = "Alojamiento";
+export const rowKindMissing = "Falta elegir";
+export const rowWhere = "Dónde";
+export const rowWhereMissing = "Falta la ubicación";
+export const rowCapacity = "Capacidad";
+export const rowCapacityMissing = "Falta indicarla";
+export const rowParking = "Parqueo";
+export const rowParkingMissing = "Falta indicar si se paga";
+export const rowName = "Nombre";
+export const rowNameValue = ({ title, description }: { title: string; description: boolean }) => (title ? `«${title}»${description ? "" : " · sin descripción"}` : "Sin nombre");
+export const rowPhotos = "Fotos";
+export const rowPhotosValue = ({ count }: { count: number }) => (count ? plural(count, { one: `${count} foto`, other: `${count} fotos` }) : "Ninguna todavía");
+export const rowPrice = "Precio";
+export const rowPriceMissing = "Falta el precio";

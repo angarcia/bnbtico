@@ -11,3 +11,10 @@ export const pending = ({ changes }: { changes: boolean }) => (changes ? "Cambio
 export const uploading = ({ name }: { name: string }) => `Subiendo ${name}`;
 export const addPhotos = "Añadir fotos";
 export const add = "Añadir";
+export const uploadFailed = "No pudimos subir esa foto. Intente de nuevo.";
+export const photosError = "No pudimos cambiar las fotos. Intente de nuevo.";
+export const phasePreparing = "Preparando…";
+export const phaseUploading = "Subiendo…";
+export const phaseSaving = "Guardando…";
+export const dragHelpDesktop = "Arrastre una foto para cambiar el orden. La primera es la portada.";
+export const movedTo = ({ position }: { position: number }) => (position === 1 ? "Foto movida a la posición 1, portada" : `Foto movida a la posición ${position}`);

@@ -2,13 +2,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { DomainError } from "../../../domain/errors";
+import { DomainError, GENERIC_MESSAGE } from "../../../domain/errors";
 import { ownListingKey, ownListingsKey, ownResumableKey } from "../../comun/listing-keys";
 import { knownNoDraft } from "../../comun/own-listings-query";
 import { addOwnCached, api, resumableQuery } from "../owner";
 import { clearCreateFailure, createFailure, startDraft } from "./new-draft";
 
-export const errorMessage = (e: unknown) => (e instanceof DomainError ? e.message : "Algo salió mal. Intente de nuevo en un momento.");
+export const errorMessage = (e: unknown) => (e instanceof DomainError ? e.message : GENERIC_MESSAGE);
 
 /** La lectura que empezó al apoyar el dedo en «+» (Mis casas) vale si es de hace menos de esto: no se repite. */
 const RESUMABLE_FRESH_MS = 3000;

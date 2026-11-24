@@ -170,8 +170,8 @@ export function BathroomChoice({ shared, showIcon = false }: { shared: boolean |
 }
 
 const MONTHLY_OPTIONS = [
-  { value: "no", label: "No" },
-  { value: "yes", label: "Sí" },
+  { value: "no", label: FIELDS_COPY.no },
+  { value: "yes", label: FIELDS_COPY.yes },
 ] as const;
 
 /** Paso del precio: «¿Acepta alquiler por meses?» No (por defecto) / Sí, como segmento (D8); con Sí, «Precio al mes
@@ -219,11 +219,11 @@ export function MonthlyQuestion({ accepts, price }: { accepts: boolean; price: n
 export function CapacityCounters({ draft, icons = false, iconByValue }: { draft: ListingDraft; icons?: boolean; iconByValue?: boolean }) {
   return (
     <Card as="div" placement="counters">
-      <Counter name="capacity" label={FIELDS_COPY.people} unit={FIELDS_COPY.onePerson} value={draft.capacity} min={1} icon={icons ? <I.users size={22} /> : undefined} iconByValue={iconByValue} />
+      <Counter name="capacity" label={FIELDS_COPY.people} unit="people" value={draft.capacity} min={1} icon={icons ? <I.users size={22} /> : undefined} iconByValue={iconByValue} />
       {draft.kind === "habitacion" ? null : (
         <>
-          <Counter name="bedrooms" label={FIELDS_COPY.bedrooms} unit={FIELDS_COPY.oneBedroom} value={draft.bedrooms} min={0} icon={icons ? <I.bed size={22} /> : undefined} iconByValue={iconByValue} />
-          <Counter name="bathrooms" label={FIELDS_COPY.bathrooms} unit={FIELDS_COPY.oneBathroom} value={draft.bathrooms} min={1} icon={icons ? <I.bath size={22} /> : undefined} iconByValue={iconByValue} />
+          <Counter name="bedrooms" label={FIELDS_COPY.bedrooms} unit="bedrooms" value={draft.bedrooms} min={0} icon={icons ? <I.bed size={22} /> : undefined} iconByValue={iconByValue} />
+          <Counter name="bathrooms" label={FIELDS_COPY.bathrooms} unit="bathrooms" value={draft.bathrooms} min={1} icon={icons ? <I.bath size={22} /> : undefined} iconByValue={iconByValue} />
         </>
       )}
     </Card>
@@ -271,9 +271,9 @@ export function DescriptionField({ value }: { value: string }) {
   // contador normal.
   const count: FieldCount =
     n === 0
-      ? { text: "Puede añadirla después" }
+      ? { text: FIELDS_COPY.descriptionLater }
       : n < DESCRIPTION_MIN
-        ? { text: DESCRIPTION_MIN - n === 1 ? "Falta 1 carácter" : `Faltan ${DESCRIPTION_MIN - n} caracteres`, tone: "warn" }
+        ? { text: FIELDS_COPY.charsMissing({ count: DESCRIPTION_MIN - n }), tone: "warn" }
         : charCountOf(n, DESCRIPTION_MIN, DESCRIPTION_MAX);
   return (
     <Field id="pub-description" label={FIELDS_COPY.description} error={error} count={count} grow>
@@ -295,8 +295,8 @@ export function DescriptionField({ value }: { value: string }) {
 }
 
 /** Lo obligatorio que falta (terracota) y lo no obligatorio que se puede mejorar (ocre), en corto, con la acción. */
-const MISSING_ACTION: Partial<Record<Step, string>> = { 1: "Elegir el tipo", 2: "Añadir la ubicación", 6: "Añadir el nombre", 7: "Añadir una foto", 8: "Añadir precio" };
-const WARN_ACTION: Partial<Record<Step, string>> = { 4: "Completar la capacidad", 5: "Indicar si se paga", 6: "Revisar la descripción", 8: "Revisar el precio mensual" };
+const MISSING_ACTION: Partial<Record<Step, string>> = { 1: FIELDS_COPY.missingKind, 2: FIELDS_COPY.missingLocation, 6: FIELDS_COPY.missingName, 7: FIELDS_COPY.missingPhoto, 8: FIELDS_COPY.missingPrice };
+const WARN_ACTION: Partial<Record<Step, string>> = { 4: FIELDS_COPY.warnCapacity, 5: FIELDS_COPY.warnParking, 6: FIELDS_COPY.warnDescription, 8: FIELDS_COPY.warnMonthly };
 
 /** Paso 9, «Revisar y enviar» (revisión UX C4, punto 5; publicar avanza siempre, 2026-10-30): lo escrito en filas que llevan
  *  a su pantalla, la vista previa de la ficha, el WhatsApp de la casa y la oferta. En terracota lo obligatorio que falta
@@ -312,8 +312,8 @@ function SendSummary({ draft, listing, userId }: { draft: ListingDraft; listing:
   const fee = formatCRC(MONTHLY_FEE_CRC);
   const d = { ...draft, photoCount: listing.photoCount };
   const prices = [
-    d.nightlyPriceCrc ? `${formatCRC(d.nightlyPriceCrc)} / noche` : null,
-    d.acceptsMonthly ? (d.monthlyPriceCrc ? `${formatCRC(d.monthlyPriceCrc)} / mes` : "mensual a negociar") : null,
+    d.nightlyPriceCrc ? FIELDS_COPY.perNight({ price: formatCRC(d.nightlyPriceCrc) }) : null,
+    d.acceptsMonthly ? (d.monthlyPriceCrc ? FIELDS_COPY.perMonth({ price: formatCRC(d.monthlyPriceCrc) }) : FIELDS_COPY.monthlyNegotiable) : null,
   ].filter(Boolean);
   const title = d.title.trim();
   const photos = listing.photoCount;
@@ -321,15 +321,15 @@ function SendSummary({ draft, listing, userId }: { draft: ListingDraft; listing:
   const warned = warnings(d);
   useStepReady(required.length === 0);
   const rows: { step: Step; label: string; value: string }[] = [
-    { step: 1, label: "Alojamiento", value: d.kind ? KIND_LABELS[d.kind] : "Falta elegir" },
-    { step: 2, label: "Dónde", value: (d.lat !== null && d.zoneSource ? locationLine(d) : "") || "Falta la ubicación" },
+    { step: 1, label: FIELDS_COPY.rowKind, value: d.kind ? KIND_LABELS[d.kind] : FIELDS_COPY.rowKindMissing },
+    { step: 2, label: FIELDS_COPY.rowWhere, value: (d.lat !== null && d.zoneSource ? locationLine(d) : "") || FIELDS_COPY.rowWhereMissing },
     // Una Habitación no cuenta habitaciones ni baños (son 1): «2 pers. · baño compartido».
-    { step: 4, label: "Capacidad", value: d.capacity ? capacitySummary(d) : "Falta indicarla" },
+    { step: 4, label: FIELDS_COPY.rowCapacity, value: d.capacity ? capacitySummary(d) : FIELDS_COPY.rowCapacityMissing },
     // El parqueo no tiene fila propia: solo aparece cuando hay que decir si se paga.
-    ...(warned.some((w) => w.step === 5) ? [{ step: 5 as Step, label: "Parqueo", value: "Falta indicar si se paga" }] : []),
-    { step: 6, label: "Nombre", value: title ? `«${title}»${d.description.trim() ? "" : " · sin descripción"}` : "Sin nombre" },
-    { step: 7, label: "Fotos", value: photos ? `${photos} ${photos === 1 ? "foto" : "fotos"}` : "Ninguna todavía" },
-    { step: 8, label: "Precio", value: prices.join(" · ") || "Falta el precio" },
+    ...(warned.some((w) => w.step === 5) ? [{ step: 5 as Step, label: FIELDS_COPY.rowParking, value: FIELDS_COPY.rowParkingMissing }] : []),
+    { step: 6, label: FIELDS_COPY.rowName, value: FIELDS_COPY.rowNameValue({ title, description: !!d.description.trim() }) },
+    { step: 7, label: FIELDS_COPY.rowPhotos, value: FIELDS_COPY.rowPhotosValue({ count: photos }) },
+    { step: 8, label: FIELDS_COPY.rowPrice, value: prices.join(" · ") || FIELDS_COPY.rowPriceMissing },
   ];
   return (
     <>

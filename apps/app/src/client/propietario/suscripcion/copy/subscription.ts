@@ -52,3 +52,13 @@ export const counts = ({ total, inactive, blocked }: { total: number; inactive: 
 export const nextCharge = "Próximo cobro";
 export const feeNote = ({ fee }: { fee: string }) => `${fee} al mes por casa activa, sin permanencia. Sin comisiones por alquiler, nunca.`;
 export const methodRowHint = "Falta · añádalo antes de que termine su oferta";
+export const reminder90 = "de los 90 días";
+export const reminder30 = "de los 30 días";
+export const reminder7 = "de los 7 días";
+export const reminderLast = "del último día";
+export const keepSubscription = "Mantener suscripción";
+export const cancel = "Cancelar";
+export const savingMethod = "Guardando su método de pago…";
+export const savedMethod = "Método de pago guardado. No se cobra nada hasta que termine la oferta.";
+export const lateMethod = "Lo estamos confirmando; aparecerá en unos minutos.";
+export const inReview = "En revisión";

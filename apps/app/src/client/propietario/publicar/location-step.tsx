@@ -18,7 +18,7 @@ import { ZoneSelect } from "./zone-select";
 import { Button } from "../../../shared/ui/button";
 import * as LOCATION_COPY from "./copy/location-step";
 
-const NOT_LAND = "Ponga el punto sobre tierra, dentro de Costa Rica";
+const NOT_LAND = LOCATION_COPY.notLand;
 const same = (a: LatLng | null, b: LatLng | null) => a !== null && b !== null && a.lat === b.lat && a.lng === b.lng;
 
 /** Las zonas de la tabla `zones` (Caribe primero), para el buscador del mapa. Cambian poco: un día de frescura. */

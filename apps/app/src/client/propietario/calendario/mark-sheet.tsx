@@ -31,7 +31,7 @@ export function MarkSheet({ today, onConfirm, onClose, calendarDays = EMPTY_DAYS
   const [problem, setProblem] = useState<string | null>(null);
   const busy = (day: string) => calendarDays.some(d => d.day === day && !d.available);
   const occupied = days.some(busy);
-  const message = occupied ? "Las fechas cambiaron. Elija un intervalo sin noches ocupadas." : problem;
+  const message = occupied ? MARK_COPY.datesChanged : problem;
   const ready = status === "ready";
   useEffect(() => {
     if (!prepare) return;

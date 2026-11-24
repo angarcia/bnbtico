@@ -4,8 +4,8 @@ import { setCurrency, useCurrency } from "./currency";
 import * as LISTING_PARTS_COPY from "./copy/listing-parts";
 
 const OPTIONS = [
-  { value: "CRC", label: "₡", name: "Colones" },
-  { value: "USD", label: "$", name: "Dólares" },
+  { value: "CRC", label: "₡", name: LISTING_PARTS_COPY.colones },
+  { value: "USD", label: "$", name: LISTING_PARTS_COPY.dollars },
 ] as const satisfies readonly { value: Currency; label: string; name: string }[];
 
 /**

@@ -90,7 +90,7 @@ describe("Stepper: un solo contador, con nombres únicos y sus topes", () => {
   const buttons = (html: string) => [...html.matchAll(/<button([^>]*)>/g)].map((m) => m[1]!);
 
   it("«Una persona menos» y «Una persona más»; en el mínimo, «−» desactivado", () => {
-    const [less, more] = buttons(renderToString(<Stepper unit="Una persona" value={1} min={1} max={4} onChange={() => undefined} />));
+    const [less, more] = buttons(renderToString(<Stepper unit="people" value={1} min={1} max={4} onChange={() => undefined} />));
     expect(less).toContain('aria-label="Una persona menos"');
     expect(less).toContain("disabled");
     expect(more).toContain('aria-label="Una persona más"');
@@ -98,23 +98,23 @@ describe("Stepper: un solo contador, con nombres únicos y sus topes", () => {
   });
 
   it("en el máximo, «+» desactivado", () => {
-    const [less, more] = buttons(renderToString(<Stepper unit="Un dormitorio" value={4} min={0} max={4} onChange={() => undefined} />));
+    const [less, more] = buttons(renderToString(<Stepper unit="bedrooms" value={4} min={0} max={4} onChange={() => undefined} />));
     expect(less).not.toContain("disabled");
     expect(more).toContain('aria-label="Un dormitorio más"');
     expect(more).toContain("disabled");
   });
 
   it("sin indicar, un «–» en gris; con nombre propio para lectores", () => {
-    expect(renderToString(<Stepper unit="Una noche" value={0} min={1} max={90} empty onChange={() => undefined} />)).toContain('<b class="num is-empty" aria-live="polite">–</b>');
-    expect(renderToString(<Stepper unit="Un dormitorio" value={2} min={0} max={5} display="2+" valueLabel="2 o más" onChange={() => undefined} />)).toContain('aria-label="2 o más">2+</b>');
+    expect(renderToString(<Stepper unit="nights" value={0} min={1} max={90} empty onChange={() => undefined} />)).toContain('<b class="num is-empty" aria-live="polite">–</b>');
+    expect(renderToString(<Stepper unit="bedrooms" value={2} min={0} max={5} display="2+" valueLabel="2 o más" onChange={() => undefined} />)).toContain('aria-label="2 o más">2+</b>');
   });
 
   it("la fila de contador es la misma pieza, con el campo editable de la hoja de contacto", () => {
-    const row = renderToString(<CounterRow label="Baños" unit="Un baño" value={1} min={1} max={30} onChange={() => undefined} />);
+    const row = renderToString(<CounterRow label="Baños" unit="bathrooms" value={1} min={1} max={30} onChange={() => undefined} />);
     expect(row).toContain('class="counter"');
     expect(row).toContain('aria-label="Un baño menos"');
     const editable = renderToString(
-      <Stepper unit="Una persona" value={0} min={1} max={6} onChange={() => undefined} input={{ id: "p", name: "people", placeholder: "–", value: null, onInput: () => undefined }} />,
+      <Stepper unit="people" value={0} min={1} max={6} onChange={() => undefined} input={{ id: "p", name: "people", placeholder: "–", value: null, onInput: () => undefined }} />,
     );
     const input = /<input[^>]*>/.exec(editable)![0];
     for (const a of ['id="p"', 'class="stepper-input"', 'type="number"', 'name="people"', 'inputMode="numeric"', 'min="1"', 'max="6"']) expect(input).toContain(a);

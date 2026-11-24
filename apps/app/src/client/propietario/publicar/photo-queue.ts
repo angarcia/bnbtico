@@ -7,6 +7,7 @@ import type { PhotoVariants } from "../../../domain/api";
 import { createLimiter } from "../../../domain/concurrency";
 import { DomainError } from "../../../domain/errors";
 import { MAX_PHOTOS_MESSAGE, UNSUPPORTED_MESSAGE, acceptsImage } from "../../../domain/image";
+import * as GRID_COPY from "./copy/photo-grid";
 
 export type UploadPhase = "preparing" | "uploading" | "saving";
 
@@ -32,7 +33,7 @@ export interface UploadDeps {
 export const UPLOAD_STEPS = 5;
 export const progressOf = (i: Pick<UploadItem, "phase" | "uploaded">) => (i.phase === "preparing" ? 0 : i.phase === "uploading" ? 1 + i.uploaded : 4);
 
-const FAILED = "No pudimos subir esa foto. Intente de nuevo.";
+const FAILED = GRID_COPY.uploadFailed;
 
 export function createUploadQueue() {
   let items: UploadItem[] = [];

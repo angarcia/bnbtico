@@ -28,3 +28,9 @@ export const editPhotos = "Editar fotos";
 export const editPhotosLabel = ({ photos }: { photos: string }) => `Editar fotos: ${photos}`;
 export const hint = ({ admin }: { admin: boolean }) =>
   admin ? "Toque un dato para cambiarlo. Lo que guarde se publica al momento, sin revisión." : "Toque un dato para editarlo. Su ficha seguirá visible durante la revisión.";
+export const roomBath = ({ shared }: { shared: boolean }) => `Habitación · baño ${shared ? "compartido" : "privado"}`;
+export const people = ({ count }: { count: number }) => plural(count, { one: `${count} persona`, other: `${count} personas` });
+export const bedrooms = ({ count }: { count: number }) => plural(count, { one: `${count} dormitorio`, other: `${count} dormitorios` });
+export const baths = ({ count }: { count: number }) => plural(count, { one: `${count} baño`, other: `${count} baños` });
+export const noFeatures = "Ninguna marcada";
+export const noDescription = "Sin descripción";

@@ -34,7 +34,6 @@ import { Card, List, ListRow } from "../../shared/ui/card";
 import { RouterListRow } from "../comun/router-rows";
 import * as EDITABLE_COPY from "./copy/casa-editable";
 
-const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 /** El valor de un dato tal como lo verá el cliente (lo pendiente de la edición encima de lo aprobado). La capacidad sigue el
  *  tipo aprobado (`approvedKind`), como su pantalla: un cambio de tipo en revisión aún no quita habitaciones ni baños. */
@@ -45,16 +44,16 @@ function fieldValue(l: ListingDraft, field: FormField, approvedKind: Listing["ki
     case "tipo":
       if (l.kind !== "habitacion") return l.kind ? KIND_LABELS[l.kind] : "";
       // Sin elegir el baño, solo «Habitación» (y el aviso en ocre debajo).
-      return l.bathroomShared === null ? KIND_LABELS.habitacion : `Habitación · baño ${l.bathroomShared ? "compartido" : "privado"}`;
+      return l.bathroomShared === null ? KIND_LABELS.habitacion : EDITABLE_COPY.roomBath({ shared: l.bathroomShared });
     case "capacidad":
       // Una Habitación solo cuenta personas (es 1 habitación y 1 baño): «2 personas», como su título «Personas». El baño
       // privado o compartido ya sale en la fila Tipo, que es donde se cambia.
-      if (approvedKind === "habitacion") return plural(l.capacity ?? 0, "persona", "personas");
-      return [plural(l.capacity ?? 0, "persona", "personas"), plural(l.bedrooms ?? 0, "dormitorio", "dormitorios"), plural(l.bathrooms ?? 0, "baño", "baños")].join(" · ");
+      if (approvedKind === "habitacion") return EDITABLE_COPY.people({ count: l.capacity ?? 0 });
+      return [EDITABLE_COPY.people({ count: l.capacity ?? 0 }), EDITABLE_COPY.bedrooms({ count: l.bedrooms ?? 0 }), EDITABLE_COPY.baths({ count: l.bathrooms ?? 0 })].join(" · ");
     case "caracteristicas":
-      return l.features.length ? l.features.map((f) => FEATURE_LABEL[f]).join(", ") : "Ninguna marcada";
+      return l.features.length ? l.features.map((f) => FEATURE_LABEL[f]).join(", ") : EDITABLE_COPY.noFeatures;
     case "descripcion":
-      return l.description.trim() || "Sin descripción";
+      return l.description.trim() || EDITABLE_COPY.noDescription;
     case "precio": {
       const night = `${formatCRC(l.nightlyPriceCrc ?? 0)} / noche`;
       if (!l.acceptsMonthly) return night;

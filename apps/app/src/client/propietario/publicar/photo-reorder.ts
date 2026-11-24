@@ -4,8 +4,9 @@ import { DomainError } from "../../../domain/errors";
 import type { Listing } from "../../../domain/listing";
 import { applyOrder } from "../../../domain/photo-order";
 import { ownListingKey, ownListingsKey } from "../../comun/listing-keys";
+import * as GRID_COPY from "./copy/photo-grid";
 
-export const PHOTOS_ERROR = "No pudimos cambiar las fotos. Intente de nuevo.";
+export const PHOTOS_ERROR = GRID_COPY.photosError;
 
 /** Copy for the alert: a DomainError with a known kind keeps its message; unknown / non-domain → PHOTOS_ERROR. */
 export function photosErrorMessage(e: unknown): string {

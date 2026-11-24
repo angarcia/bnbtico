@@ -7,6 +7,7 @@ import { emptyDraft, type Listing, type ListingDraft } from "../../../domain/lis
 import { planStep } from "../../../domain/publish-rules";
 import type { EditorListings, EditorPort } from "../editor-port";
 import { readPhoneDraft, writePhoneDraft } from "./phone-draft";
+import * as PUBLICAR_COPY from "./copy/publicar";
 export { LOCAL_USER } from "../editor-port";
 export { clearPhoneDraft, readPhoneDraft, writePhoneDraft } from "./phone-draft";
 
@@ -35,8 +36,8 @@ export const phoneListing = (d: ListingDraft): Listing => ({
   adminHold: null,
 });
 
-const NOT_FOUND = "No encontramos ese anuncio.";
-const notHere = () => Promise.reject(new DomainError("Para esto hace falta verificar su WhatsApp.", "validation"));
+const NOT_FOUND = PUBLICAR_COPY.notFound;
+const notHere = () => Promise.reject(new DomainError(PUBLICAR_COPY.verifyFirst, "validation"));
 
 const listings: EditorListings = {
   async getOwn(id) {

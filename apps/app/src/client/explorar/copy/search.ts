@@ -27,7 +27,6 @@ export const who = "¿Quiénes?";
 export const addPeople = "Añadir personas";
 export const people = "Personas";
 export const peopleHint = "Todas las que se van a quedar";
-export const onePerson = "Una persona";
 export const messageNote = ({ mode }: { mode: "nights" | "dates" | "none" }) =>
   mode === "nights"
     ? "Las noches y las personas van en el mensaje de WhatsApp que le preparamos para el anfitrión."
@@ -36,3 +35,4 @@ export const messageNote = ({ mode }: { mode: "nights" | "dates" | "none" }) =>
       : "Las personas van en el mensaje de WhatsApp que le preparamos para el anfitrión.";
 export const clearAll = "Borrar todo";
 export const search = "Buscar";
+export const zoneLoading = "…";

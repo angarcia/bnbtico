@@ -22,7 +22,7 @@ import * as ACTIVITY_COPY from "./copy/actividad";
 
 const LATEST = 20;
 const SEEN_DELAY_MS = 800;
-const EMPTY = "Cuando alguien le escriba por WhatsApp desde la ficha de su casa, aparecerá aquí.";
+const EMPTY = ACTIVITY_COPY.empty;
 
 const route = getRouteApi("/_tabs/_private/_owner/propietario/actividad");
 

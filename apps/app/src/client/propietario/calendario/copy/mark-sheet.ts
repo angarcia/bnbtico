@@ -10,3 +10,4 @@ export const retry = "Intentar de nuevo";
 export const pick = ({ arrival }: { arrival: boolean }) => (arrival ? "Ahora elija la salida" : "Elija la llegada");
 export const submit = "Marcar como ocupado";
 export const cancel = "Cancelar";
+export const datesChanged = "Las fechas cambiaron. Elija un intervalo sin noches ocupadas.";

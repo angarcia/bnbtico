@@ -104,7 +104,7 @@ function useCloseWizard(id?: string): HeaderClose {
     if (id) await savesSettled(id);
     await navigate({ to });
   }
-  return { label: saving ? "Guardando el borrador…" : "Cerrar y seguir después", onClick: () => void close(), disabled: saving, busy: saving, title: "Cerrar y seguir después" };
+  return { label: saving ? PUBLICAR_COPY.savingDraft : PUBLICAR_COPY.closeLater, onClick: () => void close(), disabled: saving, busy: saving, title: PUBLICAR_COPY.closeLater };
 }
 
 function StepHeader({ id, step, lastInGroup, missingSteps, actions }: { id?: string; step: Step | null; lastInGroup?: Step; missingSteps?: readonly Step[]; actions?: ReactNode }) {

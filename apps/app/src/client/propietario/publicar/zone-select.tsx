@@ -12,7 +12,7 @@ export function ZoneSelect({ options, value, other, onChange, onOther }: { optio
   const current = value && !match ? value : null;
   const choices = options.map((option) => ({ id: option.key, name: option.name }));
   if (current) choices.push({ id: CURRENT, name: current.name });
-  choices.push({ id: OTHER, name: "Otra…" });
+  choices.push({ id: OTHER, name: ZONE_COPY.other });
 
   function pick(id: string | null) {
     if (id === OTHER) return onOther?.();
@@ -25,7 +25,7 @@ export function ZoneSelect({ options, value, other, onChange, onOther }: { optio
     <div className="field">
       <span className="label-plain">{ZONE_COPY.zone}</span>
       <HousePicker zone houses={choices} currentId={other ? OTHER : match?.key ?? (current ? CURRENT : null)}
-        currentName={options.length ? "Elija la zona" : "Marque el punto en el mapa"} onPick={pick} />
+        currentName={options.length ? ZONE_COPY.pickZone : ZONE_COPY.markPoint} onPick={pick} />
     </div>
   );
 }

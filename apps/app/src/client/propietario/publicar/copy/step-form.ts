@@ -7,3 +7,5 @@ export const back = "Atrás";
 export const next = "Continuar";
 export const sending = "Un momento…";
 export const send = "Enviar a revisión";
+export const saveFailed = "No pudimos guardar. Intente de nuevo.";
+export const notFound = "No encontramos ese anuncio.";

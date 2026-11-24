@@ -123,10 +123,10 @@ function useMyHouses(userId: string) {
   // El borrador también cuenta y lleva a él (A3).
   const firstDraft = list?.find((l) => l.status === "draft");
   const tiles = [
-    { n: count("active"), label: count("active") === 1 ? "activa" : "activas", cls: "tile-soft" },
-    { n: count("payment_due"), label: "por pagar", cls: "tile-sun" },
-    { n: count("review"), label: "en revisión", cls: "tile-review" },
-    { n: count("draft"), label: count("draft") === 1 ? "borrador" : "borradores", cls: "tile-draft", to: firstDraft?.id },
+    { n: count("active"), label: OWNER_COPY.tileActive({ count: count("active") }), cls: "tile-soft" },
+    { n: count("payment_due"), label: OWNER_COPY.tileDue, cls: "tile-sun" },
+    { n: count("review"), label: OWNER_COPY.tileReview, cls: "tile-review" },
+    { n: count("draft"), label: OWNER_COPY.tileDraft({ count: count("draft") }), cls: "tile-draft", to: firstDraft?.id },
   ].filter((t) => t.n > 0);
   return { listings, list, freshByHouse, billing, notice, view, tiles };
 }
@@ -440,7 +440,7 @@ export function EnviadaScreen() {
           <span>
             <b>{OWNER_COPY.sent}</b>
             <span className="block muted">
-              {OWNER_COPY.sentRef({ id: <span key="id" className="num">{l?.publicId ?? "…"}</span> })}
+              {OWNER_COPY.sentRef({ id: <span key="id" className="num">{l?.publicId ?? OWNER_COPY.idLoading}</span> })}
             </span>
           </span>
         </div>

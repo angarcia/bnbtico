@@ -110,7 +110,7 @@ export function DesktopSearch({ filters, zoneName }: { filters: Filters; zoneNam
       ))}
       <div className="desktop-search-people float-card" role="group" aria-label={DESKTOP_COPY.people}>
         <I.user size={20} />
-        <Stepper unit="Una persona" value={filters.ppl} min={0} max={SEARCH_MAX_PEOPLE} empty={!filters.ppl} valueLabel={peopleLabel(filters.ppl) ?? "Sin indicar"} onChange={changePeople} />
+        <Stepper unit="people" value={filters.ppl} min={0} max={SEARCH_MAX_PEOPLE} empty={!filters.ppl} valueLabel={peopleLabel(filters.ppl) ?? DESKTOP_COPY.peopleUnset} onChange={changePeople} />
       </div>
     </div>
   );

@@ -191,7 +191,7 @@ export function BuscarScreen() {
   const toggle = (card: Card) => () => setOpen((o) => (o === card ? null : card));
   const { data: zones } = useQuery(zonesQuery);
   // «…» solo mientras llegan las zonas; una que ya no está en la lista se muestra como «Añadir zona».
-  const zoneName = draft.zone ? (zones ? (zones.find((z) => z.id === draft.zone)?.name ?? null) : "…") : null;
+  const zoneName = draft.zone ? (zones ? (zones.find((z) => z.id === draft.zone)?.name ?? null) : SEARCH_COPY.zoneLoading) : null;
   const hasDates = !!draft.arrival && !!draft.departure;
   const datesValue = hasDates ? formatInquiryDates(draft.arrival, draft.departure) : null;
 
@@ -272,7 +272,7 @@ export function BuscarScreen() {
             <b>{SEARCH_COPY.people}</b>
             <span className="small muted">{SEARCH_COPY.peopleHint}</span>
           </span>
-          <Stepper unit={SEARCH_COPY.onePerson} value={draft.ppl} min={0} max={SEARCH_MAX_PEOPLE} empty={!draft.ppl} onChange={(ppl) => set({ ppl })} />
+          <Stepper unit="people" value={draft.ppl} min={0} max={SEARCH_MAX_PEOPLE} empty={!draft.ppl} onChange={(ppl) => set({ ppl })} />
         </div>
         <Notice small>{SEARCH_COPY.messageNote({ mode: SEARCH_MODE })}</Notice>
       </Fold>

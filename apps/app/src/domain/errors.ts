@@ -15,6 +15,7 @@ export class DomainError extends Error {
 }
 
 export const GENERIC_MESSAGE = "Algo salió mal. Intente de nuevo en un momento.";
+export const OFFLINE_MESSAGE = "Sin conexión. Revise su internet e intente de nuevo.";
 /** Turnstile no dio token o la protección de bots de Supabase Auth lo rechazó. */
 export const CAPTCHA_FAILED = "No pudimos comprobar que usted es una persona. Recargue la página e intente de nuevo.";
 
@@ -70,7 +71,7 @@ export function toDomainError(error: unknown): DomainError {
   const known = BY_CODE[code];
   if (known) return new DomainError(known[1], known[0]);
   if (e.name === "TypeError" || e.name === "AuthRetryableFetchError" || /fetch failed|failed to fetch|network|load failed/i.test(message)) {
-    return new DomainError("Sin conexión. Revise su internet e intente de nuevo.", "network");
+    return new DomainError(OFFLINE_MESSAGE, "network");
   }
   return new DomainError(GENERIC_MESSAGE, "unknown");
 }

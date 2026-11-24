@@ -1,5 +1,5 @@
 import { isAirbnbLimitMessage, isRecord, readAirbnbSummary, type AirbnbCycleService, type AirbnbService, type OwnerAirbnbApi } from "../../domain/airbnb";
-import { DomainError, toDomainError } from "../../domain/errors";
+import { DomainError, OFFLINE_MESSAGE, toDomainError } from "../../domain/errors";
 import { IcalError } from "../../domain/ical";
 
 interface Config { supabaseUrl: string; anonKey: string; fetch: typeof fetch }
@@ -13,7 +13,7 @@ export function airbnbRpc(cfg: Config, safeMessages: ReadonlySet<string> = SAFE_
       response = await cfg.fetch(`${cfg.supabaseUrl.replace(/\/$/, "")}/rest/v1/rpc/${name}`, {
         method: "POST", headers: { apikey, authorization: `Bearer ${bearer}`, "content-type": "application/json" }, body: JSON.stringify(args),
       });
-    } catch { throw new DomainError("Sin conexión. Revise su internet e intente de nuevo.", "network"); }
+    } catch { throw new DomainError(OFFLINE_MESSAGE, "network"); }
     const raw: unknown = await response.json().catch(() => null);
     if (!response.ok) {
       // Solo mensajes de dominio controlados; no propagar SQL, payload, URL ni errores de gateways.
@@ -84,7 +84,7 @@ export function createOwnerAirbnb(cfg: Config & { token(): Promise<string | null
         response = await cfg.fetch("/api/calendarios/airbnb", { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${await token()}` }, body: JSON.stringify({ listingId, url, requestId, action }) });
       } catch (error) {
         if (error instanceof DomainError) throw error;
-        throw new DomainError("Sin conexión. Revise su internet e intente de nuevo.", "network");
+        throw new DomainError(OFFLINE_MESSAGE, "network");
       }
       const raw: unknown = await response.json().catch(() => null);
       if (!response.ok) {

@@ -4,8 +4,8 @@
 import type { ReactNode } from "react";
 import * as UI_COPY from "./copy/ui";
 
-/** Lo que cuenta, en singular con su artículo: da el nombre de los botones («Una persona menos»). */
-export type StepperUnit = "Una persona" | "Un dormitorio" | "Un baño" | "Una noche";
+/** Lo que cuenta: da el nombre de los botones («Una persona menos»; el texto, en copy/ui.ts). */
+export type StepperUnit = "people" | "bedrooms" | "bathrooms" | "nights";
 
 /** Un campo para escribir la cifra entre los botones (hoja de contacto). */
 export interface StepperInput {

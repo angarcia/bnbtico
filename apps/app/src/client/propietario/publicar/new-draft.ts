@@ -10,8 +10,9 @@ import { ownListingKey, ownListingsKey, ownResumableKey } from "../../comun/list
 import { addOwnCached, api, patchCached } from "../owner";
 import { enqueueSave } from "../save-queue";
 import { markLostDraft } from "./lost-drafts";
+import { GENERIC_MESSAGE } from "../../../domain/errors";
 
-const GENERIC = "Algo salió mal. Intente de nuevo en un momento.";
+const GENERIC = GENERIC_MESSAGE;
 let failure: string | null = null;
 
 /** El mensaje del último borrador que no se pudo crear (lo enseña la entrada; después, `clearCreateFailure`). */

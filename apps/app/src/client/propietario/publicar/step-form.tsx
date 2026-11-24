@@ -44,7 +44,7 @@ import { Notice } from "../../../shared/ui/structure";
 import * as STEP_COPY from "./copy/step-form";
 import { ownListingKey, ownResumableKey } from "../../comun/listing-keys";
 
-const GENERIC = "No pudimos guardar. Intente de nuevo.";
+const GENERIC = STEP_COPY.saveFailed;
 const WhatsAppDialog = lazy(() => import("../../comun/whatsapp-dialog").then((m) => ({ default: m.WhatsAppDialog })));
 const messageOf = (e: unknown) => (e instanceof DomainError ? e.message : GENERIC);
 
@@ -142,7 +142,7 @@ async function sendForReview(client: QueryClient, router: ReturnType<typeof useR
   await savesSettled(id);
   if (failure?.listingId === id) return null; // un guardado falló: ya volvimos a esa pantalla con su mensaje
   const fresh = await (await port.listings()).getOwn(id);
-  if (!fresh) return "No encontramos ese anuncio.";
+  if (!fresh) return STEP_COPY.notFound;
   client.setQueryData(ownListingKey(userId, id), fresh);
   // Solo lo obligatorio manda a otra pantalla (2026-10-30); los avisos no bloquean.
   const invalid = validateAll(fresh);

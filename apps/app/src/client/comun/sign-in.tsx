@@ -112,11 +112,11 @@ export function SignInForm({ next, mode, onCodeSent, nameStep }: {
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    if (newPhone && !field(fd, "name").trim()) return invalid("name", "Escriba su nombre.");
+    if (newPhone && !field(fd, "name").trim()) return invalid("name", SIGN_IN_COPY.nameMissing);
     const typed = field(fd, "phone").trim();
-    if (!newPhone && !typed) return invalid("phone", "Escriba su número de WhatsApp.");
+    if (!newPhone && !typed) return invalid("phone", SIGN_IN_COPY.phoneMissing);
     const phone = newPhone ?? composePhone(country, typed);
-    if (!phone) return invalid("phone", other ? "Escriba el número completo con «+» y el código de su país." : "Ese número no parece válido para el país elegido.");
+    if (!phone) return invalid("phone", other ? SIGN_IN_COPY.phoneIntlInvalid : SIGN_IN_COPY.phoneInvalid);
     setBusy(true);
     setError(null);
     setFieldError(null);

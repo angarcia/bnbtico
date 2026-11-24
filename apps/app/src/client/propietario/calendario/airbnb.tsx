@@ -78,7 +78,7 @@ function AirbnbManagementScreen({ id, uid, mes, popup }: { id: string; uid: stri
       if (!current()) return;
       setConfirmDisconnect(null); setProblem(null);
       await refreshAirbnbCalendar(client, uid, id, l.publicId);
-      if (current()) toast("Airbnb desconectado");
+      if (current()) toast(AIRBNB_COPY.disconnected);
     } catch {
       if (!current()) return;
       const data = await reconcile().catch(() => null);
@@ -86,8 +86,8 @@ function AirbnbManagementScreen({ id, uid, mes, popup }: { id: string; uid: stri
       if (data && !data.connected) {
         setConfirmDisconnect(null); setProblem(null);
         await refreshAirbnbCalendar(client, uid, id, l.publicId);
-        if (current()) toast("Airbnb desconectado");
-      } else setDisconnectError("No pudimos completar el cambio. Cancele y consulte el estado antes de intentar de nuevo.");
+        if (current()) toast(AIRBNB_COPY.disconnected);
+      } else setDisconnectError(AIRBNB_COPY.disconnectFailed);
     } finally { inFlight.current = false; if (current()) setOperation(null); }
   }
   const connectForm = connecting && l ? <ConnectSheet houseName={popup?.listing.title}
@@ -103,12 +103,12 @@ function AirbnbManagementScreen({ id, uid, mes, popup }: { id: string; uid: stri
     client.setQueryData(airbnbQuery(uid, id).queryKey, data);
     if (!data.connected || data.state === "running") {
       await client.invalidateQueries({ queryKey: airbnbQuery(uid, id).queryKey });
-      throw new DomainError(data.state === "running" ? "La conexión sigue en curso. Vuelva a consultar el estado en un momento." : "No pudimos completar la conexión. Intente de nuevo.", data.state === "running" ? "conflict" : "validation");
+      throw new DomainError(data.state === "running" ? AIRBNB_COPY.connectRunning : AIRBNB_COPY.connectFailed, data.state === "running" ? "conflict" : "validation");
     }
     await refreshAirbnbCalendar(client, uid, id, l.publicId);
     if (!current()) return false;
     if (!popup) setConnecting(null);
-    toast(connecting === "replace" ? "Enlace de Airbnb sustituido" : "Airbnb conectado");
+    toast(connecting === "replace" ? AIRBNB_COPY.replaced : AIRBNB_COPY.connectedToast);
     return true;
   }} /> : null;
   if (popup) return connectForm;

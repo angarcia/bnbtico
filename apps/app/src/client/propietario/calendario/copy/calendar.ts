@@ -17,3 +17,6 @@ export const pausedNote = "No aparece en Explorar ni recibe consultas.";
 export const republish = "Volver a publicarla";
 export const openError = ({ name }: { name: string }) => `No pudimos abrir «${name}». Revise su conexión e inténtelo de nuevo.`;
 export const retry = "Reintentar";
+export const untitled = "Borrador sin título";
+export const availabilityUnknown = "No pudimos comprobar la disponibilidad. Intente de nuevo.";
+export const nightsTaken = "Hay noches ocupadas entre esas fechas.";

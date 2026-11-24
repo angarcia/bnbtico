@@ -54,10 +54,10 @@ export const rereadOwnListing = (client: QueryClient, userId: string, listingId:
   await client.invalidateQueries({ queryKey: ownListingKey(userId, listingId) });
 };
 
-const PHASE: Record<UploadItem["phase"], string> = { preparing: "Preparando…", uploading: "Subiendo…", saving: "Guardando…" };
+const PHASE: Record<UploadItem["phase"], string> = { preparing: GRID_COPY.phasePreparing, uploading: GRID_COPY.phaseUploading, saving: GRID_COPY.phaseSaving };
 /** La ayuda de ordenar con ratón (en escritorio no se «mantiene pulsada»). */
-export const PHOTOS_HELP_DESKTOP = "Arrastre una foto para cambiar el orden. La primera es la portada.";
-export const movedTo = (to: number) => (to === 0 ? "Foto movida a la posición 1, portada" : `Foto movida a la posición ${to + 1}`);
+export const PHOTOS_HELP_DESKTOP = GRID_COPY.dragHelpDesktop;
+export const movedTo = (to: number) => GRID_COPY.movedTo({ position: to + 1 });
 export type Dir = "before" | "after";
 
 /** El contador del asistente y del editor (con role="status": lo anuncia el lector de pantalla). */
