@@ -20,6 +20,7 @@ import * as CHROME_COPY from "./copy/chrome";
 import { adminQueueKey } from "../comun/listing-keys";
 
 const WhatsAppDialog = lazy(() => import("../comun/whatsapp-dialog").then((m) => ({ default: m.WhatsAppDialog })));
+const HelpDialog = lazy(() => import("../cuenta/cuenta-ayuda").then((m) => ({ default: m.HelpDialog })));
 const InquiriesDialog = lazy(() => import("../propietario/actividad").then((m) => ({ default: m.InquiriesDialog })));
 
 /** Contador terracota de Anuncios: lo que ya hay en la caché de la cola (no la pide; la pide la pantalla). `skipToken` en vez
@@ -55,6 +56,7 @@ export function TabsFrame({ children, ownerHouseDetail = false, publishing = fal
   const { status } = useSession();
   const [signInOpen, setSignInOpen] = useState(false);
   const [inquiriesOpen, setInquiriesOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const signInTab = pathname === "/cuenta" && status === "signed-out";
   const narrowGutter = pathname === "/cuenta" && !signInTab;
   const ownerInquiries = pathname === "/propietario/actividad";
@@ -122,9 +124,13 @@ export function TabsFrame({ children, ownerHouseDetail = false, publishing = fal
               <NavItemContent icon="chat" label={CHROME_COPY.inquiries} labelHidden count={fresh} countTestId="inquiries-badge" countHidden />
             </button>
           )}
-          {adminZone ? null : <Link to="/ayuda" className="nav desktop-help" aria-label={CHROME_COPY.help} title={CHROME_COPY.help} activeProps={{ "aria-current": "page" }}>
-            <NavItemContent icon="wa" label={CHROME_COPY.help} iconSize={24} />
-          </Link>}
+          {/* Ayuda abre una ventana sobre la pantalla actual, como Consultas e Ingresar; /ayuda sigue siendo la pantalla del teléfono. */}
+          {adminZone ? null : (
+            <button type="button" className="nav desktop-help" aria-label={CHROME_COPY.help} title={CHROME_COPY.help}
+              aria-haspopup="dialog" aria-expanded={helpOpen} onClick={() => setHelpOpen(true)}>
+              <NavItemContent icon="wa" label={CHROME_COPY.help} iconSize={24} />
+            </button>
+          )}
         </>
       ) : undefined}
     />
@@ -141,6 +147,11 @@ export function TabsFrame({ children, ownerHouseDetail = false, publishing = fal
           <InquiriesDialog onClose={() => setInquiriesOpen(false)} />
         </Suspense>
       )}
+      {desktop && helpOpen ? (
+        <Suspense fallback={null}>
+          <HelpDialog onClose={() => setHelpOpen(false)} />
+        </Suspense>
+      ) : null}
       {desktop && signInOpen ? (
         <Suspense fallback={null}>
           <WhatsAppDialog mode="account" next={next} onClose={() => setSignInOpen(false)} />

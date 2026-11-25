@@ -1,3 +1,15 @@
+## 2026-11-25 · Escritorio: barra sobre el mapa, Ayuda e Ingresar en ventana, Cuenta sin casas en su columna
+
+Se echan en falta cuatro ajustes de escritorio que se habían acordado y no estaban en el código: no aparecen en ningún commit, rama, stash ni sesión de este Mac (se buscaron todos los merges desde el 10 de noviembre: ninguno pisó cambios de `develop`), así que se rehacen aquí.
+
+- **Explorar:** la barra superior va a todo el ancho, con el margen de la pantalla: el logo empieza encima del borde izquierdo del mapa y lo del final acaba sobre la lista. Las demás pantallas siguen centradas a 1232 px.
+- **«Ayuda por WhatsApp» de la barra** abre una ventana sobre la pantalla actual, como Consultas e Ingresar, con el mismo contenido de `/ayuda` (que sigue siendo la pantalla del teléfono y de la fila de Cuenta).
+- **Ingresar es siempre una ventana en escritorio**, también al llegar sin sesión a una dirección privada o desde un flujo (`/cuenta?next=…`): la de la barra, con el modo de publicar si toca. Cerrarla vuelve atrás (o a Explorar); al entrar, sigue a su destino.
+- **Cuenta sin casas** usa la columna izquierda de la Cuenta del anfitrión, y «Mi perfil» se edita en su tarjeta (también con `?editar=1`), en vez de estirarse a todo el ancho o abrirse a pantalla completa.
+- **Favoritos:** el botón de WhatsApp de una tarjeta ya no se sale cuando otra de la fila es más alta (la tarjeta llena su celda, como en Explorar).
+
+Motivo: en escritorio, Ayuda e Ingresar no deben sacar de la pantalla en la que se está, y Cuenta debe verse igual con casas o sin ellas.
+
 ## 2026-11-25 · La descripción no tiene mínimo
 
 Ana pide quitar el mínimo de 80 caracteres de la descripción (historia #94). La descripción sigue siendo opcional y con tope de 2000; vacía o con cualquier largo hasta 2000 es válida, al crear y al editar.

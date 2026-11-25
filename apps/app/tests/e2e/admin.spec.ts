@@ -130,7 +130,7 @@ test("en escritorio: barra superior del admin y Revisar en dos columnas con la d
   await expect(bar.getByRole("link", { name: /Anuncios/ })).toBeVisible();
   await expect(bar.getByRole("link", { name: "Casas" })).toBeVisible();
   expect((await bar.boundingBox())!.y).toBe(0);
-  await expect(bar.getByRole("link", { name: "Ayuda por WhatsApp" })).toHaveCount(0);
+  await expect(bar.getByRole("button", { name: "Ayuda por WhatsApp" })).toHaveCount(0);
   const [photos, form, note] = await Promise.all([
     page.locator(".photo-strip").boundingBox(),
     page.locator("form:has(.review-actions)").boundingBox(),

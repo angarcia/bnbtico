@@ -166,6 +166,9 @@
       inset: var(--desktop-nav-height) var(--explore-map-end) 0 var(--explore-map-start);
       z-index: 1;
     }
+    /* El mapa va a todo el ancho: el logo empieza encima de su borde izquierdo y lo del final acaba sobre la lista, en vez de
+    centrarse a la medida de las demás pantallas. */
+    .desktop-app:has(.explore-map-pane) > .desktop-nav { padding-inline: var(--gutter); }
     .desktop-app .explore-map-pane .map-card { bottom: var(--float-gap); }
     .map-card:has(> .map-card-close) h2 { padding-inline-end: 40px; }
     .desktop-app:has(.explore-map-pane[data-expanded]) {
@@ -187,15 +190,15 @@
       min-width: 0;
       gap: 14px;
     }
-    .desktop-app .explore-results > .listing-cell {
+    .desktop-app .listing-grid > .listing-cell {
       display: flex;
       flex-direction: column;
     }
-    .desktop-app .explore-results .listing-cell > .listing-card,
-    .desktop-app .explore-results .listing-card-text {
+    .desktop-app .listing-grid .listing-cell > .listing-card,
+    .desktop-app .listing-grid .listing-card-text {
       flex: 1;
     }
-    .desktop-app .explore-results .listing-card-text > .listing-card-footer {
+    .desktop-app .listing-grid .listing-card-text > .listing-card-footer {
       margin-top: auto;
       padding-top: 4px;
     }

@@ -253,7 +253,7 @@ Revisar en 390 × 844 y 375 × 667. Estos controles comprueban la tanda 1; no ac
 
 - [ ] A 1024 y 1280 px, compare los márgenes exteriores de Explorar, Favoritos, Mis casas, Cuenta, Calendario y una ficha pública. El marco usa los mismos márgenes a ambos lados. Compruebe también que el mapa ampliado respeta esos márgenes y que los formularios centrados se leen con comodidad.
 
-- [ ] A 1440 px, compruebe que el contenido de Favoritos, Mis casas, Cuenta, Calendario, Ayuda y una ficha no pasa de unos 1230 px y queda centrado. El logo de la barra superior empieza a la misma altura que el contenido. A 1280 px, márgenes iguales que antes. Explorar sigue a todo el ancho con el mapa.
+- [ ] A 1440 px, compruebe que el contenido de Favoritos, Mis casas, Cuenta, Calendario, Ayuda y una ficha no pasa de unos 1230 px y queda centrado. El logo de la barra superior empieza a la misma altura que el contenido. A 1280 px, márgenes iguales que antes. Explorar sigue a todo el ancho con el mapa, y en Explorar el logo de la barra empieza justo encima del borde izquierdo del mapa (y lo del final acaba sobre el borde derecho de la lista).
 
 - [ ] En escritorio, Favoritos, Mis casas, Cuenta, Calendario y «No encontramos esta página» muestran su título arriba a la izquierda, sin repetir el logo debajo de la barra. En el móvil, esos títulos siguen ocultos como antes.
 
@@ -452,6 +452,10 @@ Con las habitaciones apagadas, C24, C30, A2, A5, A23 y las comprobaciones de esc
 - [ ] En el popup de escritorio, introduzca un número de prueba sin cuenta. En el paso del nombre, use la flecha de arriba a la izquierda para volver al número dentro de la misma ventana. Compruebe que la X de arriba a la derecha cierra el popup.
 
 - [ ] En escritorio y sin sesión, pulse «Ingresar» entre el selector de moneda y «Ayuda por WhatsApp» en Explorar y Favoritos. Compruebe que se abre la ventana de WhatsApp sobre la pantalla actual. Pida el código y compruebe que aparece en la misma ventana con la flecha de regreso y la X. Al verificar desde Favoritos, debe regresar a Favoritos. Con el código correcto, la ventana se cierra sola con la sesión iniciada (la barra ya no dice «Ingresar»); nunca se queda abierta con «Solicite un código nuevo para continuar.».
+
+- [ ] En escritorio y sin sesión, abra una dirección privada (por ejemplo `/propietario/casas`) o «Publicar» desde un enlace. Compruebe que Ingresar sale en la misma ventana, no a pantalla completa. Ciérrela con la X: vuelve a la pantalla anterior (o a Explorar si se abrió la dirección directamente). Con el código correcto, sigue adonde iba.
+
+- [ ] En escritorio, con una cuenta sin casas (`8888 1234`), abra Cuenta: la tarjeta, «Mi perfil» y la lista van en la columna izquierda, del mismo ancho que con casas. Pulse «Editar» en «Mi perfil»: el formulario se abre en esa tarjeta, sin pantalla completa y con la barra superior visible.
 
 - [ ] **C93** Con sesión de `8888 1234` toque la pestaña «Cuenta» → sin flecha ni título visible; tarjeta con iniciales, nombre, el número en su propia línea («+506 8888 1234»), «WhatsApp verificado» y debajo «Pronto podrá verificar también su identidad (opcional).»; no hay nada más sobre identidad.
 - [ ] En móvil, el título y el formulario de Ingresar empiezan a 12 px del borde, igual que la cabecera y las tarjetas de 3bstays. Cuenta tiene 3 px de margen lateral con sesión. Revise que el formulario de ingreso y la tarjeta de perfil quepan a 320 px.
@@ -848,7 +852,7 @@ Use una casa activa con oferta que sea solo para pruebas: cada casa recorre el p
 
 ### 3.18 Cuenta del propietario
 
-- [ ] En escritorio, abra «Ayuda por WhatsApp» desde la barra superior con una sesión de anfitrión y después sin sesión. Compruebe que la barra sigue visible en Ayuda y que aparece el canal correspondiente. Hasta 1365 px, Ayuda va solo con su icono, que conserva el nombre accesible y el texto emergente «Ayuda por WhatsApp»; desde 1366 px lleva texto. A 1280 px, con «Mis casas», la barra no se sale por la derecha.
+- [ ] En escritorio, abra «Ayuda por WhatsApp» desde la barra superior con una sesión de anfitrión y después sin sesión. Compruebe que se abre una ventana sobre la pantalla actual, sin cambiar de dirección, con el canal correspondiente y «Abrir WhatsApp», y que la X o Escape la cierran y deja la pantalla como estaba. Hasta 1365 px, Ayuda va solo con su icono, que conserva el nombre accesible y el texto emergente «Ayuda por WhatsApp»; desde 1366 px lleva texto. A 1280 px, con «Mis casas», la barra no se sale por la derecha.
 
 - [ ] Con suficientes suscripciones para desplazar la página, baje por la columna derecha y compruebe que el perfil y las acciones de cuenta permanecen debajo de la barra superior. En una ventana baja, compruebe que puede recorrer la columna izquierda para llegar a «Cerrar sesión».
 

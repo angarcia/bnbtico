@@ -5,6 +5,7 @@ import { Button, ButtonLink, WaIcon } from "../../shared/ui/button";
 import { Field, TextInput } from "../../shared/ui/field";
 import { RouterButtonLink } from "../comun/router-buttons";
 import { Card } from "../../shared/ui/card";
+import { Dialog } from "../../shared/ui/overlay";
 import * as ACCOUNT_COPY from "./copy/account";
 
 // ---------- /cuenta/recuperar ----------
@@ -35,31 +36,50 @@ export function RecuperarScreen() {
 
 // ---------- /ayuda ----------
 export function AyudaScreen() {
-  const s = SUPPORT[(useListingsCount().count ?? 0) > 0 ? "owner" : "guest"];
   return (
     <>
       <ScreenHeader kind="flow" title={ACCOUNT_COPY.helpTitle} back={{ to: "/cuenta", historyBack: true }} />
       <Card layout="stack" gap={14}>
-        <span className="eyebrow">{s.label}</span>
-        <p>{s.intro}</p>
-        {s.number ? (
-          <>
-            <p className="small muted">
-              {ACCOUNT_COPY.channel({ number: <span key="number" className="num">{s.number}</span>, other: s.other })}
-            </p>
-            <ButtonLink variant="secondary" size="xl" block icon={<WaIcon />} href={waLink(s.number, s.greeting)} target="_blank" rel="noopener">
-              {ACCOUNT_COPY.openWhatsapp}
-            </ButtonLink>
-          </>
-        ) : (
-          <>
-            <p className="small muted">{ACCOUNT_COPY.noNumber({ other: s.other })}</p>
-            <Button variant="secondary" size="xl" block icon={<WaIcon />} disabled>
-              {ACCOUNT_COPY.openWhatsapp}
-            </Button>
-          </>
-        )}
+        <HelpContent />
       </Card>
+    </>
+  );
+}
+
+/** «Ayuda por WhatsApp» de la barra de escritorio: el mismo contenido en una ventana sobre la pantalla actual. */
+export function HelpDialog({ onClose }: { onClose: () => void }) {
+  return (
+    <Dialog title={ACCOUNT_COPY.helpTitle} onClose={onClose}>
+      <div className="stack gap-14">
+        <HelpContent />
+      </div>
+    </Dialog>
+  );
+}
+
+function HelpContent() {
+  const s = SUPPORT[(useListingsCount().count ?? 0) > 0 ? "owner" : "guest"];
+  return (
+    <>
+      <span className="eyebrow">{s.label}</span>
+      <p>{s.intro}</p>
+      {s.number ? (
+        <>
+          <p className="small muted">
+            {ACCOUNT_COPY.channel({ number: <span key="number" className="num">{s.number}</span>, other: s.other })}
+          </p>
+          <ButtonLink variant="secondary" size="xl" block icon={<WaIcon />} href={waLink(s.number, s.greeting)} target="_blank" rel="noopener">
+            {ACCOUNT_COPY.openWhatsapp}
+          </ButtonLink>
+        </>
+      ) : (
+        <>
+          <p className="small muted">{ACCOUNT_COPY.noNumber({ other: s.other })}</p>
+          <Button variant="secondary" size="xl" block icon={<WaIcon />} disabled>
+            {ACCOUNT_COPY.openWhatsapp}
+          </Button>
+        </>
+      )}
     </>
   );
 }

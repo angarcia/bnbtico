@@ -55,7 +55,9 @@ export function MyAccount({ editing, tab = false }: { editing: boolean; tab?: bo
   const { count } = useListingsCount();
   const owner = (count ?? 0) > 0;
   const desktop = useDesktop();
-  const splitAccount = tab && owner && desktop;
+  // En escritorio, la pestaña Cuenta es la misma con o sin casas: el perfil se edita en su tarjeta y la columna no se estira.
+  const desktopTab = tab && desktop;
+  const splitAccount = desktopTab && owner;
   const navigate = useNavigate();
   const router = useRouter();
   const canGoBack = useCanGoBack();
@@ -112,7 +114,7 @@ export function MyAccount({ editing, tab = false }: { editing: boolean; tab?: bo
             </span>
           </div>
           {/* Editar y Listo sustituyen la entrada del historial: la flecha de Cuenta sigue volviendo adonde se estaba. */}
-          {splitAccount ? null : editing ? (
+          {desktopTab ? null : editing ? (
             <Link to="/cuenta" replace className="link small account-edit">
               {ACCOUNT_COPY.done}
             </Link>
@@ -126,7 +128,7 @@ export function MyAccount({ editing, tab = false }: { editing: boolean; tab?: bo
         <Skeleton shape="account" label={ACCOUNT_COPY.loading} />
       )}
 
-      {a && splitAccount ? <DesktopProfile key={a.id} account={a} /> : a && editing ? (
+      {a && desktopTab ? <DesktopProfile key={a.id} account={a} startEditing={editing} /> : a && editing ? (
         <Card layout="stack">
           <h3>{ACCOUNT_COPY.profile}</h3>
           <ProfileForm key={a.id} account={a} />
@@ -206,6 +208,14 @@ export function MyAccount({ editing, tab = false }: { editing: boolean; tab?: bo
       </div>
     </div>
     </>
+  ) : desktopTab ? (
+    // Sin casas, la misma columna izquierda que con casas: a todo el ancho, la lista y el perfil quedaban estirados.
+    <>
+      {pageHeader}
+      <div className="owner-account-layout">
+        <div>{accountContent}</div>
+      </div>
+    </>
   ) : (
     <>
       {pageHeader}
@@ -233,8 +243,8 @@ function FavoritesRow() {
 type ProfileValues = { name: string; description: string; email: string };
 const profileValues = (a: Pick<Account, "name" | "description" | "email">): ProfileValues => ({ name: a.name, description: a.description ?? "", email: a.email ?? "" });
 
-function DesktopProfile({ account }: { account: Account }) {
-  const [editing, setEditing] = useState(false);
+function DesktopProfile({ account, startEditing = false }: { account: Account; startEditing?: boolean }) {
+  const [editing, setEditing] = useState(startEditing);
   const { name, description, email } = profileValues(account);
   return (
     <Card layout="stack">
