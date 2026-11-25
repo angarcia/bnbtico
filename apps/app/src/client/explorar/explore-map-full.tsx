@@ -6,6 +6,7 @@ import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, type ReactNode } from "react";
 import { accommodationLabel, cardPrice } from "../../domain/describe";
 import type { LatLng } from "../../domain/geo";
+import type { MapArea } from "../../domain/filters";
 import type { SearchListing } from "../../domain/listing";
 import { housesCount } from "../../domain/search";
 import { track } from "../../shared/beacon";
@@ -19,7 +20,7 @@ import { CardCapacity, CardFeatures, CardPriceText } from "./listing-card";
 import { IconButton } from "../../shared/ui/button";
 import * as MAP_FULL_COPY from "./copy/map-full";
 
-export function MapScreen({ listings, zone, nights, selected, onSelect, onClose, header }: { listings: SearchListing[]; zone: LatLng | null; nights: number; selected: string | null; onSelect(id: string | null): void; onClose(): void; header: ReactNode }) {
+export function MapScreen({ listings, zone, area, onArea, more = false, nights, selected, onSelect, onClose, header }: { listings: SearchListing[]; zone: LatLng | null; area: MapArea | null; onArea(bbox: string): void; more?: boolean; nights: number; selected: string | null; onSelect(id: string | null): void; onClose(): void; header: ReactNode }) {
   const box = useRef<HTMLDivElement>(null);
   const overlay = useRef<HTMLDivElement>(null);
   const top = useRef<HTMLDivElement>(null);
@@ -39,9 +40,12 @@ export function MapScreen({ listings, zone, nights, selected, onSelect, onClose,
         top: top.current ? top.current.offsetTop + top.current.offsetHeight + 24 : 0, // + la atribución, debajo
         bottom: count.current && overlay.current ? overlay.current.clientHeight - count.current.offsetTop : 0,
       }),
+      // Al moverlo, busca el área visible (historia #96).
+      onArea,
     },
     markers,
     zone,
+    area,
   );
   useEffect(() => {
     handle.current?.select(selected);
@@ -77,7 +81,7 @@ export function MapScreen({ listings, zone, nights, selected, onSelect, onClose,
       {house ? <MapCard listing={house} nights={nights} /> : null}
       <button ref={count} type="button" className="map-count" onClick={onClose}>
         <I.list size={20} />
-        {MAP_FULL_COPY.list({ houses: housesCount(listings.length) })}
+        {MAP_FULL_COPY.list({ houses: housesCount(listings.length, more) })}
       </button>
     </div>
   );

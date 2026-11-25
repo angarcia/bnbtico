@@ -8,7 +8,7 @@ import { webStore } from "../../data/storage";
 import { DATES_FILTER_KEY, NIGHTS_FILTER_KEY, PEOPLE_FILTER_KEY, searchDatesValue } from "../../domain/contact-return";
 import { costaRicaToday } from "../../domain/dates";
 import { durationTotal, nightsBetween, resultsText, searchSummary } from "../../domain/search";
-import { ALL_PROVINCES, extrasCount, parseFilters, searchFor, searchToString, stayRange, type ExploreSearch, type Filters } from "../../domain/filters";
+import { ALL_PROVINCES, areaParam, extrasCount, parseArea, parseFilters, searchFor, searchToString, stayRange, type ExploreSearch, type Filters } from "../../domain/filters";
 import { FX_ATTRIBUTION, fxDayLabel, fxRateLabel } from "../../domain/fx";
 import { track } from "../../shared/beacon";
 import { CurrencySwitch } from "../../shared/currency-switch";
@@ -85,7 +85,7 @@ function ExploreHeader({ filters: f, zoneName, search }: { filters: Filters; zon
     <header className={desktop ? "explore-top" : "explore-top chrome-hide"}>
       <h1 className="sr-only">{EXPLORE_COPY.heading}</h1>
       <div className="explore-search">
-        {desktop && f.zone && (
+        {desktop && (f.zone || f.area) && (
           <button type="button" className="chip filters-btn float-card" aria-label={filtersLabel(extras)} aria-haspopup="dialog" onClick={() => setFiltersOpen(true)}>
             <I.sliders size={22} />
             <CountBadge n={extras} placement="filters" />
@@ -99,8 +99,8 @@ function ExploreHeader({ filters: f, zoneName, search }: { filters: Filters; zon
           <CurrencySwitch placement="float" />
         </div>
       )}
-      {desktop && f.zone && <Suspense fallback={null}><DesktopFeatureFilters filters={f} /></Suspense>}
-      {desktop && f.zone && filtersOpen && (
+      {desktop && (f.zone || f.area) && <Suspense fallback={null}><DesktopFeatureFilters filters={f} /></Suspense>}
+      {desktop && (f.zone || f.area) && filtersOpen && (
         <Suspense fallback={null}>
           <DesktopFilters search={search} onClose={() => setFiltersOpen(false)} />
         </Suspense>
@@ -188,11 +188,30 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
   const { data, isError, error, refetch, hasNextPage, fetchNextPage, isFetchingNextPage, isFetchNextPageError } = useInfiniteQuery(listingsQuery(f));
   // Todas las páginas ya cargadas («Ver más casas»): la lista y el mapa enseñan las mismas casas.
   // Modo noches (#58/#59): sin fechas, la búsqueda no calcula total; aquí, precio por noche × noches (o la regla mensual).
-  const listings = useMemo(() => {
+  const fresh = useMemo(() => {
     const loaded = loadedListings(data);
     return loaded && f.nights > 0 ? loaded.map((l) => ({ ...l, stayTotalCrc: durationTotal(l, f.nights) })) : loaded;
   }, [data, f.nights]);
+  // Si falla la búsqueda (otra área del mapa, sin red), se siguen viendo las casas de la última que salió bien, con un
+  // aviso y «Reintentar» para la búsqueda actual (historia #96). Lista, mapa y contador, siempre del mismo resultado.
+  const lastGood = useRef<SearchListing[] | undefined>(undefined);
+  useEffect(() => {
+    if (fresh) lastGood.current = fresh;
+  }, [fresh]);
+  const stale = !fresh && isError && !isDatesError(error) && !!lastGood.current;
+  const listings = stale ? lastGood.current : fresh;
+  // Al moverlo, el mapa busca el área visible, con los mismos filtros; sin zona ni provincia (historia #96). Sustituye la
+  // entrada del historial: Atrás sale de Explorar, no recorre cada gesto.
+  const searchArea = (bbox: string) => {
+    const area = parseArea(bbox);
+    if (!area || (f.area && areaParam(area) === areaParam(f.area))) return;
+    void navigate({ to: "/explorar", search: { ...searchFor({ ...f, area, zone: null, prov: ALL_PROVINCES }), ...(search.mapa ? { mapa: search.mapa } : {}) }, replace: true, resetScroll: false });
+  };
   const selectedHouse = desktop ? listings?.find((listing) => listing.publicId === selected) : undefined;
+  // La casa elegida que sale del área del mapa (o de los resultados): se cierra su tarjeta.
+  useEffect(() => {
+    if (selected && listings && !listings.some((l) => l.publicId === selected)) setSelected(null);
+  }, [selected, listings]);
   const reveal = useReveal(!listings, searchToString(searchFor(f)));
   const stay = stayRange(f);
   useRememberStay(f.ppl, searchDatesValue(stay), f.nights);
@@ -222,6 +241,8 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
         ref={mapBox}
         listings={listings ?? NO_LISTINGS}
         zone={zone}
+        area={f.area}
+        onArea={desktop ? searchArea : undefined}
         nights={nights}
         onOpen={!desktop && listings?.length ? openMap : null}
         // En escritorio, siempre interactivo: sin casas (o mientras busca) se puede seguir moviendo y acercando el mapa, y
@@ -263,6 +284,7 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
         ) : null}
         {currency === "USD" ? <UsdNote /> : null}
       </div>
+      {stale ? <LoadError onRetry={() => void refetch()}>{EXPLORE_COPY.staleResults}</LoadError> : null}
       {!listings ? (
         isDatesError(error) ? (
           <Notice as="div" tone="error" layout="column">
@@ -311,6 +333,9 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
           <MapScreen
             listings={listings}
             zone={zone}
+            area={f.area}
+            onArea={searchArea}
+            more={!!hasNextPage}
             nights={nights}
             selected={selected}
             onSelect={setSelected}

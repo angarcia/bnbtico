@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BEDS_OPTIONS, KIND_FILTERS, colonesToPriceInput, priceInputToColones, priceRangeInvalid, extrasCount, normalizeSearch, parseFilters, searchFor, searchFromString, searchToString, stayRange, toSearchParams } from "../../src/domain/filters";
+import { BEDS_OPTIONS, KIND_FILTERS, areaOf, areaParam, parseArea, colonesToPriceInput, priceInputToColones, priceRangeInvalid, extrasCount, normalizeSearch, parseFilters, searchFor, searchFromString, searchToString, stayRange, toSearchParams } from "../../src/domain/filters";
 import { listingsQuery } from "../../src/client/explorar/queries";
 
 // Portado de tests/prototype/explorar-filtros.cjs y zona-caribe.cjs.
@@ -217,5 +217,42 @@ describe("zona, fechas y personas en la URL de Explorar", () => {
   it("mapa no entra en los filtros ni en la clave de la consulta", () => {
     expect(listingsQuery(parseFilters({ mapa: "1" }, ["Limón"])).queryKey).toEqual(listingsQuery(parseFilters({}, ["Limón"])).queryKey);
     expect(toSearchParams(parseFilters({ mapa: "1" }, ["Limón"])).has("mapa")).toBe(false);
+  });
+});
+
+// Historia #96: el área visible del mapa en la URL (`area=oeste,sur,este,norte`). Manda sobre la zona y la provincia.
+describe("área del mapa", () => {
+  it("se lee de la URL, se redondea hacia fuera a 3 decimales y descarta la zona y la provincia", () => {
+    const f = parseFilters({ area: "-82.80051,9.6512,-82.70049,9.70011", zona: "704-cocles", prov: "Limón" }, ["Limón"]);
+    expect(f.area).toEqual({ west: -82.801, south: 9.651, east: -82.7, north: 9.701 });
+    expect(f.zone).toBeNull();
+    expect(f.prov).toBe("Todas");
+  });
+  it("un área mal escrita, vacía o al revés se ignora (sin filtro oculto)", () => {
+    for (const area of ["", "x", "1,2,3", "-82,9,-83,10", "-82,10,-81,9", "-82,9,-82,10", "-82,NaN,-81,10", "-200,9,-81,10", "-82,-95,-81,10"]) {
+      expect(parseFilters({ area }, []).area).toBeNull();
+    }
+  });
+  it("viaja en la URL en lugar de la zona y la provincia, y normalizeSearch la conserva redondeada", () => {
+    const f = parseFilters({ area: "-82.8,9.65,-82.7,9.7", ppl: "2" }, []);
+    expect(toSearchParams(f).toString()).toBe("area=-82.8%2C9.65%2C-82.7%2C9.7&ppl=2");
+    // Elegir una zona después de mover el mapa la sustituye.
+    expect(toSearchParams({ ...f, zone: "704-cocles" }).toString()).toBe("zona=704-cocles&ppl=2");
+    expect(normalizeSearch({ area: "-82.80051,9.6512,-82.70049,9.70011", zona: "704-cocles" })).toEqual({ area: "-82.801,9.651,-82.7,9.701" });
+  });
+  it("areaOf redondea los límites del mapa hacia fuera: la misma área para gestos casi iguales (misma caché)", () => {
+    const a = areaOf({ west: -82.80051, south: 9.65121, east: -82.70049, north: 9.70011 });
+    const b = areaOf({ west: -82.8001, south: 9.6519, east: -82.7004, north: 9.7001 });
+    expect(a).toEqual({ west: -82.801, south: 9.651, east: -82.7, north: 9.701 });
+    expect(b).toEqual(a);
+    expect(a && areaParam(a)).toBe("-82.801,9.651,-82.7,9.701");
+    // El formato de `toBBoxString()` de Leaflet, que el mapa pasa tal cual.
+    expect(parseArea("-82.80051,9.65121,-82.70049,9.70011")).toEqual(a);
+  });
+  it("la clave de la consulta cambia con el área (y no con «Más filtros»)", () => {
+    const a = parseFilters({ area: "-82.8,9.65,-82.7,9.7" }, []);
+    const b = parseFilters({ area: "-82.9,9.65,-82.7,9.7" }, []);
+    expect(listingsQuery(a).queryKey).not.toEqual(listingsQuery(b).queryKey);
+    expect(listingsQuery({ ...a, open: true }).queryKey).toEqual(listingsQuery(a).queryKey);
   });
 });

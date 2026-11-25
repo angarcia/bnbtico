@@ -118,6 +118,25 @@ export function publicReadsContract(name: string, makeHarness: () => Promise<Cal
         expect(await ids(parseFilters({}, PROVINCES))).toEqual([grande.publicId, mensual.publicId, cahuita.publicId, nicoya.publicId]);
       });
 
+      // Historia #96: el área visible del mapa, filtrada en la base por el punto público (el mismo que pinta el marcador),
+      // antes del límite y del total; manda sobre la provincia y la zona.
+      it("área del mapa: solo las casas cuyo punto público cae dentro, en el orden de siempre", async () => {
+        const area = (west: number, south: number, east: number, north: number) => parseFilters({ area: `${west},${south},${east},${north}`, prov: "Guanacaste" }, PROVINCES);
+        expect(await ids(area(-85.6, 9.8, -85.45, 9.95))).toEqual([nicoya.publicId]);
+        const caribe = await h.anon.searchPublic(area(-82.9, 9.68, -82.78, 9.8));
+        expect(caribe.listings.map((l) => l.publicId)).toEqual([grande.publicId, mensual.publicId, cahuita.publicId]);
+        for (const l of caribe.listings) {
+          expect(l.approx!.lat).toBeGreaterThanOrEqual(9.68);
+          expect(l.approx!.lat).toBeLessThanOrEqual(9.8);
+          expect(l.approx!.lng).toBeGreaterThanOrEqual(-82.9);
+          expect(l.approx!.lng).toBeLessThanOrEqual(-82.78);
+        }
+        // Un área sin casas: vacío, sin error.
+        expect(await ids(area(-84.2, 10.0, -84.1, 10.1))).toEqual([]);
+        // Con los demás filtros, igual que sin área.
+        expect(await ids(parseFilters({ area: "-82.9,9.68,-82.78,9.8", ppl: "5" }, PROVINCES))).toEqual([grande.publicId]);
+      });
+
       it("provincia", async () => {
         expect(await ids(filters({ prov: "Guanacaste" }))).toEqual([nicoya.publicId]);
         expect(await ids(parseFilters({ prov: "Limón" }, ["Limón"]))).toEqual([grande.publicId, mensual.publicId, cahuita.publicId]);

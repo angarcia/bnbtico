@@ -139,7 +139,8 @@ describe("search_listings: límite y página siguiente", () => {
   });
 
   it("la autorización no cambia: anon y authenticated ejecutan search_listings; search_stay_total sigue cerrada", () => {
-    const fn = "public.search_listings(text,date,date,text,integer,integer,public.feature[],integer,integer,integer,public.listing_kind[],boolean,timestamp with time zone,uuid)";
+    // Con el área del mapa (historia #96): cuatro límites más al final.
+    const fn = "public.search_listings(text,date,date,text,integer,integer,public.feature[],integer,integer,integer,public.listing_kind[],boolean,timestamp with time zone,uuid,double precision,double precision,double precision,double precision)";
     expect(sql(`select has_function_privilege('anon', '${fn}', 'execute') and has_function_privilege('authenticated', '${fn}', 'execute')`)).toBe("t");
     expect(sql(`select has_function_privilege('public', '${HELPER}', 'execute') or has_function_privilege('anon', '${HELPER}', 'execute')`)).toBe("f");
     expect(sql("select prosecdef from pg_proc where oid = 'public.search_listings'::regproc")).toBe("t");

@@ -14,7 +14,8 @@ export const listingsQuery = (f: Filters) => {
   // Por páginas de 60 («Ver más casas»): cada página trae el cursor de la siguiente (`next`, null si no quedan).
   return infiniteQueryOptions({
     queryKey: [...listingsKey, key] as const,
-    queryFn: async ({ pageParam }) => (await api()).searchPublic(f, pageParam),
+    // La señal de Query cancela la petición de un área del mapa que ya no se ve (historia #96).
+    queryFn: async ({ pageParam, signal }) => (await api()).searchPublic(f, pageParam, signal),
     initialPageParam: null as SearchCursor | null,
     getNextPageParam: (page: SearchPage) => page.next,
     staleTime: 60_000,
@@ -36,9 +37,10 @@ export const provincesQuery = queryOptions({
   staleTime: 10 * 60_000,
 });
 
-export const zoneListingsQuery = (zone: string | null) => ({
-  ...listingsQuery({ ...parseFilters({}, []), zone }),
-  enabled: !!zone,
+/** Las casas de la zona o del área del mapa sin filtros (historia #96): qué características se pueden ofrecer. */
+export const zoneListingsQuery = (zone: string | null, area: Filters["area"] = null) => ({
+  ...listingsQuery({ ...parseFilters({}, []), zone, area: zone ? null : area }),
+  enabled: !!zone || !!area,
   placeholderData: undefined,
 });
 

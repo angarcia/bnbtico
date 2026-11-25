@@ -5,6 +5,7 @@ import { formatInquiryDates } from "./dates";
 import { ALL_PROVINCES, type Filters } from "./filters";
 import type { PublicListing } from "./listing";
 import { nightsLabel } from "./stay-label";
+import * as SEARCH_COPY from "./search-copy";
 import { caribeFirst, norm, type ZoneWithListings } from "./zones";
 
 /** Desde cuántas noches una casa con precio al mes se estima por meses (igual que MONTHLY_ESTIMATE_NIGHTS de stay-price.ts,
@@ -37,7 +38,7 @@ export function peopleLabel(n: number): string | null {
 
 /** La píldora de Explorar: «Cocles · 23–27 nov · 4 personas»; null si no hay nada. */
 export function searchSummary(f: Filters, zoneName: string | null): string | null {
-  const text = [f.zone ? zoneName : null, stayLabel(f), peopleLabel(f.ppl)].filter(Boolean).join(" · ");
+  const text = [f.area ? SEARCH_COPY.mapArea : f.zone ? zoneName : null, stayLabel(f), peopleLabel(f.ppl)].filter(Boolean).join(" · ");
   return text ? text.charAt(0).toUpperCase() + text.slice(1) : null;
 }
 
@@ -46,8 +47,8 @@ export function searchSummary(f: Filters, zoneName: string | null): string | nul
 export const housesCount = (n: number, more = false): string => `${more ? "Más de " : ""}${n} ${n === 1 ? "casa" : "casas"}`;
 
 /** Línea de resultados: { count: "4 casas", rest: " en Cocles y alrededores · 23–27 nov" }. */
-export function resultsText(n: number, f: StayFilters & Pick<Filters, "prov" | "zone">, zoneName: string | null = null, more = false): { count: string; rest: string } {
-  const place = f.zone && zoneName ? ` en ${zoneName} y alrededores` : f.prov !== ALL_PROVINCES ? ` en ${f.prov}` : "";
+export function resultsText(n: number, f: StayFilters & Pick<Filters, "prov" | "zone" | "area">, zoneName: string | null = null, more = false): { count: string; rest: string } {
+  const place = f.area ? SEARCH_COPY.inMapArea : f.zone && zoneName ? ` en ${zoneName} y alrededores` : f.prov !== ALL_PROVINCES ? ` en ${f.prov}` : "";
   const stay = stayLabel(f);
   return { count: housesCount(n, more), rest: place + (stay ? ` · ${stay}` : "") };
 }

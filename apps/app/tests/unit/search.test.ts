@@ -36,6 +36,10 @@ describe("resultsText", () => {
     expect(resultsText(4, n, "Cocles")).toEqual({ count: "4 casas", rest: " en Cocles y alrededores · 23–27 nov" });
     expect(resultsText(1, { ...base, arrival: "2026-11-23", departure: "2026-11-27" })).toEqual({ count: "1 casa", rest: " · 23–27 nov" });
     expect(resultsText(9, { ...base, prov: "Todas" })).toEqual({ count: "9 casas", rest: "" });
+    // Historia #96: con el área del mapa, ni zona ni provincia.
+    const area = { west: -82.8, south: 9.65, east: -82.7, north: 9.7 };
+    expect(resultsText(3, { ...base, area }, null, true)).toEqual({ count: "Más de 3 casas", rest: " en esta zona del mapa" });
+    expect(searchSummary({ ...base, area, ppl: 2 }, null)).toBe("Zona del mapa · 2 personas");
   });
 
   it("con más páginas por cargar («Ver más casas») no cuenta las que faltan: «Más de 60 casas»", () => {

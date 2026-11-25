@@ -119,7 +119,7 @@ export function DesktopSearch({ filters, zoneName }: { filters: Filters; zoneNam
 
 export function DesktopFeatureFilters({ filters }: { filters: Filters }) {
   const navigate = useNavigate();
-  const { data } = useInfiniteQuery(zoneListingsQuery(filters.zone));
+  const { data } = useInfiniteQuery(zoneListingsQuery(filters.zone, filters.area));
   const available = new Set(loadedListings(data)?.flatMap((listing) => listing.features));
   const choices = FEATURE_CHOICE_ORDER.filter((feature) => available.has(feature));
   if (!choices.length) return null;

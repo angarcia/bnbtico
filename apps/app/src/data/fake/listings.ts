@@ -90,6 +90,13 @@ export function createFakeListings(db: FakeDb, opts: { supabaseUrl: string }): P
       const found = active()
         .filter((l) => l.available)
         .filter((l) => !zone || nearZone(l, zone))
+        // Área del mapa (historia #96): por el punto público, el mismo que pinta el marcador; nunca por el real.
+        .filter((l) => {
+          if (!q.area) return true;
+          if (l.lat === null || l.lng === null) return false;
+          const p = publicPoint(l.id, l.lat, l.lng);
+          return p.lat >= q.area.south && p.lat <= q.area.north && p.lng >= q.area.west && p.lng <= q.area.east;
+        })
         .filter((l) => !r || !busy(l, r.from, r.to))
         .filter((l) => !!zone || q.prov === ALL_PROVINCES || l.province === q.prov)
         .filter((l) => !q.ppl || gte(l.capacity, q.ppl))

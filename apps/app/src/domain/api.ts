@@ -31,7 +31,8 @@ export interface PublicListingsApi {
    *  personas, habitaciones, características y precio por noche; el Caribe primero y luego las más nuevas, como mucho 60 por
    *  página. `after` (el `next` de la página anterior) pide las siguientes; `next` es null si no quedan. Con llegada y salida,
    *  cada casa trae su total orientativo (`stayTotalCrc`, domain/stay-price.ts). Rango inválido: «Revise las fechas.» */
-  searchPublic(filters: Filters, after?: SearchCursor | null): Promise<SearchPage>;
+  /** `signal`: cancela la petición si la búsqueda deja de interesar (otra área del mapa, historia #96). */
+  searchPublic(filters: Filters, after?: SearchCursor | null, signal?: AbortSignal): Promise<SearchPage>;
   /** Zonas activas con alguna casa activa y abierta a 5 km o menos (o con esa zona), Caribe primero y por nombre. */
   zonesWithListings(): Promise<ZoneWithListings[]>;
   /** Ficha pública por `CT-####`; null si no está activa. */

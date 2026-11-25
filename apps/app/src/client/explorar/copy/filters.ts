@@ -28,6 +28,8 @@ export const kindWhole = "Alojamiento completo";
 export const kindRoom = "Habitación";
 export const zone = "Zona";
 export const allProvinces = "Todas las provincias";
+/** La zona tras mover el mapa (historia #96). */
+export const mapArea = "Zona del mapa";
 export const wholeProvince = ({ province }: { province: string }) => `Todo ${province}`;
 export const dates = "Fechas";
 export const noDates = "Sin fechas";

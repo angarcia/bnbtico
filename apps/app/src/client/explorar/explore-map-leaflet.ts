@@ -3,6 +3,7 @@
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { EXPLORE_MAP, exploreMapView, type LatLng } from "../../domain/geo";
+import type { MapArea } from "../../domain/filters";
 import { groupLabel, groupPins } from "../../domain/map-pins";
 
 const OSM = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
@@ -11,8 +12,12 @@ const ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">Op
 /** Un marcador: el punto aproximado de la casa (listings_public), su precio y su nombre. */
 export interface MapMarker { publicId: string; lat: number; lng: number; label: string; title: string }
 
+/** Espera tras el último movimiento antes de buscar el área: una ráfaga de gestos es una sola búsqueda (historia #96). */
+export const AREA_SETTLE_MS = 300;
+
 export interface ExploreMapHandle {
-  show(markers: MapMarker[], zone: LatLng | null): void;
+  /** `area`: búsqueda por el área del mapa: el encuadre lo eligió el viajero y los resultados no lo mueven. */
+  show(markers: MapMarker[], zone: LatLng | null, area: MapArea | null): void;
   select(publicId: string | null): void;
   zoomBy(step: number): void;
   dispose(): void;
@@ -21,7 +26,8 @@ export interface ExploreMapHandle {
 /** `interactive: false` es el mapa pequeño de la lista: sin arrastrar, zoom ni teclado (la página baja con el dedo).
  *  Los marcadores que se pisan van juntos en uno, «N casas» (revisión UX 2026-10-29, C2): en el mapa grande, tocarlo acerca
  *  el mapa a esas casas; en el pequeño, el toque sigue hasta la caja y abre el mapa grande. Se rehace al cambiar el zoom. */
-export function drawExploreMap(el: HTMLElement, opts: { interactive: boolean; onMarker(publicId: string): void; onMap(): void; insets(): { top: number; bottom: number } }): ExploreMapHandle {
+/** `onArea` recibe los límites como `oeste,sur,este,norte` (el formato de `?area=`; lo lee `parseArea` del dominio). */
+export function drawExploreMap(el: HTMLElement, opts: { interactive: boolean; onMarker(publicId: string): void; onMap(): void; insets(): { top: number; bottom: number }; onArea?(bbox: string): void }): ExploreMapHandle {
   const still = { dragging: false, scrollWheelZoom: false, touchZoom: false, doubleClickZoom: false, boxZoom: false, keyboard: false };
   const map = L.map(el, { zoomControl: false, ...(opts.interactive ? {} : still) });
   const tiles = L.tileLayer(OSM, { attribution: ATTRIBUTION, maxZoom: 18 }).addTo(map);
@@ -108,19 +114,51 @@ export function drawExploreMap(el: HTMLElement, opts: { interactive: boolean; on
     if (markers.length) draw();
   });
 
+  // Búsqueda por el área visible (historia #96): solo tras un gesto del viajero (arrastrar, rueda, pellizco, teclado, + y −),
+  // nunca tras un encuadre de la app (resultados, zona, casa elegida): así no hay búsquedas en bucle. Se espera a que el
+  // mapa se quede quieto AREA_SETTLE_MS y se busca una vez el área final.
+  let gesture = false;
+  let settle: ReturnType<typeof setTimeout> | undefined;
+  const byUser = () => (gesture = true);
+  if (opts.interactive && opts.onArea) {
+    // pointerdown cubre también el dedo (Pointer Events en todos los navegadores que se soportan).
+    for (const type of ["pointerdown", "wheel", "keydown"] as const) el.addEventListener(type, byUser, { passive: true });
+    map.on("moveend", () => {
+      if (!gesture) return;
+      clearTimeout(settle);
+      settle = setTimeout(() => {
+        gesture = false;
+        opts.onArea?.(map.getBounds().toBBoxString());
+      }, AREA_SETTLE_MS);
+    });
+  }
+  // Un encuadre de la app: lo que se mueva ahora no lo hizo el viajero.
+  const programmatic = () => {
+    gesture = false;
+    clearTimeout(settle);
+  };
+  let placed = false;
+
   return {
-    show(next, zone) {
+    show(next, zone, area) {
       markers = next;
-      const zoneKey = zone ? `${zone.lat},${zone.lng}` : "";
-      // Sin casas en la misma zona: mismo encuadre y zoom, solo se quitan los marcadores.
-      const keep = !next.length && shown === zoneKey;
+      const zoneKey = area ? `${area.west},${area.south},${area.east},${area.north}` : zone ? `${zone.lat},${zone.lng}` : "";
+      // Sin casas en la misma zona: mismo encuadre y zoom, solo se quitan los marcadores. Con el área del mapa, en el mapa
+      // que se mueve el encuadre es del viajero: los resultados nunca lo mueven (al abrir con el área en la URL, se coloca
+      // una vez). El mapa pequeño de la lista, que no se mueve con el dedo, sigue el área cuando cambia.
+      const keep = area ? (opts.interactive ? placed : shown === zoneKey) : !next.length && shown === zoneKey;
       shown = zoneKey;
       // Primero la vista: hasta tenerla, Leaflet no crea los elementos de los marcadores (getElement() sería undefined).
-      const view = exploreMapView(next, zone);
       if (!keep) {
-        if ("fit" in view) fit(view.fit);
-        else map.setView([view.center.lat, view.center.lng], view.zoom);
+        programmatic();
+        if (area) map.fitBounds([[area.south, area.west], [area.north, area.east]]);
+        else {
+          const view = exploreMapView(next, zone);
+          if ("fit" in view) fit(view.fit);
+          else map.setView([view.center.lat, view.center.lng], view.zoom);
+        }
       }
+      placed = true;
       draw();
     },
     select(publicId) {
@@ -128,13 +166,19 @@ export function drawExploreMap(el: HTMLElement, opts: { interactive: boolean; on
       // Si la casa va dentro de un grupo, el mapa se acerca hasta que sale sola.
       const m = publicId ? markers.find((x) => x.publicId === publicId) : undefined;
       if (m && !icons.has(m.publicId) && map.getZoom() < EXPLORE_MAP.maxZoom) {
+        programmatic();
         map.setView([m.lat, m.lng], EXPLORE_MAP.maxZoom, { animate: false });
         draw();
       }
       mark();
     },
-    zoomBy: (step) => map.setZoom(map.getZoom() + step),
+    // «+» y «−» de escritorio están fuera de la caja del mapa: también son un gesto del viajero.
+    zoomBy: (step) => {
+      byUser();
+      map.setZoom(map.getZoom() + step);
+    },
     dispose: () => {
+      clearTimeout(settle);
       resize.disconnect();
       removeEventListener("online", online);
       map.remove();

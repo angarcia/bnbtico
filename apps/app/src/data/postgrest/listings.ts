@@ -22,13 +22,13 @@ export function createPostgrestListings(db: SupabaseClient<Database>, opts: { su
   const toPublic = (row: PublicRow): PublicListing => fromPublicRow(row, url);
 
   return {
-    async searchPublic(f: Filters, after: SearchCursor | null = null): Promise<SearchPage> {
+    async searchPublic(f: Filters, after: SearchCursor | null = null, signal?: AbortSignal): Promise<SearchPage> {
       const r = stayRange(f);
       // Todo lo decide search_listings: zona (5 km con el punto real), noches libres, casas cerradas fuera («Cerrar la casa
       // hasta…» del Calendario, ticket 20; su ficha sí se abre), provincia (solo sin zona), personas, habitaciones, tipo,
       // características y precio por noche; ordena (`sort_rank`: el Caribe primero y luego las más nuevas), limita y solo
       // entonces calcula `stay_total_crc`. La página siguiente va por cursor (`p_after_*`) y `has_more` dice si queda otra.
-      const { data, error } = await db
+      const query = db
         .rpc("search_listings", {
           p_zone: f.zone ?? undefined,
           p_from: r?.from,
@@ -44,10 +44,17 @@ export function createPostgrestListings(db: SupabaseClient<Database>, opts: { su
           p_after_caribe: after?.caribe,
           p_after_created: after?.createdAt,
           p_after_id: after?.id,
+          // Área del mapa (historia #96): la base filtra por el punto público antes del límite.
+          p_west: f.area?.west,
+          p_south: f.area?.south,
+          p_east: f.area?.east,
+          p_north: f.area?.north,
         })
         // PostgREST solo ordena una función `returns table` por una columna que también se pide: sort_rank va en el select.
         .select(`${PUBLIC_COLUMNS}, stay_total_crc, sort_rank, has_more`)
         .order("sort_rank");
+      if (signal) query.abortSignal(signal);
+      const { data, error } = await query;
       if (error) throw toDomainError(error);
       // Los tipos generados dan las columnas de `returns table` como no nulas; el total sí puede ser null.
       const listings = data.map((row): SearchListing => ({ ...toPublic(row), stayTotalCrc: (row.stay_total_crc as number | null) ?? null }));

@@ -77,7 +77,7 @@ function FiltrosForm({
   const badRange = priceRangeInvalid(Number(draft.min ?? 0), Number(draft.max ?? 0));
   const { data, hasNextPage } = useInfiniteQuery(listingsQuery(f));
   const count = loadedListings(data)?.length;
-  const zoneListings = useInfiniteQuery(zoneListingsQuery(f.zone));
+  const zoneListings = useInfiniteQuery(zoneListingsQuery(f.zone, f.area));
   const availableFeatures = new Set(loadedListings(zoneListings.data)?.flatMap((listing) => listing.features));
   const featureChoices = FEATURE_CHOICE_ORDER.filter((key) => availableFeatures.has(key));
   const symbol = currency === "USD" ? "$" : "₡";
@@ -87,7 +87,7 @@ function FiltrosForm({
       abrir: "donde",
       label: FILTERS_COPY.zone,
       icon: I.pin,
-      value: f.zone ? (zoneName ?? "") : f.prov === ALL_PROVINCES ? FILTERS_COPY.allProvinces : FILTERS_COPY.wholeProvince({ province: f.prov }),
+      value: f.area ? FILTERS_COPY.mapArea : f.zone ? (zoneName ?? "") : f.prov === ALL_PROVINCES ? FILTERS_COPY.allProvinces : FILTERS_COPY.wholeProvince({ province: f.prov }),
     },
     // Feature flags (#58): la fila de la estancia dice fechas o noches según el modo; sin estancia, no hay fila.
     ...(SEARCH_MODE === "dates"
@@ -207,7 +207,7 @@ function FiltrosForm({
             /> : null}
           </div>
         </section>
-        {f.zone && (!zoneListings.data || featureChoices.length > 0) && <section className="stack">
+        {(f.zone || f.area) && (!zoneListings.data || featureChoices.length > 0) && <section className="stack">
           <span className="eyebrow">{FILTERS_COPY.needs}</span>
           {!zoneListings.data && (zoneListings.isError || zoneListings.isPaused ? (
             <p className="xs muted" role="status">{FILTERS_COPY.featuresError}</p>

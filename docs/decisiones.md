@@ -10,6 +10,19 @@ Se echan en falta cuatro ajustes de escritorio que se habían acordado y no esta
 
 Motivo: en escritorio, Ayuda e Ingresar no deben sacar de la pantalla en la que se está, y Cuenta debe verse igual con casas o sin ellas.
 
+## 2026-11-25 · Explorar busca las casas del área visible al mover el mapa
+
+Ana pide (historia #96) que la lista y los marcadores se actualicen al mover o acercar el mapa. Decisiones del mismo día: manda el área del mapa sobre la zona elegida; se busca en el mapa de escritorio y en el mapa completo del teléfono (el mapa pequeño de la lista sigue sin moverse con el dedo); al cambiar un filtro se mantiene el área; el área va en la URL.
+
+- **Cuándo busca:** solo tras un gesto del viajero (arrastrar, rueda, pellizco, teclado, «+» y «−»), cuando el mapa lleva 300 ms quieto: una ráfaga de gestos es una búsqueda. Los encuadres de la app (resultados, zona, casa elegida) no buscan, así que no hay bucles; los resultados de un área nunca mueven el encuadre.
+- **Qué busca:** `search_listings` con `p_west`, `p_south`, `p_east`, `p_north` (migración `20261125180000_buscar_area_mapa`) filtra en Postgres por el punto público guardado (`public_lat`/`public_lng`, el que pinta el marcador; nunca el real), antes del límite de 60 y del total; índice `listings_public_point_idx`. Con el área no se manda zona ni provincia: no hay un radio oculto. Mismo límite y «Ver más casas»; con más páginas, «Más de N casas».
+- **URL y caché:** `?area=oeste,sur,este,norte`, redondeada hacia fuera a 3 decimales (unos 110 m), en la clave de la consulta: gestos casi iguales y volver a un área reutilizan la caché. Atrás, recargar y un enlace compartido vuelven al área. Elegir después una zona sustituye el área.
+- **Respuestas y errores:** cada área es una consulta aparte (una respuesta vieja no pisa la nueva) y la petición superada se cancela. Si falla, siguen las casas de la última búsqueda buena con «No pudimos actualizar las casas. Se ven las de la búsqueda anterior.» y «Reintentar». La casa elegida que sale del área cierra su tarjeta.
+- **Textos:** «N casas en esta zona del mapa» en la línea de resultados y «Zona del mapa» en la píldora y en Filtros; en escritorio, Filtros y «Qué necesitan» salen también con el área.
+- **Coste medido** (local, 5 000 casas activas en una transacción deshecha): un área de Cahuita 0,57 ms; todo el país 6,9 ms; el filtro usa el índice (31 bloques). Evidencia en `.scratch/buscar-area-mapa/evidencia.md`.
+
+Motivo: explorar por el mapa como en otros catálogos, sin descargar el catálogo entero ni revelar el punto real de las casas.
+
 ## 2026-11-25 · Acciones sobre la foto en Mis casas y en Mi casa
 
 Ana aprueba, con capturas, las composiciones de las historias #95 y #92 (implementadas a partir de su texto: los mockups no estaban en el repositorio).

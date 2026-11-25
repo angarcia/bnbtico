@@ -26,9 +26,19 @@ export const STAY_MAX_DAYS = 365;
 /** Id de una zona: código del cantón y nombre (`704-cocles`). */
 export const ZONE_ID = /^[1-7][0-9]{2}-[a-z0-9-]+$/;
 
+/** Área visible del mapa (historia #96), en grados, redondeada hacia fuera a 3 decimales (unos 110 m): gestos casi iguales
+ *  dan la misma área y reutilizan la caché, y nunca se queda fuera nada de lo que se ve. */
+export interface MapArea {
+  west: number;
+  south: number;
+  east: number;
+  north: number;
+}
+
 export interface Filters {
   prov: string; // provincia o «Todas»
   zone: string | null; // id de zona (`704-cocles`); si está, manda sobre la provincia
+  area: MapArea | null; // el área del mapa tras moverlo; si está, manda sobre la zona y la provincia (historia #96)
   arrival: string | null; // llegada por noches, con su salida
   departure: string | null;
   nights: number; // 0 = sin indicar, 1–90 (modo noches: sin fechas, estimación por duración)
@@ -70,7 +80,31 @@ const money = (v: string) => {
   return n === null || Number.isNaN(n) || n < 0 ? 0 : n;
 };
 
-type Parsed = { prov: string; zona: string; llegada: string; salida: string; noches: number; ppl: number; beds: number; tipo: KindFilter | ""; min: number; max: number; mas: boolean; mapa: boolean } & Record<Feature, boolean>;
+/** Redondea hacia fuera a 3 decimales (antes, a 6, para que 9.65 no suba a 9.651 por el error de coma flotante). */
+const outward = (v: number, up: boolean) => {
+  const n = Math.round(v * 1e6) / 1e3;
+  return (up ? Math.ceil(n) : Math.floor(n)) / 1e3;
+};
+
+/** Los límites del mapa como área de búsqueda; null si no forman un rectángulo válido. */
+export function areaOf(b: MapArea): MapArea | null {
+  const ok = [b.west, b.south, b.east, b.north].every(Number.isFinite) && b.south >= -90 && b.north <= 90 && b.west >= -180 && b.east <= 180;
+  if (!ok || b.west >= b.east || b.south >= b.north) return null;
+  return { west: outward(b.west, false), south: outward(b.south, false), east: outward(b.east, true), north: outward(b.north, true) };
+}
+
+/** `oeste,sur,este,norte`, como viaja en `?area=`. */
+export const areaParam = (a: MapArea): string => [a.west, a.south, a.east, a.north].join(",");
+
+/** `oeste,sur,este,norte` (la URL o `toBBoxString()` de Leaflet) como área redondeada; null si no vale. */
+export function parseArea(v: string): MapArea | null {
+  const parts = v.split(",");
+  if (parts.length !== 4 || parts.some((p) => !/^-?\d+(\.\d+)?$/.test(p))) return null;
+  const [west, south, east, north] = parts.map(Number) as [number, number, number, number];
+  return areaOf({ west, south, east, north });
+}
+
+type Parsed = { prov: string; zona: string; area: MapArea | null; llegada: string; salida: string; noches: number; ppl: number; beds: number; tipo: KindFilter | ""; min: number; max: number; mas: boolean; mapa: boolean } & Record<Feature, boolean>;
 
 /** `rooms` (feature flag de habitaciones, historia #62): apagada, no hay tipo en Filtros (todo es alojamiento completo), así
  *  que `?tipo=` se ignora y el mínimo de dormitorios vale sin `tipo=completo`. */
@@ -80,6 +114,7 @@ function parseSearch(params: SearchParams, rooms = true): Parsed {
   return {
     prov: get("prov"),
     zona: ZONE_ID.test(zona) ? zona : "",
+    area: parseArea(get("area")),
     llegada: date(get("llegada")),
     salida: date(get("salida")),
     noches: nightsOf(get("noches")),
@@ -108,9 +143,11 @@ export function parseFilters(params: SearchParams, provinces: readonly string[],
   const invalid = priceRangeInvalid(p.min, p.max);
   const min = invalid ? 0 : p.min;
   const max = invalid ? 0 : p.max;
+  // Con el área del mapa no hay zona ni provincia: no se aplica un radio oculto que impida explorar fuera de él.
   return {
-    prov: provinces.includes(p.prov) ? p.prov : ALL_PROVINCES,
-    zone: p.zona && (!ctx.zoneIds || ctx.zoneIds.includes(p.zona)) ? p.zona : null,
+    prov: !p.area && provinces.includes(p.prov) ? p.prov : ALL_PROVINCES,
+    zone: !p.area && p.zona && (!ctx.zoneIds || ctx.zoneIds.includes(p.zona)) ? p.zona : null,
+    area: p.area,
     ...(mode === "dates" ? stayFrom(p, ctx.today) : { arrival: null, departure: null }),
     nights: mode === "nights" ? p.noches : 0,
     ppl: p.ppl,
@@ -152,7 +189,9 @@ export function colonesToPriceInput(crc: number, currency: Currency, fx: number)
  *  «Más filtros»; `mapa` tampoco: lo pone la pantalla del mapa. Con zona, la provincia sobra. */
 export function toSearchParams(f: Filters): URLSearchParams {
   const p = new URLSearchParams();
+  // Una zona elegida en la búsqueda gana al área del mapa (la sustituye); al leer la URL, el área deja la zona fuera.
   if (f.zone) p.set("zona", f.zone);
+  else if (f.area) p.set("area", areaParam(f.area));
   else if (f.prov !== ALL_PROVINCES) p.set("prov", f.prov);
   if (f.arrival && f.departure) {
     p.set("llegada", f.arrival);
@@ -180,7 +219,7 @@ export function extrasCount(f: Filters): number {
 
 // ---------- Búsqueda en la URL (rutas tipadas de Explorar y Filtros) ----------
 
-export type SearchKey = "prov" | "zona" | "llegada" | "salida" | "noches" | "ppl" | "beds" | "tipo" | "min" | "max" | "mas" | "mapa" | Feature;
+export type SearchKey = "prov" | "zona" | "area" | "llegada" | "salida" | "noches" | "ppl" | "beds" | "tipo" | "min" | "max" | "mas" | "mapa" | Feature;
 /** Parámetros de Explorar tal como viajan en la URL: texto, solo claves conocidas y solo si no son el valor por defecto. */
 export type ExploreSearch = Partial<Record<SearchKey, string>>;
 
@@ -192,8 +231,11 @@ export function normalizeSearch(params: SearchParams, today?: string, mode: Sear
   const p = parseSearch(params, rooms);
   const out: ExploreSearch = {};
   const stay = stayFrom(p, today);
-  if (p.prov) out.prov = p.prov;
-  if (p.zona) out.zona = p.zona;
+  if (p.area) out.area = areaParam(p.area);
+  else {
+    if (p.prov) out.prov = p.prov;
+    if (p.zona) out.zona = p.zona;
+  }
   if (mode === "dates" && stay.arrival && stay.departure) {
     out.llegada = stay.arrival;
     out.salida = stay.departure;

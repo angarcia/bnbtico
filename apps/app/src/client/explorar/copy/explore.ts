@@ -7,6 +7,8 @@ export const heading = "Explorar casas";
 export const moreError = "No pudimos cargar más casas. Revise su conexión e inténtelo de nuevo.";
 export const more = ({ loading }: { loading: boolean }) => (loading ? "Cargando casas…" : "Ver más casas");
 export const searching = "Buscando casas…";
+/** Falló la búsqueda del área del mapa (historia #96): se siguen viendo las casas de la búsqueda anterior. */
+export const staleResults = "No pudimos actualizar las casas. Se ven las de la búsqueda anterior.";
 export const nightsNote = "Precios orientativos con el precio por noche. El anfitrión le confirma por WhatsApp si está libre.";
 export const datesError = "Revise las fechas de su búsqueda.";
 export const clearDates = "Quitar fechas";

@@ -4,6 +4,7 @@
 import { Suspense, lazy, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent, type RefObject } from "react";
 import { mapPriceLabel } from "../../domain/describe";
 import type { LatLng } from "../../domain/geo";
+import type { MapArea } from "../../domain/filters";
 import type { SearchListing } from "../../domain/listing";
 import type { Currency } from "../../domain/currency";
 import { useCurrency } from "../../shared/currency";
@@ -47,9 +48,10 @@ export function exploreHeaderInsets(box: HTMLElement): { top: number; bottom: nu
 /** Dibuja el mapa en `box` cuando Leaflet llega (en reposo); sin red no pasa nada: queda el fondo de la caja. */
 export function useExploreMap(
   box: RefObject<HTMLElement | null>,
-  opts: { interactive: boolean; onMarker(id: string): void; onMap(): void; insets: MapInsets },
+  opts: { interactive: boolean; onMarker(id: string): void; onMap(): void; insets: MapInsets; onArea?: (bbox: string) => void },
   markers: MapMarker[],
   zone: LatLng | null,
+  area: MapArea | null = null,
 ): { handle: RefObject<ExploreMapHandle | null>; ready: boolean } {
   const handle = useRef<ExploreMapHandle | null>(null);
   const callbacks = useRef(opts);
@@ -57,8 +59,8 @@ export function useExploreMap(
   const [ready, setReady] = useState(false);
   // Lo último que debe enseñar: un mapa rehecho (otro `interactive`) arranca ya con su vista, sin esperar a que cambie nada
   // (historia 05 de la revisión 2026-11-17: en escritorio, al pasar de casas a ninguna, Leaflet quedaba sin vista ni teselas).
-  const latest = useRef({ markers, zone });
-  latest.current = { markers, zone };
+  const latest = useRef({ markers, zone, area });
+  latest.current = { markers, zone, area };
   useEffect(() => {
     let cancelled = false;
     const load = () =>
@@ -70,8 +72,10 @@ export function useExploreMap(
             onMarker: (id) => callbacks.current.onMarker(id),
             onMap: () => callbacks.current.onMap(),
             insets: () => callbacks.current.insets(),
+            // Solo el mapa que busca al moverlo (escritorio y mapa completo, historia #96).
+            onArea: callbacks.current.onArea ? (a) => callbacks.current.onArea?.(a) : undefined,
           });
-          handle.current.show(latest.current.markers, latest.current.zone);
+          handle.current.show(latest.current.markers, latest.current.zone, latest.current.area);
           setReady(true);
         })
         .catch(() => undefined);
@@ -88,9 +92,10 @@ export function useExploreMap(
   }, [box, opts.interactive]);
   // La zona cuenta por su valor, no por su objeto (cada render trae uno nuevo).
   const zoneKey = zone ? `${zone.lat},${zone.lng}` : "";
+  const areaKey = area ? `${area.west},${area.south},${area.east},${area.north}` : "";
   useEffect(() => {
-    if (ready) handle.current?.show(markers, zone);
-  }, [ready, markers, zoneKey]);
+    if (ready) handle.current?.show(markers, zone, area);
+  }, [ready, markers, zoneKey, areaKey]);
   return { handle, ready };
 }
 
@@ -99,7 +104,7 @@ const PricePreview = lazy(() => import("./map-preview").then((m) => ({ default: 
 
 /** Arriba de Explorar, a todo el ancho y bajo la cabecera flotante: tocarlo (o Intro/Espacio) abre el mapa grande; un marcador,
  *  con su casa. Sin `onOpen` (mientras busca o sin casas) es solo el mapa de la zona. */
-export function ExploreMap({ listings, zone, nights, onOpen, onSelect, selected = null, expanded, onExpand, ref }: { listings: SearchListing[]; zone: LatLng | null; nights: number; onOpen: ((publicId: string | null) => void) | null; onSelect?: (publicId: string | null) => void; selected?: string | null; expanded?: boolean; onExpand?: () => void; ref?: RefObject<HTMLDivElement | null> }) {
+export function ExploreMap({ listings, zone, area = null, onArea, nights, onOpen, onSelect, selected = null, expanded, onExpand, ref }: { listings: SearchListing[]; zone: LatLng | null; area?: MapArea | null; onArea?: (bbox: string) => void; nights: number; onOpen: ((publicId: string | null) => void) | null; onSelect?: (publicId: string | null) => void; selected?: string | null; expanded?: boolean; onExpand?: () => void; ref?: RefObject<HTMLDivElement | null> }) {
   const own = useRef<HTMLDivElement>(null);
   const box = ref ?? own;
   const markers = useMapMarkers(listings, nights);
@@ -109,7 +114,8 @@ export function ExploreMap({ listings, zone, nights, onOpen, onSelect, selected 
     onMarker: onSelect ?? ((id) => onOpen?.(id)),
     onMap: () => onSelect?.(null),
     insets,
-  }, markers, zone);
+    onArea,
+  }, markers, zone, area);
   useEffect(() => {
     if (onSelect) handle.current?.select(selected);
   }, [handle, ready, markers, onSelect, selected]);
