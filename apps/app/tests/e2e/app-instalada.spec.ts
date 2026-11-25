@@ -173,3 +173,36 @@ test("versión nueva: espera, avisa al volver a la app, no se ofrece dentro del 
     writeFileSync(SW_FILE, original);
   }
 });
+
+// Sin tocar «Actualizar», recargar no bastaba: la versión vieja seguía sirviéndose durante días (Ana, 2026-11-25, con una
+// del 17 de noviembre). Al abrir la app con una versión nueva esperando y sin otras pestañas, se aplica sola.
+test("versión nueva: al abrir o recargar la app con una versión esperando, se aplica sola sin aviso", async ({ page }) => {
+  await injectSession(page, "owner");
+  await page.goto("/explorar");
+  await controlled(page);
+  await page.waitForTimeout(500);
+  const original = readFileSync(SW_FILE, "utf8");
+  try {
+    writeFileSync(SW_FILE, `${original}\n// otro despliegue`);
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send("Network.clearBrowserCache");
+    await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+    await expect(page.getByRole("status").filter({ hasText: "Hay una versión nueva" })).toBeVisible();
+    const waitingScript = () => page.evaluate(async () => (await navigator.serviceWorker.getRegistration())?.waiting?.scriptURL ?? null);
+    expect(await waitingScript()).not.toBeNull();
+
+    // Al recargar, la app ve la versión esperando, la activa y se recarga una sola vez más, ya con la nueva.
+    let loads = 0;
+    page.on("load", () => loads++);
+    await page.reload();
+    await expect.poll(() => loads, { timeout: 15_000 }).toBe(2);
+    await page.waitForTimeout(2_000);
+    expect(loads, "una sola recarga más, no dos").toBe(2);
+    expect(await waitingScript()).toBe(null);
+    await expect(results(page)).toHaveText("2 casas");
+    await expect(page.getByText("Hay una versión nueva")).toHaveCount(0);
+    expect(await page.evaluate(() => fetch("/sw.js").then((r) => r.text()))).toContain("// otro despliegue");
+  } finally {
+    writeFileSync(SW_FILE, original);
+  }
+});

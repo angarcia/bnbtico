@@ -1,3 +1,15 @@
+## 2026-11-25 · La versión nueva se aplica sola al abrir la app
+
+Hasta hoy la versión nueva esperaba a que se tocara «Actualizar», y recargar no bastaba: el navegador no activa un service worker que espera mientras la pestaña siga abierta, aunque se recargue. Ana vio otra vez «Solicite un código nuevo» al ingresar en escritorio con una versión del 17 de noviembre, anterior al arreglo, que su navegador seguía sirviendo ocho días después.
+
+- **Al abrir o recargar la app con una versión nueva ya esperando**, se aplica sola: se recarga una vez y queda en la nueva, sin aviso (`sw-register.ts`, mensaje `skip-waiting-if-alone` en `sw.ts`).
+- **Solo si es la única pestaña de 3bstays** (lo comprueba el service worker): al activarse borra los archivos de la versión vieja y otra pestaña abierta con ella fallaría al cargar una pantalla. Con más pestañas, el aviso de siempre.
+- **Nunca dentro del asistente de publicar**, como el aviso.
+- **El aviso «Hay una versión nueva · Actualizar»** sigue para quien tiene la app abierta cuando llega el despliegue.
+- **Una sola recarga, con la versión ya activada:** la pestaña recarga cuando el service worker nuevo pasa a `activated`, no en `controllerchange`, que llegaba dos veces (al activarse y al reclamar la pestaña) y podía recargar aún con la vieja. Vale también para «Actualizar».
+
+Motivo: que nadie se quede días en una versión vieja, con fallos ya arreglados, sin perder lo que se está haciendo en otra pestaña ni en el asistente.
+
 ## 2026-11-24 · El límite del JS inicial cuenta solo lo que se carga al arrancar
 
 El límite «JS inicial» de `.size-limit.json` se escribe como «todos los `.js` menos los trozos diferidos», y la lista de diferidos se había quedado atrás: contaba diez trozos que la SPA no carga al arrancar (`phone-draft`, `ical`, `stepper`, `hydrate-listing`, `dismiss`, `feature-choices`, `random-uuid`, `legacy-storage`, `account`, `chunk-error`), 4,2 KB en total. Marcaba 160,4 KB de 161 cuando al arrancar se cargan 156,2 KB.

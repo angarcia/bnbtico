@@ -12,7 +12,8 @@ const PAGES = "pages";
 const precached = new Set(__PRECACHE__);
 
 self.addEventListener("install", (event) => {
-  // Sin skipWaiting: la versión nueva espera hasta que la persona toque «Actualizar».
+  // Sin skipWaiting: la versión nueva espera a que la persona toque «Actualizar» o a la próxima vez que abra la app
+  // (sw-register.ts).
   event.waitUntil(caches.open(PRECACHE).then((cache) => cache.addAll(__PRECACHE__.map((url) => new Request(url, { cache: "reload" })))));
 });
 
@@ -28,6 +29,11 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("message", (event) => {
   if (event.data === "skip-waiting") void self.skipWaiting();
+  // Al abrir la app con esta versión esperando: solo si no hay otra pestaña con la vieja (al activarse se borran sus
+  // archivos y esa pestaña fallaría al cargar una pantalla). Si la hay, se queda el aviso.
+  if (event.data === "skip-waiting-if-alone") {
+    event.waitUntil(self.clients.matchAll({ type: "window" }).then((windows) => (windows.length <= 1 ? self.skipWaiting() : undefined)));
+  }
 });
 
 /** Imágenes de otro origen: se piden con CORS (Storage y OSM lo permiten) para no guardar respuestas opacas, que pesan mucho en la cuota. */
