@@ -92,6 +92,27 @@ for (const slow of [
   });
 }
 
+// Con casas, al ingresar la barra pasa a cinco pestañas y se leen las consultas; la ventana se cierra igual. (El 2026-11-25
+// Ana volvió a ver «Solicite un código nuevo», pero con una versión del 17 de noviembre, anterior al arreglo, que seguía
+// en su navegador porque no había tocado «Actualizar».)
+test("en escritorio, una cuenta con casas ingresa desde Explorar y la ventana se cierra sin pedir otro código", async ({ page }) => {
+  test.setTimeout(60_000);
+  const h = await postgrestHarness();
+  await h.seed({ status: "active", draft: { title: "Casa para ingresar" } });
+  await h.seed({ status: "active", draft: { title: "Otra casa para ingresar" } });
+  const seen = await watchForText(page, NEW_CODE);
+  const { nav, dialog } = await openSignIn(page);
+  await requestCode(dialog, TEST_PHONES.owner.replace(/^\+506/, ""));
+  await dialog.getByLabel("Código de 6 dígitos").fill("123456");
+  await dialog.getByRole("button", { name: "Verificar y continuar" }).click();
+  await expect(dialog).toBeHidden({ timeout: 15_000 });
+  await expect(nav.getByRole("link", { name: "Calendario" })).toBeVisible();
+  await page.waitForTimeout(1_500);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  expect(await seen(), "el texto no aparece en ningún momento").toBe(false);
+  await expect(page).toHaveURL(/\/explorar$/);
+});
+
 test("en escritorio, un código incorrecto muestra el error y la ventana sigue abierta; con el bueno, entra", async ({ page }) => {
   const { nav, dialog } = await openSignIn(page);
   await requestCode(dialog);
