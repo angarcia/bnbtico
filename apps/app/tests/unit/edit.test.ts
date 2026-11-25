@@ -114,14 +114,14 @@ describe("editar una casa publicada · dominio", () => {
   });
   it("planEdit: la descripción valida sobre la edición pendiente", () => {
     const pending = { ...activeListing, edit: edit({ title: "Casa Coco frente al mar" }) };
-    expect(planEdit(pending, "descripcion", { description: "Corta" })).toEqual({ reviewed: { description: "Corta" }, warning: DESCRIPTION_LENGTH_ERROR });
+    expect(planEdit(pending, "descripcion", { description: "Corta" })).toEqual({ reviewed: { description: "Corta" } });
     expect(planEdit({ ...activeListing, edit: edit({ title: "Casa" }) }, "precio", { nightlyPriceCrc: 50000 })).toEqual({ immediate: { nightlyPriceCrc: 50000 } });
   });
   it("planEdit: un nombre aprobado de más de 32 caracteres no impide cambiar otro dato; uno nuevo de 33 sí falla", () => {
     const legacy = { ...activeListing, title: "N".repeat(40) };
     expect(planEdit(legacy, "descripcion", { description: "D".repeat(100) })).toEqual({ reviewed: { description: "D".repeat(100) } });
-    // Un nombre viejo fuera de la regla no calla el aviso de la descripción.
-    expect(planEdit(legacy, "descripcion", { description: "Corta" })).toEqual({ reviewed: { description: "Corta" }, warning: DESCRIPTION_LENGTH_ERROR });
+    // Un nombre viejo fuera de la regla no calla el aviso de la descripción vacía.
+    expect(planEdit(legacy, "descripcion", { description: "" })).toEqual({ reviewed: { description: "" }, warning: DESCRIPTION_EMPTY_WARNING });
     expect(planEdit(legacy, "tipo", { kind: "completo", bathroomShared: null })).toEqual({ reviewed: { kind: "completo", bathroomShared: null } });
     expect(planEdit(legacy, "nombre", { title: "T".repeat(33) })).toEqual({ error: TITLE_LENGTH_ERROR });
   });
@@ -179,7 +179,8 @@ describe("editar sigue las reglas de crear · tabla por dato", () => {
     { name: "nombre de 4", row: activeListing, field: "nombre", patch: { title: "Casa" }, outcome: "bloquea", message: TITLE_LENGTH_ERROR },
     { name: "nombre de 33", row: activeListing, field: "nombre", patch: { title: "N".repeat(33) }, outcome: "bloquea", message: TITLE_LENGTH_ERROR },
     { name: "nombre de 32 con descripción de 50 (renombrar)", row: { ...activeListing, description: D50 }, field: "nombre", patch: { title: "N".repeat(32) }, outcome: "nada" },
-    { name: "descripción de 50", row: activeListing, field: "descripcion", patch: { description: D50 }, outcome: "avisa", message: DESCRIPTION_LENGTH_ERROR },
+    { name: "descripción de 1", row: activeListing, field: "descripcion", patch: { description: "D" }, outcome: "nada" },
+    { name: "descripción de 50", row: activeListing, field: "descripcion", patch: { description: D50 }, outcome: "nada" },
     { name: "descripción vacía", row: activeListing, field: "descripcion", patch: { description: "" }, outcome: "avisa", message: DESCRIPTION_EMPTY_WARNING },
     { name: "descripción de 80", row: activeListing, field: "descripcion", patch: { description: "D".repeat(80) }, outcome: "nada" },
     { name: "descripción de 2000", row: activeListing, field: "descripcion", patch: { description: "D".repeat(2000) }, outcome: "nada" },
@@ -261,7 +262,7 @@ describe("editar sigue las reglas de crear · tabla por dato", () => {
 
   it("fieldWarning: el aviso en ocre de cada fila de la ficha editable, el mismo que «Revisar y enviar»", () => {
     const d = mergeEdit(activeListing, null);
-    expect(fieldWarning("descripcion", { ...d, description: D50 })).toBe(DESCRIPTION_LENGTH_ERROR);
+    expect(fieldWarning("descripcion", { ...d, description: D50 })).toBeNull();
     expect(fieldWarning("descripcion", { ...d, title: "N".repeat(40), description: "" })).toBe(DESCRIPTION_EMPTY_WARNING);
     expect(fieldWarning("capacidad", { ...d, bathrooms: null })).toBe(BATHROOMS_ERROR);
     expect(fieldWarning("caracteristicas", { ...d, features: ["parking"], parkingPaid: null })).toBe(PARKING_ERROR);

@@ -20,7 +20,7 @@
   "domain/image.ts": 2,
   "domain/inquiry-filter.ts": 1,
   "domain/inquiry.ts": 18,
-  "domain/listing-rules.ts": 19,
+  "domain/listing-rules.ts": 18,
   "domain/listing.ts": 18,
   "domain/navigation.ts": 2,
   "domain/owner-delete.ts": 4,

@@ -392,8 +392,6 @@
   /* Vista previa de la ficha encima del asistente. */
   .ficha-preview{position:fixed;inset:0;z-index:calc(var(--z-overlay) + 1);overflow-y:auto;overscroll-behavior:contain;background:var(--bg)}
   .ficha-preview:focus{outline:none}
-  /* Descripción por debajo del mínimo (revisión UX N3). */
-  .description-short{color:var(--sun-ink);font-weight:var(--w-medium)}
   @media (min-width:900px) {
     .listing-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
   }

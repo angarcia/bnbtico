@@ -16,9 +16,9 @@ export interface ControlProps {
 }
 
 export type FieldSize = "md" | "compact";
-/** Contador o estado del texto a la derecha de la etiqueta («12 / 32», «Faltan 20 caracteres»). */
-export type FieldCount = { text: ReactNode; tone?: "muted" | "bad" | "warn" };
-const COUNT_TONE = { muted: " muted", bad: " counter-out", warn: " description-short" } as const;
+/** Contador o estado del texto a la derecha de la etiqueta («12 / 32», «Puede añadirla después»). */
+export type FieldCount = { text: ReactNode; tone?: "muted" | "bad" };
+const COUNT_TONE = { muted: " muted", bad: " counter-out" } as const;
 
 export function Field({
   label,

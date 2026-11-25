@@ -1,3 +1,13 @@
+## 2026-11-25 · La descripción no tiene mínimo
+
+Ana pide quitar el mínimo de 80 caracteres de la descripción (historia #94). La descripción sigue siendo opcional y con tope de 2000; vacía o con cualquier largo hasta 2000 es válida, al crear y al editar.
+
+- **Frontend y dominio:** fuera `DESCRIPTION_MIN`, el aviso en ocre de descripción corta y el contador «Faltan N caracteres» (con su estilo `.description-short`). El contador muestra «n / 2000»; vacía, «Puede añadirla después». La descripción vacía sigue avisando en ocre («Sin descripción.»), sin bloquear.
+- **Base:** ya no exigía el mínimo desde las migraciones del 2 y 3 de noviembre; solo el tope. El mensaje de ese tope pasa a «La descripción puede tener como mucho 2000 caracteres.» (migración `20261125120000_descripcion_sin_minimo`, que solo cambia el texto en `listing_edit_check`, `save_edit` y `listing_submit`), el mismo que `DESCRIPTION_LENGTH_ERROR` y el fake, como exige la suite de contrato.
+- Sin cambios en el tratamiento de espacios (se cuentan caracteres sin los de los extremos), borradores, permisos ni revisión.
+
+Motivo: decisión de Ana (historia #94); si la descripción es opcional, una breve no tiene por qué pedir más.
+
 ## 2026-11-25 · La versión nueva se aplica sola al abrir la app
 
 Hasta hoy la versión nueva esperaba a que se tocara «Actualizar», y recargar no bastaba: el navegador no activa un service worker que espera mientras la pestaña siga abierta, aunque se recargue. Ana vio otra vez «Solicite un código nuevo» al ingresar en escritorio con una versión del 17 de noviembre, anterior al arreglo, que su navegador seguía sirviendo ocho días después.

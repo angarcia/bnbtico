@@ -199,10 +199,10 @@ export function normalize(d: ListingDraft): ListingDraft {
   return n;
 }
 
-/** Paso 6 (ticket 19): la misma regla en el dominio, el fake y `submit_listing`. Se cuentan caracteres (como char_length). */
+/** Paso 6 (ticket 19): la misma regla en el dominio, el fake y `submit_listing`. Se cuentan caracteres (como char_length).
+ *  La descripción es opcional y sin mínimo (historia #94, 2026-11-25): solo tiene tope. */
 export const TITLE_MIN = 5;
 export const TITLE_MAX = 32;
-export const DESCRIPTION_MIN = 80;
 export const DESCRIPTION_MAX = 2000;
 /** Las pantallas en tres etapas (revisión UX C4): la cabecera y el aviso «Seguir publicando» hablan de la etapa, no del paso. */
 export const WIZARD_STAGES: readonly { name: string; steps: readonly Step[] }[] = [

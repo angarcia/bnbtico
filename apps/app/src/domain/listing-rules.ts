@@ -5,7 +5,6 @@
 import { inCostaRica } from "./geo";
 import {
   DESCRIPTION_MAX,
-  DESCRIPTION_MIN,
   MAX_PHOTOS,
   TITLE_MAX,
   TITLE_MIN,
@@ -23,7 +22,7 @@ export const isInt = (v: number | null, min: number) => v !== null && Number.isI
 export const TITLE_LENGTH_ERROR = `El nombre de la casa debe tener entre ${TITLE_MIN} y ${TITLE_MAX} caracteres.`;
 export const TITLE_EMPTY_ERROR = "Póngale un nombre a la casa.";
 export const KIND_ERROR = "Elija Alojamiento completo o Habitación.";
-export const DESCRIPTION_LENGTH_ERROR = `La descripción debe tener entre ${DESCRIPTION_MIN} y ${DESCRIPTION_MAX} caracteres o quedar vacía.`;
+export const DESCRIPTION_LENGTH_ERROR = `La descripción puede tener como mucho ${DESCRIPTION_MAX} caracteres.`;
 /** Caracteres (puntos de código) de un texto sin los espacios de los extremos. */
 export const charCount = (text: string) => [...text.trim()].length;
 const between = (n: number, min: number, max: number) => n >= min && n <= max;
@@ -42,9 +41,8 @@ export const titleError = (d: ListingDraft): string | null => {
   if (!d.title.trim()) return TITLE_EMPTY_ERROR;
   return between(charCount(d.title), TITLE_MIN, TITLE_MAX) ? null : TITLE_LENGTH_ERROR;
 };
-// Descripción opcional: vacía pasa; si se escribe, de 80 a 2000.
-export const descriptionError = (d: ListingDraft): string | null =>
-  d.description.trim() && !between(charCount(d.description), DESCRIPTION_MIN, DESCRIPTION_MAX) ? DESCRIPTION_LENGTH_ERROR : null;
+// Descripción opcional y sin mínimo: vacía o de cualquier largo hasta 2000.
+export const descriptionError = (d: ListingDraft): string | null => (charCount(d.description) > DESCRIPTION_MAX ? DESCRIPTION_LENGTH_ERROR : null);
 export const nightlyError = (d: ListingDraft): string | null => (isInt(d.nightlyPriceCrc, 1) ? null : NIGHTLY_PRICE_ERROR);
 // Precio al mes opcional: vacío es «Precio a negociar con el dueño».
 export const monthlyError = (d: Pick<ListingDraft, "acceptsMonthly" | "monthlyPriceCrc">): string | null => (d.acceptsMonthly && d.monthlyPriceCrc !== null && !isInt(d.monthlyPriceCrc, 1) ? MONTHLY_PRICE_ERROR : null);

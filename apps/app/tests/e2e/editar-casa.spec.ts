@@ -339,25 +339,25 @@ test("un tipo de antes (casa) abre con «Alojamiento completo» marcado y, sin t
 
 // ---------- Editar sigue las reglas de crear (ronda de Ana del 2026-11-02, ticket 12) ----------
 
-test("una descripción corta se guarda con un aviso en ocre y no estorba al renombrar; el nombre vacío o corto sí bloquea", async ({ page }) => {
+test("una descripción corta se guarda sin aviso (no hay mínimo) y no estorba al renombrar; el nombre vacío o corto sí bloquea", async ({ page }) => {
   const short = "Cabina con jardín, a dos cuadras de la playa Negra.";
   const { id } = await h.seed({ status: "active", draft: { description: short } });
   await page.goto(`/propietario/casas/${id}`);
-  // La descripción de antes (51 caracteres) avisa en ocre bajo su fila; no bloquea nada.
-  await expect(page.getByTestId("warn-descripcion")).toHaveText("La descripción debe tener entre 80 y 2000 caracteres o quedar vacía.");
+  // La descripción de antes (51 caracteres) no lleva aviso: la descripción no tiene mínimo.
+  await expect(page.getByTestId("warn-descripcion")).toHaveCount(0);
   await row(page, "Nombre").click();
   await page.getByLabel("Nombre de la casa").fill("Casa Coco frente al mar");
   await send(page).click();
   await expect(toastText(page)).toHaveText(SENT);
   await expect(row(page, "Nombre")).toContainText("Casa Coco frente al mar");
-  // Una descripción nueva corta también se envía, con el mismo aviso que al crear.
+  // Una descripción nueva corta también se envía, sin aviso; el contador solo habla del máximo.
   await row(page, "Descripción").click();
-  await expect(page.locator("#pub-description-count")).toHaveText("Faltan 29 caracteres");
+  await expect(page.locator("#pub-description-count")).toHaveText("51 / 2000");
   await page.getByLabel("Descripción (opcional)").fill("Casita de madera con jardín y hamacas, cerca de la playa.");
   await send(page).click();
-  await expect(toastText(page).last()).toHaveText(`${SENT} La descripción debe tener entre 80 y 2000 caracteres o quedar vacía.`);
+  await expect(toastText(page).last()).toHaveText(SENT);
   await expect(page).toHaveURL(new RegExp(`/propietario/casas/${id}$`));
-  await expect(page.getByTestId("warn-descripcion")).toBeVisible();
+  await expect(page.getByTestId("warn-descripcion")).toHaveCount(0);
   expect((await h.owner("owner").getOwn(id))!.edit).toMatchObject({ title: "Casa Coco frente al mar", description: "Casita de madera con jardín y hamacas, cerca de la playa." });
   // El nombre es obligatorio, como al crear: vacío o de 4 letras no se envía, con el mensaje de crear.
   await row(page, "Nombre").click();

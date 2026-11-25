@@ -28,7 +28,7 @@ Registro y borradores sin verificaciones iniciales. Antes de la primera publicac
 ## Mínimos para enviar y para publicar (2026-10-29)
 
 - **Enviar a revisión:** WhatsApp verificado, tipo, punto en el mapa y zona, capacidad, **nombre de 5 a 32 caracteres** y **precio por noche** (obligatorio). **Sin fotos y sin descripción se puede enviar.**
-- **Descripción:** opcional; si se escribe, de 80 a 2000 caracteres.
+- **Descripción:** opcional y sin mínimo; como mucho 2000 caracteres (decisión 2026-11-25).
 - **Fotos:** 0 para enviar, **al menos 1 para que el admin apruebe** (máximo 15). Sin fotos el admin solo puede pedir cambios, con la nota «Para publicarla necesitamos al menos una foto de la casa.».
 - Los mínimos de arriba sustituyen al «mínimo 5» fotos de los campos del recorrido. Ver `docs/decisiones.md`, 2026-10-29 · Publicar v2.
 

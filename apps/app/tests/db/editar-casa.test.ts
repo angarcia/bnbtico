@@ -275,7 +275,7 @@ describe("ediciones del propietario", () => {
     expect((await save(id, { lat: 9.6553, lng: -82.7536 })).error?.message).toBe(notHere);
     expect((await save(id, { kind: "castillo" })).error?.message).toBe(notHere);
     expect((await save(id, { lat: 9.6553, lng: -82.7536, zone: "Puerto Viejo", zone_source: "mapa" })).error?.message).toBe(notHere);
-    expect((await save(id, { description: "x".repeat(2001) })).error?.message).toBe("La descripción debe tener entre 80 y 2000 caracteres o quedar vacía.");
+    expect((await save(id, { description: "x".repeat(2001) })).error?.message).toBe("La descripción puede tener como mucho 2000 caracteres.");
     expect((await save(id, { lat: 9.6553, lng: -82.7536, zone: "z".repeat(61), zone_source: "other" })).error?.message).toBe("La zona puede tener como mucho 60 caracteres.");
     expect((await save(id, { title: "C".repeat(33) })).error?.message).toBe("El nombre de la casa debe tener entre 5 y 32 caracteres.");
     expect((await owner.from("listing_edits").select("listing_id").eq("listing_id", id)).data).toEqual([]);
@@ -322,7 +322,7 @@ describe("ediciones del propietario", () => {
     expect((await save(id, { kind: "habitacion" })).error).toBeNull();
     expect((await save(id, { kind: "habitacion", bathroom_shared: false })).error).toBeNull();
     expect((await save(id, { description: "Muy corta." })).error).toBeNull();
-    expect((await save(id, { description: "a".repeat(2001) })).error?.message).toBe("La descripción debe tener entre 80 y 2000 caracteres o quedar vacía.");
+    expect((await save(id, { description: "a".repeat(2001) })).error?.message).toBe("La descripción puede tener como mucho 2000 caracteres.");
     expect((await save(id, { title: "   " })).error?.message).toBe("Póngale un nombre a la casa.");
     expect((await save(id, { title: "" })).error?.message).toBe("Póngale un nombre a la casa.");
     expect((await save(id, { description: "" })).error).toBeNull();

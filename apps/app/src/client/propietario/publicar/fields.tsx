@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Component, lazy, Suspense, useId, useRef, useState, type ReactNode } from "react";
 import { FullScreen } from "../../../shared/ui/overlay";
 import { Link } from "@tanstack/react-router";
-import { DESCRIPTION_MAX, DESCRIPTION_MIN, KIND_LABELS, TITLE_MAX, TITLE_MIN, isFreshDraft, locationLine, parseColones, type Feature, type Listing, type ListingDraft, type Step } from "../../../domain/listing";
+import { DESCRIPTION_MAX, KIND_LABELS, TITLE_MAX, TITLE_MIN, isFreshDraft, locationLine, parseColones, type Feature, type Listing, type ListingDraft, type Step } from "../../../domain/listing";
 import { charCount, monthlyError } from "../../../domain/listing-rules";
 import { requiredProblems, warnings } from "../../../domain/publish-rules";
 import { previewListing } from "../../../domain/preview";
@@ -261,20 +261,14 @@ export function TitleField({ value }: { value: string }) {
   );
 }
 
-/** Descripción opcional (vacía, o de 80 a 2000 caracteres) con contador; el área llena lo que queda de pantalla, con y sin teclado. */
+/** Descripción opcional y sin mínimo (hasta 2000 caracteres) con contador; el área llena lo que queda de pantalla, con y sin teclado. */
 export function DescriptionField({ value }: { value: string }) {
   const [n, setN] = useState(charCount(value));
   const area = useRef<HTMLTextAreaElement>(null);
   useFillHeight(area);
   const error = useFieldError("description");
-  // Vacía, que se puede añadir después; por debajo del mínimo, cuántos faltan en ocre (revisión UX N3); después, el
-  // contador normal.
-  const count: FieldCount =
-    n === 0
-      ? { text: FIELDS_COPY.descriptionLater }
-      : n < DESCRIPTION_MIN
-        ? { text: FIELDS_COPY.charsMissing({ count: DESCRIPTION_MIN - n }), tone: "warn" }
-        : charCountOf(n, DESCRIPTION_MIN, DESCRIPTION_MAX);
+  // Vacía, que se puede añadir después; con texto, el contador hasta el máximo (sin mínimo, historia #94).
+  const count: FieldCount = n === 0 ? { text: FIELDS_COPY.descriptionLater } : charCountOf(n, 1, DESCRIPTION_MAX);
   return (
     <Field id="pub-description" label={FIELDS_COPY.description} error={error} count={count} grow>
       {/* Tres preguntas guía que se van al escribir; sin texto de ejemplo, que acabaría copiado en todas las fichas. */}

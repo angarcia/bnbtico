@@ -155,14 +155,14 @@ test("las ocho pantallas: se guardan por detrás, sin scroll con y sin teclado, 
   expect((await h.owner("owner").listOwn()).length).toBe(1);
 
   await page.goto(`/propietario/publicar/${id}/6`);
-  // Ticket 19 y publicar v2: nombre de 5 a 32 y descripción opcional (vacía, o de 80 a 2000), con contador.
+  // Ticket 19 y publicar v2: nombre de 5 a 32 y descripción opcional y sin mínimo (como mucho 2000, historia #94), con contador.
   await title.fill("Casa");
   await expect(page.locator("#pub-title-count")).toHaveText("4 / 32 · mínimo 5");
   await expect(page.locator("#pub-description-count")).toHaveText("Puede añadirla después");
-  // Revisión UX N3: tres preguntas guía (sin texto para copiar) y, por debajo de 80, cuántos caracteres faltan.
+  // Revisión UX N3: tres preguntas guía (sin texto para copiar). Sin mínimo: el contador solo cuenta hasta 2000.
   await expect(page.getByLabel("Descripción")).toHaveAttribute("placeholder", "¿Cómo es por dentro? ¿Qué hay cerca (playa, pulpería, parada de bus)? ¿Qué incluye o qué debe saber el cliente?");
   await page.getByLabel("Descripción").fill("Casa de madera a 80 m de la playa.");
-  await expect(page.locator("#pub-description-count")).toHaveText("Faltan 46 caracteres");
+  await expect(page.locator("#pub-description-count")).toHaveText("34 / 2000");
   // Un nombre o una descripción fuera de regla tampoco frenan «Continuar»: se avisa en «Revisar y enviar».
   await title.fill(TITLE);
   await page.getByLabel("Descripción").fill("Casa de madera a 80 m de la playa, con rancho, hamacas y un jardín grande donde se ven monos.");
@@ -774,13 +774,14 @@ test("Habitación no pregunta habitaciones ni baños (son 1); Alojamiento comple
   await expect.poll(async () => await h.owner("owner").getOwn(room.id)).toMatchObject({ kind: "completo", bedrooms: 2, bathrooms: 2 });
 });
 
-test("lo que no es obligatorio (capacidad, parqueo, descripción) sale en ocre y no impide enviar", async ({ page }) => {
-  const draft = await h.seed({ status: "draft", photos: 2, draft: { capacity: null, features: ["parking"], parkingPaid: null, description: "Corta." } });
+test("lo que no es obligatorio (capacidad, parqueo, descripción vacía) sale en ocre y no impide enviar", async ({ page }) => {
+  // La descripción vacía avisa; una corta ya no (sin mínimo, historia #94).
+  const draft = await h.seed({ status: "draft", photos: 2, draft: { capacity: null, features: ["parking"], parkingPaid: null, description: "" } });
   await page.goto(`/propietario/publicar/${draft.id}/9`);
   await expect(page.locator(".review-row.is-missing")).toHaveCount(0);
   const warned = page.locator(".review-row.is-warn");
   await expect(warned).toHaveCount(3);
-  await expect(warned.locator(".review-text")).toHaveText(["Completar la capacidad", "Indicar si se paga", "Revisar la descripción"]);
+  await expect(warned.locator(".review-text")).toHaveText(["Completar la capacidad", "Indicar si se paga", "Añadir una descripción"]);
   // Progreso: ningún tramo vacío, porque no falta nada obligatorio.
   await expect(page.locator(".progress span.on")).toHaveCount(8);
   await page.getByRole("button", { name: "Enviar a revisión" }).click();

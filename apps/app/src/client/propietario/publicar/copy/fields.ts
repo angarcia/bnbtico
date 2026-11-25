@@ -50,7 +50,6 @@ export const priceTitle = "Precio";
 export const no = "No";
 export const yes = "Sí";
 export const descriptionLater = "Puede añadirla después";
-export const charsMissing = ({ count }: { count: number }) => plural(count, { one: "Falta 1 carácter", other: `Faltan ${count} caracteres` });
 export const missingKind = "Elegir el tipo";
 export const missingLocation = "Añadir la ubicación";
 export const missingName = "Añadir el nombre";

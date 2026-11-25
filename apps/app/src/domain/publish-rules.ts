@@ -38,7 +38,7 @@ export function requiredProblems(d: ListingDraft): Problem[] {
 
 const problems = (list: [Step, string | null][]): Problem[] => list.flatMap(([step, error]) => (error ? [{ step, error }] : []));
 
-/** Lo no obligatorio que está sin decir o mal escrito (capacidad y baño, parqueo, descripción vacía o fuera de 80–2000,
+/** Lo no obligatorio que está sin decir o mal escrito (capacidad y baño, parqueo, descripción vacía o de más de 2000,
  *  precio al mes): se muestra en ocre al final y no bloquea; lo decide el admin al revisar. Con el nombre mal, el aviso de
  *  la descripción se calla (ya hay un obligatorio en esa pantalla). */
 export function warnings(d: ListingDraft): Problem[] {

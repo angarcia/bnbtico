@@ -23,7 +23,7 @@ async function rejection(p: Promise<unknown>): Promise<DomainError> {
 }
 
 /** Cada pantalla con un parche inválido (mensaje esperado) y uno válido, sobre un borrador recién creado y relleno en orden. */
-/** Descripción válida (80–2000 caracteres, ticket 19) para las pruebas que guardan el paso 6. */
+/** Descripción de ejemplo (opcional, como mucho 2000 caracteres) para las pruebas que guardan el paso 6. */
 const TEXT = "Descripción de prueba con lo justo para pasar el mínimo de ochenta caracteres que pide el paso seis.";
 
 /** Paso 2 válido: el pin de COMPLETE (Cahuita) con lo que da place_at y la zona Cahuita de la lista. */

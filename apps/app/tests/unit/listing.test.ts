@@ -200,15 +200,15 @@ describe("validateStep", () => {
     expect(validateStep(5, { ...d, features: [] })).toBeNull();
   });
 
-  it("paso 6: la descripción es opcional; si se escribe, de 80 a 2000", () => {
+  it("paso 6: la descripción es opcional y sin mínimo; como mucho 2000", () => {
     const d = validDraft();
     expect(validateStep(6, d)).toBeNull();
     expect(validateStep(6, { ...d, description: "" })).toBeNull();
     expect(validateStep(6, { ...d, description: "   " })).toBeNull();
-    expect(validateStep(6, { ...d, description: "a".repeat(79) })).toBe("La descripción debe tener entre 80 y 2000 caracteres o quedar vacía.");
-    expect(validateStep(6, { ...d, description: "a".repeat(80) })).toBeNull();
+    for (const n of [1, 20, 79, 80, 2000]) expect(validateStep(6, { ...d, description: "a".repeat(n) })).toBeNull();
     expect(validateStep(6, { ...d, description: ` ${"x".repeat(80)} ` })).toBeNull();
-    expect(validateStep(6, { ...d, description: "a".repeat(2001) })).toBe(DESCRIPTION_LENGTH_ERROR);
+    expect(validateStep(6, { ...d, description: "a".repeat(2001) })).toBe("La descripción puede tener como mucho 2000 caracteres.");
+    expect(DESCRIPTION_LENGTH_ERROR).toBe("La descripción puede tener como mucho 2000 caracteres.");
   });
 
   it("paso 6: nombre de 5 a 32 caracteres", () => {
@@ -382,7 +382,7 @@ describe("requiredProblems y warnings (publicar avanza siempre, 2026-10-30)", ()
     expect(warnings({ ...validDraft(), kind: "habitacion", bedrooms: null, bathroomShared: true })).toEqual([]); // sin aviso de habitaciones
     expect(warnings({ ...validDraft(), kind: "habitacion", bathrooms: null, bathroomShared: true })).toEqual([]); // ni de baños
     expect(warnings({ ...validDraft(), features: ["parking"], parkingPaid: null }).map((w) => w.step)).toEqual([5]);
-    expect(warnings({ ...validDraft(), description: "corta" }).map((w) => w.step)).toEqual([6]);
+    expect(warnings({ ...validDraft(), description: "corta" })).toEqual([]); // sin mínimo (historia #94)
     expect(warnings({ ...validDraft(), description: "" }).map((w) => w.step)).toEqual([6]); // vacía: aviso, no error
     expect(warnings({ ...validDraft(), acceptsMonthly: true, monthlyPriceCrc: 0 }).map((w) => w.step)).toEqual([8]);
     expect(warnings({ ...validDraft(), acceptsMonthly: true, monthlyPriceCrc: null })).toEqual([]);
