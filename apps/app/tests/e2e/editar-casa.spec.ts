@@ -171,7 +171,7 @@ test("inactiva: el bloque ocre arriba", async ({ page }) => {
   await expect(block.getByRole("link", { name: "Activar suscripción" })).toHaveAttribute("href", `/propietario/suscripcion?casa=${publicId}#pago=${publicId}`);
   await expect(block).toContainText("₡2 900 al mes, sin permanencia");
   expect((await block.boundingBox())!.y).toBeLessThan((await page.locator(".detail-photo").boundingBox())!.y);
-  await expect(page.getByRole("button", { name: "Compartir ficha" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Compartir (ficha|casa)/ })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Ver ficha" })).toHaveCount(0);
   await expect(page.getByTestId("subscription-row")).toHaveCount(0);
   await expect(page.locator(".detail-photo .state")).toHaveText("Inactiva");

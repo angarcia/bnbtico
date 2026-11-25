@@ -288,7 +288,6 @@
   toda la tarjeta abre el detalle (el título es un enlace estirado); sus botones quedan por encima y se pueden tocar. */
   .house-card{position:relative;display:flex;flex-direction:column;gap:10px;padding:12px}
   .house-card :is(.btn,.btn-link,.btn-text,.btn-text-danger){position:relative;z-index:1}
-  .house-share>svg{flex:none;width:24px;height:24px}
   /* La etiqueta del estado, sobre la foto: una pastilla con su punto. */
   .state{position:absolute;left:12px;top:12px;display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border-radius:var(--r-tag);font-size:var(--fs-sm);font-weight:var(--w-medium);line-height:1;box-shadow:0 2px 10px rgba(28,43,42,.22)}
   .sub-house{padding-top:12px;border-top:1px solid var(--line-soft);outline:none}
@@ -305,7 +304,7 @@
   .subscription-offer{background:var(--sun-soft)}
   .sub-house .row>h3{min-width:0;overflow-wrap:anywhere}
   .sub-house .badge{flex-shrink:0}
-  .listing-stats.stack{justify-content:center;gap:14px;min-height:138px;padding:14px;background:color-mix(in srgb,var(--sun) 14%,var(--bg));text-align:center}
+  .listing-stats.stack{justify-content:center;gap:6px;min-height:88px;padding:8px 14px;background:color-mix(in srgb,var(--sun) 14%,var(--bg));text-align:center}
   /* «Eliminar casa» (historia 28): texto terracota (TextButton tone="danger") centrado al final del detalle; la hoja pone sus
   líneas una debajo de otra. */
   .delete-house{align-self:center;justify-content:center;width:100%}

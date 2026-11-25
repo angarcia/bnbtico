@@ -13,9 +13,9 @@ export type TextButtonTone = "link" | "quiet" | "danger";
 export type IconButtonTone = "plain" | "overlay" | "float";
 
 /** Clases de colocación que ya usaban las pantallas (ver los comentarios de cada regla en las hojas de cada área). */
-export type ButtonPlacement = "grow" | "back" | "desktop-sign-in" | "house-share";
+export type ButtonPlacement = "grow" | "back" | "desktop-sign-in";
 export type TextButtonPlacement = "delete-house" | "sub-stop" | "logout-link" | "account-profile-toggle" | "sent-link" | "cal-base" | "header-close";
-export type IconButtonPlacement = "cal-arrow" | "status-back" | "search-close" | "map-card-close" | "map-locate" | "header-close" | "remove";
+export type IconButtonPlacement = "cal-arrow" | "status-back" | "search-close" | "map-card-close" | "map-locate" | "header-close" | "remove" | "photo-share" | "house-tool";
 
 const VARIANT: Record<ButtonVariant, string> = {
   primary: "btn-primary",
@@ -25,7 +25,7 @@ const VARIANT: Record<ButtonVariant, string> = {
   danger: "btn-danger",
 };
 const SIZE: Record<ButtonSize, string> = { md: "", lg: " btn-lg", xl: " btn-xl" };
-const PLACEMENT: Record<ButtonPlacement, string> = { grow: "grow", back: "btn-back", "desktop-sign-in": "desktop-sign-in", "house-share": "house-share" };
+const PLACEMENT: Record<ButtonPlacement, string> = { grow: "grow", back: "btn-back", "desktop-sign-in": "desktop-sign-in" };
 const TONE: Record<TextButtonTone, string> = { link: "btn-link", quiet: "btn-text", danger: "btn-text-danger" };
 const ICON_TONE: Record<IconButtonTone, string> = { plain: "", overlay: " overlay", float: " float-card" };
 

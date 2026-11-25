@@ -26,7 +26,7 @@ import { useDesktop } from "../../shared/desktop";
 import { useDiscardEditField } from "./edit";
 import { useEditor } from "./editor-port";
 import { activityQuery } from "./owner";
-import { ActivateButton, HoldNotice, PayNotice, ShareButtonInline, SubscriptionLink, WhatsAppItem, shareOf } from "./owner-ui";
+import { ActivateButton, HoldNotice, PayNotice, ShareButtonInline, SharePhotoButton, SubscriptionLink, WhatsAppItem, shareOf } from "./owner-ui";
 import { TextButton } from "../../shared/ui/button";
 import { RouterTextLink } from "../comun/router-buttons";
 import { Notice, StatusTag } from "../../shared/ui/structure";
@@ -267,7 +267,8 @@ function StoppedNotice({ listing: l }: { listing: Listing }) {
   );
 }
 
-export function EditableFicha({ listing: l, userId, rightPanel }: { listing: Listing; userId: string; rightPanel?: ReactNode }) {
+/** `addOnPhoto`: «＋ Añadir otra casa» sobre la foto, solo con una única casa (lo decide OwnerHouseDetail, historia #92). */
+export function EditableFicha({ listing: l, userId, rightPanel, addOnPhoto }: { listing: Listing; userId: string; rightPanel?: ReactNode; addOnPhoto?: ReactNode }) {
   const desktop = useDesktop();
   const { admin, field } = useEditor();
   // La suscripción y las cifras son de la cuenta de quien mira: en las rutas del admin no son las del anfitrión.
@@ -285,6 +286,9 @@ export function EditableFicha({ listing: l, userId, rightPanel }: { listing: Lis
   const actionsOnLeft = desktop && !admin;
   // En el escritorio del anfitrión, «Editar» abre la ventana del dato sobre este detalle (historia 06).
   const editLinks = actionsOnLeft && !blocked;
+  // Teléfono del anfitrión (historia #92): sobre la foto, añadir arriba a la izquierda, Compartir arriba a la derecha, el
+  // estado abajo a la izquierda y las fotos abajo a la derecha. Escritorio y admin, como estaban.
+  const composed = !desktop && !admin;
   const subscription = !onTop && hb && billing ? <SubscriptionCard listing={l} sub={hb.sub} today={billing.today} inPanel={actionsOnLeft} /> : null;
   const actions = (
     <>
@@ -309,9 +313,11 @@ export function EditableFicha({ listing: l, userId, rightPanel }: { listing: Lis
       {onTop && l.status === "inactive" ? <StoppedNotice listing={l} /> : null}
 
       <div className="owner-detail-summary">
-        <div className="photo detail-photo">
+        <div className={composed ? "photo detail-photo photo-composed" : "photo detail-photo"}>
           {cover ? <img src={variantUrl(cover, 800)} alt="" width={800} height={600} /> : <span className="small">{EDITABLE_COPY.noPhotos}</span>}
           <StatusTag placement="photo" label={label} />
+          {composed ? addOnPhoto : null}
+          {composed && can(l, "share") ? <SharePhotoButton listing={l} /> : null}
           {blocked ? (
             <span className="pill photo-pill num">{photoContent}</span>
           ) : (

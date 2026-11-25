@@ -7,7 +7,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useOwnListing, useUserId } from "./editor-query";
 import { NotFoundCard } from "./editor-status";
-import { ActivateButton, HoldNotice, PayButton, PayNotice, ShareButtonInline, WhatsAppItem, shareOf, titleOf } from "./owner-ui";
+import { ActivateButton, HoldNotice, PayButton, PayNotice, SharePhotoButton, WhatsAppItem, shareOf, titleOf } from "./owner-ui";
 import { Suspense, lazy, useEffect, useState, type ReactNode } from "react";
 import { can, isPublished } from "../../domain/can";
 import { describe } from "../../domain/describe";
@@ -32,7 +32,7 @@ import { knownNoDraft } from "../comun/own-listings-query";
 import { ConfirmSheet } from "../comun/confirm-sheet";
 import { useDesktop } from "../../shared/desktop";
 import { Button, TextButton } from "../../shared/ui/button";
-import { RouterButtonLink, RouterTextLink } from "../comun/router-buttons";
+import { RouterButtonLink, RouterIconLink, RouterTextLink } from "../comun/router-buttons";
 import { CountBadge, LoadError, Notice, Skeleton, StatusTag } from "../../shared/ui/structure";
 import { Card, List, ListRowButton } from "../../shared/ui/card";
 import * as OWNER_COPY from "./copy/owner";
@@ -83,23 +83,24 @@ function usePreloadPublish() {
   }, []);
 }
 
-/** «+», «Nueva casa»: junto a las cifras de Mis casas o, con una sola casa, junto a su título. */
-function NewHouseLink({ userId }: { userId: string }) {
+/** «+», «Nueva casa»: junto a las cifras de Mis casas o, con una sola casa, junto a su título. `onPhoto`: «＋ Añadir otra
+ *  casa» flotando sobre la foto de la única casa publicada, en el teléfono (historia #92); el mismo recorrido. */
+function NewHouseLink({ userId, onPhoto = false }: { userId: string; onPhoto?: boolean }) {
   const client = useQueryClient();
   return (
     // Al apoyar el dedo empieza ya la lectura del borrador pendiente que el asistente necesita (siempre de la base), salvo
     // que la lista ya diga que no hay ninguno: entonces el paso 1 sale sin esperarla.
     <Link
       to="/propietario/publicar"
-      className="new-house"
-      aria-label={OWNER_COPY.newHouse}
+      className={onPhoto ? "photo-add" : "new-house"}
+      aria-label={onPhoto ? undefined : OWNER_COPY.newHouse}
       onPointerDown={() => {
         if (userId && !knownNoDraft(client, userId)) void client.prefetchQuery(resumableQuery(userId));
       }}
     >
-      <I.plus size={22} />
+      <I.plus size={onPhoto ? 20 : 22} />
       {/* El texto que se ve en escritorio (antes con `content:` en el CSS); el nombre accesible sigue siendo «Nueva casa». */}
-      <span className="desktop-label">{OWNER_COPY.addHouse}</span>
+      {onPhoto ? <span>{OWNER_COPY.addOtherHouse}</span> : <span className="desktop-label">{OWNER_COPY.addHouse}</span>}
     </Link>
   );
 }
@@ -140,7 +141,7 @@ export function CasasScreen() {
   if (view === "detail") {
     const only = list![0]!;
     const ownNotice = only.status === "payment_due" || only.status === "inactive" ? null : <NoticeCard notice={notice} billing={billing} />;
-    return <OwnerHouseDetail id={only.id} newHouse={<NewHouseLink userId={userId} />} notice={ownNotice} />;
+    return <OwnerHouseDetail id={only.id} newHouse={<NewHouseLink userId={userId} />} newHouseOnPhoto={<NewHouseLink userId={userId} onPhoto />} notice={ownNotice} />;
   }
   return (
     <>
@@ -182,7 +183,8 @@ export function CasasScreen() {
   );
 }
 
-/** Una casa por fila: foto con su estado, nombre y zona; debajo, como mucho un botón relleno (diseño v2, 07-mis-casas). */
+/** Una casa por fila: foto con su estado, nombre y zona; debajo, como mucho un botón relleno (diseño v2, 07-mis-casas).
+ *  Compartir, Calendario y Consultas van sobre la foto (historia #95, 2026-11-25): sin fila de acciones debajo. */
 function OwnerCard({ listing: l, userId, eager, multiple, newInquiries }: { listing: Listing; userId: string; eager: boolean; multiple: boolean; newInquiries: number }) {
   const discard = useDeleteDraft(userId);
   const [ask, sheet] = useDiscardSheet(() => discard.mutate(l.id));
@@ -191,30 +193,29 @@ function OwnerCard({ listing: l, userId, eager, multiple, newInquiries }: { list
   const shareable = can(l, "share");
   const tools = multiple && can(l, "available");
   const inquiriesLabel = newInquiries > 0 ? OWNER_COPY.inquiriesFresh({ count: newInquiries }) : OWNER_COPY.inquiries;
-  return (
-    <Card as="article" placement={shareable || tools ? "house-card-compact" : "house-card"}>
-      {/* Enlace estirado: toda la tarjeta abre el detalle; los botones van por encima (revisión de Ana). */}
-      <HouseCardTop listing={l} edit={l.edit} eager={eager} link />
-      {l.reviewNote && l.status === "changes" ? <Notice tone="solid" small>{OWNER_COPY.reviewNote({ note: l.reviewNote })}</Notice> : null}
-      <HoldNotice listing={l} card />
-      {shareable || tools ? (
-        <div className="house-actions">
-          {shareable ? <ShareButtonInline listing={l} placement="house-share" /> : null}
-          {tools ? (
-            <div className="house-tools">
-              <Link to="/propietario/calendario" search={{ casa: l.id }} replace className="house-tool" aria-label={OWNER_COPY.calendar} title={OWNER_COPY.calendar}>
-                <I.calendar size={28} />
-                <span className="desktop-label">{OWNER_COPY.calendar}</span>
-              </Link>
-              <Link to="/propietario/actividad" search={{ casa: l.id }} replace className="house-tool" aria-label={inquiriesLabel} title={inquiriesLabel}>
-                <I.chat size={28} />
-                <CountBadge n={newInquiries} placement="house" data-testid="house-inquiries-count" aria-hidden="true" />
-                <span className="desktop-label">{OWNER_COPY.inquiries}</span>
-              </Link>
-            </div>
-          ) : null}
+  // Hermanos del enlace estirado (no van dentro de él), por encima de su capa: cada uno hace solo lo suyo.
+  const overlay = (
+    <>
+      {shareable ? <SharePhotoButton listing={l} /> : null}
+      {tools ? (
+        <div className="photo-tools">
+          <RouterIconLink to="/propietario/calendario" search={{ casa: l.id }} replace label={OWNER_COPY.calendar} tone="overlay" placement="house-tool" title={OWNER_COPY.calendar}>
+            <I.calendar size={22} />
+          </RouterIconLink>
+          <RouterIconLink to="/propietario/actividad" search={{ casa: l.id }} replace label={inquiriesLabel} tone="overlay" placement="house-tool" title={inquiriesLabel}>
+            <I.chat size={22} />
+            <CountBadge n={newInquiries} placement="house" data-testid="house-inquiries-count" aria-hidden="true" />
+          </RouterIconLink>
         </div>
       ) : null}
+    </>
+  );
+  return (
+    <Card as="article" placement="house-card">
+      {/* Enlace estirado: toda la tarjeta abre el detalle; los botones van por encima (revisión de Ana). */}
+      <HouseCardTop listing={l} edit={l.edit} eager={eager} link overlay={overlay} />
+      {l.reviewNote && l.status === "changes" ? <Notice tone="solid" small>{OWNER_COPY.reviewNote({ note: l.reviewNote })}</Notice> : null}
+      <HoldNotice listing={l} card />
       {l.status === "changes" ? (
         <RouterButtonLink to="/propietario/publicar/$id/$paso" params={{ id: l.id, paso: "1" }} variant="primary" block>
           {OWNER_COPY.fixAndResend}
@@ -269,8 +270,9 @@ function usePrefetchHouseExtras(userId: string) {
 }
 
 /** `newHouse`: la gestión va en la pestaña «Mi casa» (una sola casa): cabecera de pestaña con el «+», sin flecha, y
- *  `notice` (el aviso del pago de la lista) debajo. */
-export function OwnerHouseDetail({ id, rightPanel, showSubscription, newHouse, notice }: { id: string; rightPanel?: ReactNode; showSubscription?: boolean; newHouse?: ReactNode; notice?: ReactNode }) {
+ *  `notice` (el aviso del pago de la lista) debajo. En el teléfono, con la casa ya publicada, el «+» pasa a la foto como
+ *  `newHouseOnPhoto` y la cabecera no deja franja (historia #92). */
+export function OwnerHouseDetail({ id, rightPanel, showSubscription, newHouse, newHouseOnPhoto, notice }: { id: string; rightPanel?: ReactNode; showSubscription?: boolean; newHouse?: ReactNode; newHouseOnPhoto?: ReactNode; notice?: ReactNode }) {
   const { userId, query } = useOwnListing(id);
   const desktop = useDesktop();
   usePrefetchHouseExtras(userId);
@@ -286,17 +288,18 @@ export function OwnerHouseDetail({ id, rightPanel, showSubscription, newHouse, n
       {OWNER_COPY.viewListing}
     </Link>)
   ) : null;
+  const addOnPhoto = !desktop && !!newHouseOnPhoto && !!l && isPublished(l);
   return (
     <>
       {newHouse ? (
-        <ScreenHeader kind="root" title={l ? titleOf(l) : OWNER_COPY.myHouse} action={<>{desktop ? viewListing : null}{newHouse}</>} />
+        <ScreenHeader kind="root" title={l ? titleOf(l) : OWNER_COPY.myHouse} action={addOnPhoto ? undefined : <>{desktop ? viewListing : null}{newHouse}</>} />
       ) : (
         <ScreenHeader kind="flow" title={l ? titleOf(l) : OWNER_COPY.myHouse} back={{ to: "/propietario/casas" }} action={viewListing && desktop ? <div className="page-header-actions">{viewListing}</div> : undefined} />
       )}
       {notice}
       {l && isPublished(l) ? (
         <Suspense fallback={<Skeleton shape="row" label={OWNER_COPY.loading} />}>
-          <EditableFicha key={l.id} listing={l} userId={userId} rightPanel={showSubscription ? <HouseSubscription listing={l} /> : rightPanel} />
+          <EditableFicha key={l.id} listing={l} userId={userId} rightPanel={showSubscription ? <HouseSubscription listing={l} /> : rightPanel} addOnPhoto={addOnPhoto ? newHouseOnPhoto : undefined} />
         </Suspense>
       ) : null}
       {l && !isPublished(l) ? <Detail listing={l} userId={userId} /> : null}

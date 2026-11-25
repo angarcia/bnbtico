@@ -23,6 +23,7 @@ const nav = (page: Page) => page.getByRole("navigation", { name: "Navegación pr
 const houseTab = (page: Page, name: "Mi casa" | "Mis casas") => nav(page).getByRole("link", { name, exact: true });
 const myHouses = (page: Page) => page.getByRole("heading", { level: 1, name: "Mis casas" });
 const newHouse = (page: Page) => page.getByRole("link", { name: "Nueva casa" });
+const addOnPhoto = (page: Page) => page.getByRole("link", { name: "Añadir otra casa" });
 /** La caché de Query vive en IndexedDB (fresca 30 s): tras cambiar algo por detrás, se abre la app sin ella. */
 async function fresh(page: Page, path: string) {
   await page.goto("/robots.txt");
@@ -49,7 +50,14 @@ for (const desktop of [false, true]) {
     await expect(myHouses(page)).toHaveCount(0);
     await expect(page.getByRole("article")).toHaveCount(0);
     await expect(houseTab(page, "Mi casa")).toHaveAttribute("aria-current", "page");
-    await expect(newHouse(page)).toHaveAttribute("href", "/propietario/publicar");
+    // En el teléfono, «＋ Añadir otra casa» sobre la foto (historia #92); en escritorio, el «+» de la cabecera.
+    if (desktop) {
+      await expect(newHouse(page)).toHaveAttribute("href", "/propietario/publicar");
+      await expect(addOnPhoto(page)).toHaveCount(0);
+    } else {
+      await expect(page.locator(".detail-photo").getByRole("link", { name: "Añadir otra casa" })).toHaveAttribute("href", "/propietario/publicar");
+      await expect(newHouse(page)).toHaveCount(0);
+    }
     // La misma maqueta que su detalle: en escritorio, la foto a la izquierda y los datos a la derecha.
     const photo = (await page.locator(".detail-photo").boundingBox())!;
     const fields = (await page.getByTestId("field-rows").boundingBox())!;
@@ -58,6 +66,56 @@ for (const desktop of [false, true]) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
   });
 }
+
+// Historia #92 (2026-11-25): en el teléfono, con una sola casa publicada, la foto empieza arriba (sin franja) y lleva
+// «＋ Añadir otra casa» arriba a la izquierda, Compartir arriba a la derecha, el estado abajo a la izquierda y las fotos abajo
+// a la derecha; las cifras, justo debajo.
+test("móvil: una casa publicada, sobre la foto «Añadir otra casa», Compartir, el estado y las fotos; nada en el detalle de una lista", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 667 });
+  const casa = await h.seed({ status: "active", photos: 2, draft: { title: "Casa Cocles" } });
+  await page.addInitScript(() => {
+    const w = window as unknown as { shared: unknown[] };
+    w.shared = [];
+    Object.defineProperty(navigator, "share", { configurable: true, value: async (data: unknown) => void w.shared.push(data) });
+  });
+  await injectSession(page, "owner");
+  await page.goto("/propietario/casas");
+  const photo = page.locator(".detail-photo");
+  const add = photo.getByRole("link", { name: "Añadir otra casa" });
+  const share = photo.getByRole("button", { name: "Compartir casa" });
+  const tag = photo.locator(".state");
+  const pill = photo.locator(".photo-pill");
+  await expect(add).toBeVisible();
+  const box = async (x: ReturnType<Page["locator"]>) => (await x.boundingBox())!;
+  const [p, a, s, t, c, stats] = await Promise.all([box(photo), box(add), box(share), box(tag), box(pill), box(page.getByTestId("listing-stats"))]);
+  expect(p.y).toBeLessThan(40); // sin franja vacía arriba
+  expect(a.x - p.x).toBeLessThan(20);
+  expect(a.y - p.y).toBeLessThan(20);
+  expect(a.height).toBeGreaterThanOrEqual(44);
+  expect(p.x + p.width - (s.x + s.width)).toBeLessThan(20);
+  expect(s.y - p.y).toBeLessThan(20);
+  expect(t.x - p.x).toBeLessThan(20);
+  expect(p.y + p.height - (t.y + t.height)).toBeLessThan(20); // el estado, abajo a la izquierda
+  expect(p.y + p.height - (c.y + c.height)).toBeLessThan(20); // las fotos, abajo a la derecha
+  expect(t.x + t.width).toBeLessThan(c.x);
+  expect(stats.y - (p.y + p.height)).toBeLessThan(24); // las cifras, justo debajo
+  // Compartir: el mismo flujo que la ficha.
+  await share.click();
+  expect(await page.evaluate(() => (window as unknown as { shared: { url: string }[] }).shared)).toEqual([expect.objectContaining({ url: expect.stringContaining(`/casa/${casa.publicId}`) })]);
+  // Añadir: el mismo recorrido que el «+».
+  await add.click();
+  await expect(page).toHaveURL(/\/propietario\/publicar/);
+
+  // Con dos casas, el detalle de una de ellas no lleva el botón de añadir (el «+» sigue en la lista).
+  await h.seed({ status: "draft", draft: { title: "Borrador del Caribe" } });
+  await fresh(page, "/propietario/casas");
+  await expect(myHouses(page)).toBeVisible();
+  await expect(newHouse(page)).toBeVisible();
+  await page.getByRole("article").filter({ hasText: "Casa Cocles" }).getByRole("link", { name: "Casa Cocles" }).click();
+  await expect(page).toHaveURL(new RegExp(`/propietario/casas/${casa.id}$`));
+  await expect(page.locator(".detail-photo").getByRole("button", { name: "Compartir casa" })).toBeVisible();
+  await expect(addOnPhoto(page)).toHaveCount(0);
+});
 
 test("con dos casas, una de ellas borrador, «Mis casas» abre la lista con las dos", async ({ page }) => {
   await h.seed({ status: "active", draft: { title: "Casa Cocles" } });

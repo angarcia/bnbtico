@@ -56,12 +56,23 @@ test("Mis casas: la etiqueta sobre la foto, barra de estados y acciones por tarj
   await expect(cocles.getByTestId("card-label")).toHaveText("Activa");
   await expect(cocles.getByTestId("card-zone")).toHaveText("Cocles");
   await expect(cocles).not.toContainText("₡");
-  const share = cocles.getByRole("button", { name: "Compartir ficha" });
-  await expect(share).toHaveClass(/btn-primary/); // icono y texto verdes; el dorado se conserva para pagos
-  await expect(share).toHaveText("Compartir");
+  // Historia #95: Compartir (icono) arriba a la derecha y Calendario y Consultas abajo a la derecha, sobre la foto; sin fila
+  // de acciones debajo.
+  const photo = cocles.locator(".house-photo");
+  const share = photo.getByRole("button", { name: "Compartir casa" });
   await expect(share).toHaveAttribute("data-share-url", new RegExp(`/casa/${active.publicId}$`));
-  await expect(cocles.getByRole("link", { name: "Calendario" })).toHaveAttribute("href", `/propietario/calendario?casa=${active.id}`);
-  await expect(cocles.getByRole("link", { name: "Consultas", exact: true })).toHaveAttribute("href", `/propietario/actividad?casa=${active.id}`);
+  await expect(photo.getByRole("link", { name: "Calendario" })).toHaveAttribute("href", `/propietario/calendario?casa=${active.id}`);
+  await expect(photo.getByRole("link", { name: "Consultas", exact: true })).toHaveAttribute("href", `/propietario/actividad?casa=${active.id}`);
+  const rect = async (x: ReturnType<Page["locator"]>) => (await x.boundingBox())!;
+  const [p, s, cal, chat, tag] = await Promise.all([rect(photo), rect(share), rect(photo.getByRole("link", { name: "Calendario" })), rect(photo.getByRole("link", { name: "Consultas", exact: true })), rect(cocles.getByTestId("card-label"))]);
+  for (const b of [s, cal, chat]) expect([b.width, b.height]).toEqual([44, 44]);
+  expect(s.y - p.y).toBeLessThan(20); // arriba
+  expect(p.x + p.width - (s.x + s.width)).toBeLessThan(20); // a la derecha
+  expect(p.y + p.height - (cal.y + cal.height)).toBeLessThan(20); // abajo
+  expect(cal.x + cal.width).toBeLessThanOrEqual(chat.x); // Calendario a la izquierda de Consultas
+  expect(tag.x - p.x).toBeLessThan(20); // el estado, arriba a la izquierda
+  expect(tag.y - p.y).toBeLessThan(20);
+  await expect(cocles.locator(".house-actions")).toHaveCount(0);
 
   const cambios = card(page, "Cabina con cambios");
   await expect(cambios.getByTestId("card-label")).toHaveText("Cambios pedidos");
@@ -102,7 +113,7 @@ test("Mis casas: la etiqueta sobre la foto, barra de estados y acciones por tarj
 
 // Revisión de Ana: toda la tarjeta abre el detalle (enlace estirado del título); sus botones siguen haciendo lo suyo y
 // arrastrar sobre una tarjeta desplaza la lista.
-test("Mis casas: tocar la foto o el nombre abre el detalle; «Compartir ficha», «Calendario» y «Seguir publicando» siguen; arrastrar desplaza", async ({ page }) => {
+test("Mis casas: tocar la foto o el nombre abre el detalle; «Compartir casa», «Calendario» y «Seguir publicando» siguen; arrastrar desplaza", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 667 });
   await page.addInitScript(() => {
     const w = window as unknown as { shared: unknown[] };
@@ -126,15 +137,15 @@ test("Mis casas: tocar la foto o el nombre abre el detalle; «Compartir ficha»,
   await expect(page).toHaveURL(new RegExp(`/propietario/casas/${active.id}$`));
   await page.goBack();
 
-  await card(page, "Casa Cocles").getByRole("button", { name: "Compartir ficha" }).click();
+  await card(page, "Casa Cocles").getByRole("button", { name: "Compartir casa" }).click();
   await expect(page).toHaveURL(/\/propietario\/casas$/);
   expect(await page.evaluate(() => (window as unknown as { shared: { url: string }[] }).shared)).toEqual([expect.objectContaining({ url: `http://${HOST}/casa/${active.publicId}` })]);
-  const shareBeforeCopy = (await card(page, "Casa Cocles").getByRole("button", { name: "Compartir ficha" }).boundingBox())!;
+  const shareBeforeCopy = (await card(page, "Casa Cocles").getByRole("button", { name: "Compartir casa" }).boundingBox())!;
   await page.evaluate(() => {
     Object.defineProperty(navigator, "share", { configurable: true, value: undefined });
     Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: async () => undefined } });
   });
-  await card(page, "Casa Cocles").getByRole("button", { name: "Compartir ficha" }).click();
+  await card(page, "Casa Cocles").getByRole("button", { name: "Compartir casa" }).click();
   const copiedButton = card(page, "Casa Cocles").getByRole("button", { name: "Enlace copiado" });
   await expect(copiedButton).toBeVisible();
   const shareAfterCopy = (await copiedButton.boundingBox())!;
@@ -179,8 +190,9 @@ test("visitas y consultas de 30 días en el detalle de la casa, bajo la portada"
   await expect(stats).toHaveText(/^Últimos 30 días\s*0\s*visitas\s*0\s*consultas$/);
   expect((await stats.boundingBox())!.y).toBeGreaterThan((await page.locator(".detail-photo").boundingBox())!.y);
   expect((await stats.boundingBox())!.y).toBeLessThan((await page.getByTestId("field-rows").boundingBox())!.y);
-  expect((await stats.boundingBox())!.height).toBeGreaterThanOrEqual(130);
-  expect((await stats.boundingBox())!.height).toBeLessThanOrEqual(150);
+  // Compacta también en el teléfono (historia #92): la altura de escritorio, 88 px.
+  expect((await stats.boundingBox())!.height).toBeGreaterThanOrEqual(84);
+  expect((await stats.boundingBox())!.height).toBeLessThanOrEqual(100);
   await h.recordViews(active.publicId, 4);
   await h.recordViews(active.publicId, 2, 45);
   const first = await h.inquiries("other").create(active.publicId, { arrival: null, departure: null, people: null });
@@ -208,16 +220,17 @@ test("visitas y consultas de 30 días en el detalle de la casa, bajo la portada"
   await expect(page.getByTestId("listing-stats")).not.toContainText("WhatsApp");
 });
 
-// Revisión de escritorio 2026-11-13, tanda 4 (A8): «Añadir casa», «Calendario» y «Consultas» con texto en escritorio.
-test("Mis casas en escritorio: «Añadir casa» con texto, las herramientas de la tarjeta con su nombre y la foto 4:3", async ({ page }) => {
+// Revisión de escritorio 2026-11-13, tanda 4 (A8): «Añadir casa» con texto en escritorio. Desde la historia #95, Calendario y
+// Consultas son iconos sobre la foto también en escritorio, con su nombre accesible.
+test("Mis casas en escritorio: «Añadir casa» con texto, las herramientas sobre la foto con su nombre y la foto 4:3", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/propietario/casas");
   const add = page.getByRole("link", { name: "Nueva casa" });
   // El texto está en el DOM (historia 07, paso 5: antes con `content:`), y el nombre accesible sigue siendo «Nueva casa».
   await expect(add.getByText("Añadir casa", { exact: true })).toBeVisible();
-  const tool = page.locator(".house-tool").first();
+  const tool = page.locator(".house-photo .house-tool").first();
   await expect(tool).toBeVisible();
-  await expect(tool.getByText("Calendario", { exact: true })).toBeVisible();
+  await expect(tool).toHaveAttribute("aria-label", "Calendario");
   const photo = (await page.locator(".house-list .house-photo").first().boundingBox())!;
   expect(Math.abs(photo.width / photo.height - 4 / 3)).toBeLessThan(0.02);
 });
@@ -318,7 +331,7 @@ test("detalle: compartir con la hoja nativa y, si no la hay, copiar el enlace", 
   // Una casa que no está activa no se comparte: su enlace no funcionaría, y la fila no sale (revisión UX 2026-10-29, A4).
   await page.goto(`/propietario/casas/${review.id}`);
   await expect(page.getByText("La estamos revisando")).toBeVisible();
-  await expect(page.getByRole("button", { name: /Compartir ficha/ })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Compartir (ficha|casa)/ })).toHaveCount(0);
   await expect(page.getByRole("switch")).toHaveCount(0);
   await expect(page.getByRole("button", { name: /Editar la ficha/ })).toHaveCount(0);
 });
@@ -471,7 +484,7 @@ test("Mis casas: los accesos filtran la casa correcta y el contador excluye las 
     const calendar = (await aCard.getByRole("link", { name: "Calendario", exact: true }).boundingBox())!;
     const inquiries = (await aInquiries.boundingBox())!;
     expect(Math.min(calendar.width, calendar.height, inquiries.width, inquiries.height)).toBeGreaterThanOrEqual(44);
-    expect(inquiries.x - calendar.x - calendar.width).toBeGreaterThanOrEqual(16);
+    expect(inquiries.x - calendar.x - calendar.width).toBeGreaterThanOrEqual(8); // sobre la foto, 8 px entre ellos (historia #95)
     const summary = (await page.locator(".tiles-row").boundingBox())!;
     const house = (await aCard.boundingBox())!;
     expect(summary.x).toBeCloseTo(house.x, 0);
@@ -480,7 +493,7 @@ test("Mis casas: los accesos filtran la casa correcta y el contador excluye las 
     expect(house.x + house.width).toBeCloseTo(viewport.width, 0);
     const calendarDrawing = await aCard.getByRole("link", { name: "Calendario", exact: true }).locator("svg").boundingBox();
     const inquiriesDrawing = await aInquiries.locator("svg").boundingBox();
-    expect(Math.min(calendarDrawing!.width, calendarDrawing!.height, inquiriesDrawing!.width, inquiriesDrawing!.height)).toBeGreaterThanOrEqual(28);
+    expect(Math.min(calendarDrawing!.width, calendarDrawing!.height, inquiriesDrawing!.width, inquiriesDrawing!.height)).toBeGreaterThanOrEqual(22); // iconos de 22 px sobre la foto (historia #95)
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
   }
   await aInquiries.click();

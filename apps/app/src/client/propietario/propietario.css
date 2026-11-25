@@ -52,9 +52,9 @@
   /* «Mapa» (Explorar), «N casas» (mapa a pantalla completa) y «Ver ficha» (detalle de la casa del anfitrión): la misma tarjeta
   flotante clara, variante B (tarjetas flotantes, tanda 1, decisión 8: la tinta al 92 % era demasiado oscura), con texto e icono
   en tinta, 44 px de alto y esquinas de 12. Centradas con left/right y margin:auto: sin transform en reposo (Safari y el desenfoque). */
-  .float-btn,.map-label,.map-count{display:inline-flex;align-items:center;gap:8px;height:44px;width:fit-content;left:0;right:0;margin:0 auto;padding:0 18px;border:1px solid var(--float-edge);border-radius:var(--float-r);background:var(--float-bg-solid);color:var(--fg);font:500 15px/1 var(--body);white-space:nowrap;box-shadow:var(--float-shadow);cursor:pointer}
+  .float-btn,.map-label,.map-count,.photo-add{display:inline-flex;align-items:center;gap:8px;height:44px;width:fit-content;left:0;right:0;margin:0 auto;padding:0 18px;border:1px solid var(--float-edge);border-radius:var(--float-r);background:var(--float-bg-solid);color:var(--fg);font:500 15px/1 var(--body);white-space:nowrap;box-shadow:var(--float-shadow);cursor:pointer}
   @supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))) {
-    .float-btn,.map-label,.map-count{background:var(--float-bg);-webkit-backdrop-filter:var(--float-blur);backdrop-filter:var(--float-blur)}
+    .float-btn,.map-label,.map-count,.photo-add{background:var(--float-bg);-webkit-backdrop-filter:var(--float-blur);backdrop-filter:var(--float-blur)}
   }
   /* «Ver ficha» (ronda de Ana 2 nov, ticket 05): fijo abajo, en una pantalla sin barra de pestañas (--chrome-bottom: a 12 px del
   borde). La pantalla deja debajo el botón y 16 px de aire para que lo último se lea por encima. */
@@ -102,17 +102,12 @@
   .house-list .house-card{padding:0 0 14px;overflow:hidden}
   .house-list .house-photo{border-radius:0}
   .house-list .house-card > :not(.house-photo){margin-inline:14px}
-  /* Revisión de Ana 2026-11-06: tarjeta compacta y divisor neutro, conservando las casillas de estados de arriba. */
-  .house-list .house-card-compact{padding-bottom:0;gap:0}
-  .house-list .house-card-compact>.house-card-title{margin-top:10px;margin-bottom:2px;letter-spacing:0}
-  .house-list .house-card-compact>.note{margin-top:8px}
-  /* Acciones por casa: superficie de la tarjeta, sin franja verde; Compartir conserva icono y texto. */
-  .house-actions{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px 16px;min-width:0}
-  .house-list .house-card>.house-actions{margin:8px 0 0;padding:4px 14px;border-top:1px solid var(--line);background:transparent}
-  .house-actions .house-share{flex:0 1 160px;width:160px;max-width:100%;min-height:44px;padding:0;justify-content:flex-start;background:transparent;box-shadow:none;font-weight:var(--w-medium)}
-  .house-tools{display:flex;align-items:center;gap:16px;margin-left:auto;flex:none}
-  .house-tool{position:relative;z-index:1;display:inline-flex;align-items:center;justify-content:center;flex:0 0 44px;width:44px;height:44px;color:var(--primary);border-radius:var(--r-control);text-decoration:none}
-  .house-tool:hover,.house-tool:active{background:var(--surface-soft)}
+  /* Acciones sobre la foto (historia #95, 2026-11-25): Compartir arriba a la derecha, frente al estado; Calendario y Consultas
+  abajo a la derecha. Botones de icono de 44 px sobre crema al 70 % (los de la ficha pública), por encima del enlace estirado. */
+  .photo-share{position:absolute;top:12px;right:12px;z-index:1}
+  .photo-tools{position:absolute;right:12px;bottom:12px;z-index:1;display:flex;gap:8px}
+  .house-tool{position:relative;text-decoration:none}
+  .house-photo:has(.photo-share) .state{max-width:calc(100% - 24px - var(--hit) - 8px)}
   /* El texto de escritorio de «Añadir casa», «Calendario» y «Consultas» (13-escritorio.css lo enseña). */
   .desktop-label{display:none}
   /* Un botón al 100 % más los márgenes salía de la tarjeta y se recortaba por overflow:hidden. */
@@ -144,6 +139,11 @@
   .photos-grid .photo-note{position:absolute;left:4px;right:4px;bottom:4px;padding:2px 6px;border-radius:var(--r-pill);background:var(--overlay);color:var(--on-overlay);line-height:1.3}
   .field-title{display:flex;align-items:center;gap:8px;font-size:var(--fs-sm);font-weight:var(--w-medium);color:var(--muted)}
   .detail-photo .pill-bl{left:12px;bottom:12px}
+  /* «Mi casa» en el teléfono (historia #92, 2026-11-25): «＋ Añadir otra casa» con el aspecto de «Ver ficha», arriba a la
+  izquierda; Compartir arriba a la derecha; el estado baja a la esquina inferior izquierda, frente a las fotos. */
+  .photo-add{position:absolute;top:12px;left:12px;z-index:1;margin:0;padding:0 14px;max-width:calc(100% - 24px - var(--hit) - 8px);text-decoration:none}
+  .photo-add span{overflow:hidden;text-overflow:ellipsis}
+  .photo-composed .state{top:auto;bottom:12px;max-width:calc(100% - 24px - 120px)}
   .muted-icon{color:var(--muted);display:inline-flex;flex-shrink:0}
   .list-item .muted-icon svg{width:24px;height:24px}
   button.list-item:disabled .muted-icon,button.list-item:disabled small{color:inherit}
@@ -606,13 +606,8 @@
     .desktop-app .my-houses-summary .new-house .desktop-label { display: inline; }
     .desktop-app .house-list { align-items: stretch; gap: 20px; }
     .desktop-app .house-list .house-photo { aspect-ratio: 4 / 3; }
-    .desktop-app .house-list .house-card > :is(.house-actions, .row.gap-8):last-child { margin-top: auto; }
+    .desktop-app .house-list .house-card > .row.gap-8:last-child { margin-top: auto; }
     .desktop-app .house-list .house-card > .row.gap-8:last-child { margin-bottom: 14px; }
-    .desktop-app .house-actions { flex-wrap: nowrap; }
-    .desktop-app .house-actions .house-share { flex: none; width: auto; }
-    .desktop-app .house-tools { gap: 4px; }
-    .desktop-app .house-tool { flex: none; width: auto; gap: 6px; padding: 0 8px; }
-    .desktop-app .house-tool .desktop-label { display: inline; font-size: var(--fs-sm); font-weight: var(--w-medium); }
     /* Detalle de casa: «Editar» deja de competir en verde en cada fila; se enciende al pasar por la fila. */
     .desktop-app .house-field .account-profile-toggle { color: var(--muted); }
     .desktop-app .house-field:hover .account-profile-toggle,

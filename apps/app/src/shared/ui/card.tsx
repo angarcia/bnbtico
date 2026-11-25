@@ -14,13 +14,13 @@ const CARD_TONE: Record<CardTone, string> = { plain: "card", solid: "card-solid"
 export type CardPlacement =
   | "return-card" | "contact-card" | "placeholder-card" | "publish-promo" | "subscription-offer" | "diff-fold" | "account-card"
   | "review-owner" | "listing-stats" | "inquiry-card" | "sub-house" | "sub-house-inactive" | "how-it-works" | "house-card"
-  | "house-card-compact" | "queue-card" | "counters" | "review-list" | "offer-line" | "about-price" | "cal-action-group" | "cal-airbnb";
+  | "queue-card" | "counters" | "review-list" | "offer-line" | "about-price" | "cal-action-group" | "cal-airbnb";
 const CARD_PLACEMENT: Record<CardPlacement, string> = {
   "return-card": "return-card", "contact-card": "return-card contact-card", "placeholder-card": "placeholder-card",
   "publish-promo": "offer-card publish-promo", "subscription-offer": "offer-card subscription-offer", "diff-fold": "diff-fold",
   "account-card": "account-card", "review-owner": "review-owner", "listing-stats": "listing-stats", "inquiry-card": "inquiry-card",
   "sub-house": "sub-house", "sub-house-inactive": "sub-house sub-house-inactive", "how-it-works": "small how-it-works",
-  "house-card": "house-card", "house-card-compact": "house-card house-card-compact", "queue-card": "queue-card", counters: "counters",
+  "house-card": "house-card", "queue-card": "queue-card", counters: "counters",
   "review-list": "review-list", "offer-line": "between baseline offer-line", "about-price": "about-price",
   "cal-action-group": "cal-action-group", "cal-airbnb": "cal-airbnb",
 };

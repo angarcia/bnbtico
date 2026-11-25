@@ -10,6 +10,8 @@ export const discardBody = "No se puede deshacer.";
 export const discard = "Descartar";
 export const newHouse = "Nueva casa";
 export const addHouse = "Añadir casa";
+/** Sobre la foto de «Mi casa» cuando es la única casa (historia #92). */
+export const addOtherHouse = "Añadir otra casa";
 export const title = "Mis casas";
 export const loading = "Cargando sus casas";
 export const reviewNote = ({ note }: { note: string }) => `Nota de 3bstays: ${note}`;
@@ -46,6 +48,8 @@ export const holdTitle = ({ title }: { title: string }) => `${title}.`;
 export const reasonLabel = "Motivo:";
 export const shareLabel = ({ copied }: { copied: boolean }) => (copied ? "Enlace copiado" : "Compartir ficha");
 export const shareButton = ({ copied }: { copied: boolean }) => (copied ? "Enlace copiado" : "Compartir");
+/** El icono de compartir sobre la foto de la casa (historias #95 y #92). */
+export const sharePhoto = ({ copied }: { copied: boolean }) => (copied ? "Enlace copiado" : "Compartir casa");
 export const housePhone = "WhatsApp de esta casa";
 export const housePhoneLine = ({ phone }: { phone: string }) => `${phone} · verificado`;
 export const notFoundTitle = "No encontramos esta casa";

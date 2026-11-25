@@ -1,5 +1,6 @@
 // Cabeza de la tarjeta de una casa (diseño v2, 07-mis-casas y 10-actividad): foto cuadrada con la etiqueta de estado
 // encima, nombre y zona. La usan Mis casas y Actividad; debajo, cada pantalla pone lo suyo (botones o cifras).
+import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { isLegacyPhotoPath, variantUrl } from "../../domain/image";
 import type { Listing } from "../../domain/listing";
@@ -18,9 +19,11 @@ export interface HouseCardTopProps {
   sizes?: string;
   /** Mis casas: el nombre es un enlace estirado al detalle y toda la tarjeta lo abre. */
   link?: boolean;
+  /** Mis casas: Compartir arriba a la derecha y Calendario y Consultas abajo a la derecha, sobre la foto (historia #95). */
+  overlay?: ReactNode;
 }
 
-export function HouseCardTop({ listing: l, edit = null, eager = false, sizes = "100vw", link = false }: HouseCardTopProps) {
+export function HouseCardTop({ listing: l, edit = null, eager = false, sizes = "100vw", link = false, overlay = null }: HouseCardTopProps) {
   const label = cardLabel(l, edit);
   const cover = l.photos[0];
   const title = l.title || OWNER_COPY.untitled;
@@ -46,6 +49,7 @@ export function HouseCardTop({ listing: l, edit = null, eager = false, sizes = "
           </span>
         )}
         <StatusTag placement="photo" label={label} data-testid="card-label" />
+        {overlay}
       </div>
       <h2 className="house-card-title">
         {link ? (

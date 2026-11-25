@@ -122,7 +122,7 @@ test("mientras llega el trozo del asistente, la cabecera es la del asistente: t�
   expect(now!.width).toBe(pending!.width);
 });
 
-test("escritorio: «Añadir casa», «Calendario» y «Consultas» están en el DOM y el enlace conserva su nombre accesible", async ({ page }) => {
+test("escritorio: «Añadir casa» está en el DOM y conserva su nombre accesible; «Calendario» y «Consultas», iconos sobre la foto con su nombre", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await injectSession(page, "owner");
   await page.goto("/propietario/casas");
@@ -130,9 +130,10 @@ test("escritorio: «Añadir casa», «Calendario» y «Consultas» están en el 
   await expect(add).toHaveText("Añadir casa");
   await expect(add.getByText("Añadir casa")).toBeVisible();
   const card = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Casa Cocles" }) });
-  await expect(card.getByRole("link", { name: "Calendario", exact: true })).toHaveText("Calendario");
-  await expect(card.getByRole("link", { name: /^Consultas/ })).toContainText("Consultas");
-  // En el teléfono, los mismos enlaces solo con su icono.
+  // Historia #95: sobre la foto, solo con el icono, también en escritorio.
+  await expect(card.locator(".house-photo").getByRole("link", { name: "Calendario", exact: true })).toBeVisible();
+  await expect(card.locator(".house-photo").getByRole("link", { name: /^Consultas/ })).toBeVisible();
+  // En el teléfono, «Añadir casa» solo con su icono.
   await page.setViewportSize({ width: 375, height: 812 });
   await page.reload();
   await expect(page.getByRole("link", { name: "Nueva casa" }).getByText("Añadir casa")).toBeHidden();

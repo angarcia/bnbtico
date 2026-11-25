@@ -9,7 +9,7 @@ import { I } from "../../shared/ui/icons";
 import { useShare } from "../../shared/share-button";
 import type { HouseBilling } from "./suscripcion/billing";
 import { SUPPORT_NUMBERS } from "../comun/support-numbers";
-import { Button, ButtonLink, WaIcon } from "../../shared/ui/button";
+import { Button, ButtonLink, IconButton, WaIcon } from "../../shared/ui/button";
 import { RouterButtonLink } from "../comun/router-buttons";
 import { RouterListRow } from "../comun/router-rows";
 import { Notice } from "../../shared/ui/structure";
@@ -122,15 +122,29 @@ export function HoldNotice({ listing: l, card = false }: { listing: Listing; car
 }
 
 /** Compartir con el acabado verde común aprobado; nombre accesible y lógica de copia conservados. */
-export function ShareButtonInline({ listing: l, placement = "grow", block = false }: { listing: Listing; placement?: "grow" | "house-share"; block?: boolean }) {
+export function ShareButtonInline({ listing: l, block = false }: { listing: Listing; block?: boolean }) {
   const target = shareOf(l);
   const { share, copied, swap } = useShare(target);
   return (
-    <Button variant="primary" block={block} placement={block ? undefined : placement} icon={<I.share size={20} />} onClick={share} aria-label={OWNER_COPY.shareLabel({ copied })} data-share-url={target.url}>
+    <Button variant="primary" block={block} placement={block ? undefined : "grow"} icon={<I.share size={20} />} onClick={share} aria-label={OWNER_COPY.shareLabel({ copied })} data-share-url={target.url}>
       <span key={copied ? "copied" : "share"} className={swap}>
         {OWNER_COPY.shareButton({ copied })}
       </span>
     </Button>
+  );
+}
+
+/** Compartir como icono sobre la foto de la casa, arriba a la derecha (Mis casas #95, Mi casa #92): el mismo flujo que la
+ *  ficha pública (hoja del sistema o, sin ella, copiar el enlace; cancelar no hace nada). */
+export function SharePhotoButton({ listing: l }: { listing: Listing }) {
+  const target = shareOf(l);
+  const { share, copied, swap } = useShare(target);
+  return (
+    <IconButton label={OWNER_COPY.sharePhoto({ copied })} tone="overlay" placement="photo-share" onClick={share} data-share-url={target.url}>
+      <span key={copied ? "copied" : "share"} className={swap}>
+        {copied ? <I.check size={22} /> : <I.share size={22} />}
+      </span>
+    </IconButton>
   );
 }
 

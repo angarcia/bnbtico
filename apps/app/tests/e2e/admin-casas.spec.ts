@@ -365,7 +365,7 @@ test("bloquear: el propietario ve «Bloqueada por 3bstays» con el motivo y «Es
   // Solo lectura: ningún dato abre su pantalla, y el enlace directo vuelve a la ficha.
   await expect(page.getByTestId("field-rows").getByRole("link")).toHaveCount(0);
   await expect(page.getByText("Toque un dato para cambiarlo.")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Compartir ficha" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Compartir (ficha|casa)/ })).toHaveCount(0);
   await page.screenshot({ path: "test-results/propietario-casa-bloqueada.png", fullPage: true });
   await page.goto(`/propietario/casas/${house.id}/editar/capacidad`);
   await expect(page).toHaveURL(new RegExp(`/propietario/casas/${house.id}$`));

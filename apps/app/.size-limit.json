@@ -219,7 +219,7 @@
       "dist/client/assets/publish-promo-*.js",
       "dist/client/assets/offer-*.js"
     ],
-    "limit": "27.95 kB",
+    "limit": "28.3 kB",
     "gzip": true
   },
   {
@@ -391,7 +391,7 @@
       "dist/client/assets/calendar-*.js",
       "dist/client/assets/month-grid-*.js"
     ],
-    "limit": "9.2 kB",
+    "limit": "9.3 kB",
     "gzip": true
   },
   {

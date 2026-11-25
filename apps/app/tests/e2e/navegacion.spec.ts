@@ -194,7 +194,7 @@ test("el contador se va con la sesión y la consulta privada sale de la caché d
 });
 
 // Revisión de la app 2026-11-17, historia 01: con una sola casa, la pestaña abre su gestión, sin la lista de un elemento.
-test("3 · una casa: la pestaña abre su gestión, con «Nueva casa» y sin flecha; con dos, la lista", async ({ page }) => {
+test("3 · una casa: la pestaña abre su gestión, con «Añadir otra casa» sobre la foto y sin flecha; con dos, la lista", async ({ page }) => {
   h = await postgrestHarness(); // la prueba anterior cerró la sesión del propietario también en el servidor
   await h.reset();
   const casa = await h.seed({ status: "active", draft: { title: "Casa Puerto Viejo" } });
@@ -203,7 +203,7 @@ test("3 · una casa: la pestaña abre su gestión, con «Nueva casa» y sin flec
   await expect(page.getByRole("heading", { level: 1, name: "Mis casas" })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Volver" })).toHaveCount(0);
   await expect(page.getByRole("article")).toHaveCount(0);
-  await expect(page.getByRole("link", { name: "Nueva casa" })).toHaveAttribute("href", "/propietario/publicar");
+  await expect(page.getByRole("link", { name: "Añadir otra casa" })).toHaveAttribute("href", "/propietario/publicar");
   await expect(page.getByRole("link", { name: "Ver ficha" })).toHaveAttribute("href", `/casa/${casa.publicId}`);
   await expect(nav(page).getByRole("link", { name: "Mi casa" })).toHaveAttribute("aria-current", "page");
   await page.screenshot({ path: "test-results/mis-casas-una.png", fullPage: true });

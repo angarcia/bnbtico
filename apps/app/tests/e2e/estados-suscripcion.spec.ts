@@ -137,13 +137,13 @@ test("Mis casas: casillas, etiqueta y botones de cada estado y su línea en el d
   const a = card(page, "Casa sin prisa");
   await expect(a.getByTestId("card-label")).toHaveText("Activa");
   await expect(a.getByTestId("card-line")).toHaveCount(0);
-  await expect(a.getByRole("button", { name: "Compartir ficha" })).toBeVisible();
+  await expect(a.getByRole("button", { name: "Compartir casa" })).toBeVisible();
   await expect(a.getByRole("link", { name: "Calendario" })).toBeVisible();
   await expect(a.getByRole("link", { name: "Añadir método de pago" })).toHaveCount(0);
 
   const b = card(page, "Casa en la ventana");
   await expect(b.getByTestId("card-label")).toHaveText("Activa");
-  await expect(b.getByRole("button", { name: "Compartir ficha" })).toBeVisible();
+  await expect(b.getByRole("button", { name: "Compartir casa" })).toBeVisible();
   await expect(b.getByRole("link", { name: "Calendario" })).toBeVisible();
   await expect(b.getByRole("link", { name: "Añadir método de pago" })).toHaveCount(0); // lo cubre el aviso de arriba
 
@@ -210,7 +210,7 @@ test("ficha editable: la tarjeta ocre de la pendiente, el bloque de la parada, s
   await expect(notice).toContainText(`Su oferta gratuita terminó el ${dayOf(subDebe.promoEndsOn!, now)}`);
   await expect(notice).toContainText(`La ficha está oculta y el enlace no funciona hasta que añada un método de pago. ${FEE} al mes, sin permanencia; puede parar cuando quiera.`);
   await expect(notice.getByRole("link", { name: "Añadir método de pago" })).toHaveAttribute("href", payLink(debe.publicId));
-  await expect(page.getByRole("button", { name: /Compartir ficha/ })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Compartir (ficha|casa)/ })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Ver ficha" })).toHaveCount(0);
   await expect(page.getByTestId("subscription-row")).toHaveCount(0);
   await page.screenshot({ path: "test-results/capturas/detalle-pendiente.png", fullPage: true });
@@ -229,7 +229,7 @@ test("ficha editable: la tarjeta ocre de la pendiente, el bloque de la parada, s
   await page.goto(`/propietario/casas/${parada.id}`);
   await expect(page.getByTestId("stopped-notice").getByRole("link", { name: "Activar suscripción" })).toHaveAttribute("href", payLink(parada.publicId));
   await expect(page.getByTestId("pay-notice")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: /Compartir ficha/ })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Compartir (ficha|casa)/ })).toHaveCount(0);
   await expect(page.getByTestId("subscription-row")).toHaveCount(0);
 });
 
@@ -349,7 +349,7 @@ test("una casa inactiva conserva Activar suscripción dentro de los márgenes en
   const activate = only.getByRole("link", { name: "Activar suscripción", exact: true });
   await expect(activate).toHaveAttribute("href", payLink(house.publicId));
   await expect(activate).toHaveClass(/btn-sun/);
-  await expect(only.getByRole("button", { name: "Compartir ficha" })).toHaveCount(0);
+  await expect(only.getByRole("button", { name: /Compartir (ficha|casa)/ })).toHaveCount(0);
   await expect(only.getByRole("link", { name: "Calendario" })).toHaveCount(0);
   await expect(only.getByRole("link", { name: "Consultas" })).toHaveCount(0);
   for (const viewport of [{ width: 375, height: 667 }, { width: 390, height: 844 }, { width: 320, height: 667 }]) {

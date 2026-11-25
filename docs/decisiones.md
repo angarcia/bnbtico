@@ -10,6 +10,18 @@ Se echan en falta cuatro ajustes de escritorio que se habían acordado y no esta
 
 Motivo: en escritorio, Ayuda e Ingresar no deben sacar de la pantalla en la que se está, y Cuenta debe verse igual con casas o sin ellas.
 
+## 2026-11-25 · Acciones sobre la foto en Mis casas y en Mi casa
+
+Ana aprueba, con capturas, las composiciones de las historias #95 y #92 (implementadas a partir de su texto: los mockups no estaban en el repositorio).
+
+- **Tarjetas de Mis casas (#95):** Compartir pasa a ser un icono arriba a la derecha de la foto (nombre accesible «Compartir casa»); Calendario y Consultas, con varias casas, iconos abajo a la derecha de la foto, Calendario primero, con el contador de consultas nuevas. El estado sigue arriba a la izquierda. Sin fila de acciones debajo: nombre, zona y los botones de cada estado (borrador, cambios, pago, parada), como antes. Botones de 44 px sobre crema al 70 % (el de la ficha pública), hermanos del enlace estirado y por encima de él. En escritorio, los mismos iconos sobre la foto: sin el texto «Calendario» y «Consultas» de la tanda 4 (2026-11-13).
+- **Mi casa en el teléfono (#92):** sobre la portada de la casa publicada, «＋ Añadir otra casa» arriba a la izquierda, con el aspecto de «Ver ficha» y el mismo recorrido que el «+» (borrador pendiente incluido), solo cuando la cuenta tiene una única casa y la lista ya se conoce; sin la franja de cabecera que dejaba el «+». Compartir como icono arriba a la derecha; el estado baja a la esquina inferior izquierda, frente a «N fotos». Con varias casas, el detalle lleva Compartir y el estado abajo, pero no «Añadir otra casa». Los botones se desplazan con la foto. Escritorio y admin no cambian; una casa nunca publicada conserva su detalle con el «+» arriba.
+- **Cifras de 30 días** más bajas también en el teléfono (88 px, como ya estaban en escritorio), con sus dos columnas iguales.
+- **«Compartir» al pie de Mi casa** (botón con el enlace debajo) se queda: Ana no pidió quitarlo.
+- **Presupuesto:** el trozo del Calendario sube de 9,2 a 9,3 KB (`.size-limit.json`). Ya estaba en el límite y pasaba por 2 B solo porque cambian los nombres con hash de los trozos que importa; no lleva código de estas historias. El trozo «Pantallas de las pestañas» sube de 27,95 a 28,3 KB: ya pasaba por 190 B con el commit `9ac9f84` (Cuenta y Ayuda de escritorio) y estas historias añaden 147 B (el icono de compartir sobre la foto, los iconos de Calendario y Consultas y «Añadir otra casa»). Los demás límites no cambian.
+
+Motivo: tarjetas más compactas, con las herramientas de cada casa a mano sobre su foto, y «Mi casa» sin hueco arriba, con una forma clara de añadir otra casa.
+
 ## 2026-11-25 · La descripción no tiene mínimo
 
 Ana pide quitar el mínimo de 80 caracteres de la descripción (historia #94). La descripción sigue siendo opcional y con tope de 2000; vacía o con cualquier largo hasta 2000 es válida, al crear y al editar.
