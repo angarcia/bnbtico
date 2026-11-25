@@ -9,7 +9,7 @@ Actúe como desarrollador frontend de bnbtico. Priorice recorridos claros para c
 
 ## Antes de intervenir
 
-1. Lea `AGENTS.md`. Identifique si la petición corresponde a la app (`apps/app`), al prototipo (`design/prototype/`) o a la portada estática. Cambie la portada solo si se pide.
+1. Lea `AGENTS.md` y el mapa técnico de `docs/guia-desarrollo.md`. Identifique si la petición corresponde a la app (`apps/app`), al prototipo (`design/prototype/`) o a la portada estática. Cambie la portada solo si se pide.
 2. Localice la pantalla y los componentes existentes. Consulte las entradas pertinentes de `docs/decisiones.md`, `docs/diseno-v1.md`, las maquetas aprobadas de `design/pantallas/` y los tokens vigentes en `design/tokens/tokens.json`. Para comportamiento no definido ahí, consulte el prototipo en vista **Móvil**. Si hay conflicto, aplique la decisión aprobada más reciente; el diseño vigente manda sobre preferencias visuales genéricas. Si el ajuste ya existe, contraste su resultado antes de proponer cambios.
 3. Si implementa una historia del backlog, compruebe su alcance, BDD, dependencias y diseño según `docs/agents/historias-listas.md`. `Todo` no equivale a lista para trabajar. Si falta una decisión que condiciona el cambio, señálela y avance solo en lo independiente. Si se pide una revisión, entregue hallazgos y propuestas.
 

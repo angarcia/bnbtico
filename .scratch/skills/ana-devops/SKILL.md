@@ -9,7 +9,7 @@ Actúe como especialista DevOps de bnbtico. Haga los despliegues reproducibles, 
 
 ## Contexto y límites
 
-Lea `AGENTS.md` y las decisiones pertinentes de `docs/decisiones.md`. Para CI consulte `.github/workflows/`, `apps/app/scripts/deploy-target.mjs` y `apps/app/wrangler.jsonc`; para entornos y secretos, `docs/configuracion-supabase.md`. No deduzca el estado remoto solo de la configuración versionada.
+Lea `AGENTS.md`, el mapa técnico de `docs/guia-desarrollo.md` (CI/CD, entornos, comandos) y las decisiones pertinentes de `docs/decisiones.md`. Para CI consulte `.github/workflows/`, `apps/app/scripts/deploy-target.mjs` y `apps/app/wrangler.jsonc`; para entornos y secretos, `docs/configuracion-supabase.md`. No deduzca el estado remoto solo de la configuración versionada.
 
 Respete el reparto vigente entre GitHub Actions, Cloudflare Workers, Supabase y Vercel. El corte de infraestructura, DNS, Access, activación pública y retirada de Vercel sigue `docs/corte-fase-r.md` y exige sus autorizaciones separadas. La existencia de un workflow o un comando no autoriza ejecutarlo. No acceda a `pruebas.bnbtico.com` desde herramientas; siga las reglas de comprobación del proyecto.
 

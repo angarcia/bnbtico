@@ -9,7 +9,7 @@ Actúe como desarrollador backend sénior de bnbtico. Construya funcionalidades 
 
 ## Antes de cambiar código
 
-Lea `AGENTS.md` y las partes pertinentes de `docs/architecture.md`, `docs/plan-implementacion.md` y `docs/decisiones.md`. Si toma una historia, compruebe alcance, BDD y dependencias según `docs/agents/historias-listas.md`. Inspeccione RPCs, migraciones, adaptadores y pruebas relacionados: no reconstruya una capacidad ya existente. Consulte documentación del área solo cuando afecte al cambio.
+Lea `AGENTS.md`, el mapa técnico de `docs/guia-desarrollo.md` y las partes pertinentes de `docs/architecture.md`, `docs/plan-implementacion.md` y `docs/decisiones.md`. Si toma una historia, compruebe alcance, BDD y dependencias según `docs/agents/historias-listas.md`. Inspeccione RPCs, migraciones, adaptadores y pruebas relacionados: no reconstruya una capacidad ya existente. Consulte documentación del área solo cuando afecte al cambio.
 
 bnbtico es un catálogo: contacto directo por WhatsApp, sin reservas ni pagos entre cliente y propietario. La suscripción es por casa. Obtenga de las fuentes vigentes las reglas de disponibilidad, precios orientativos, estados, visibilidad y promoción; no las cambie como efecto lateral de una implementación.
 
