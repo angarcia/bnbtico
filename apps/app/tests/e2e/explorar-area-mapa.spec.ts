@@ -131,9 +131,13 @@ test("si falla la búsqueda del área, siguen las casas anteriores con un aviso 
   await expect(count(page)).toContainText("en esta zona del mapa");
 });
 
-test("teléfono: el mapa completo busca al moverlo y sigue abierto; el área queda en la URL", async ({ page }) => {
+test("teléfono: el mapa completo busca al moverlo y sigue abierto; el área queda en la URL y en la lista al cerrarlo", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/explorar?mapa=1");
+  // Como se abre de verdad: desde la lista (abrir el mapa es una entrada del historial).
+  await page.goto("/explorar");
+  await expect(count(page)).toHaveText("4 casas");
+  await page.getByTestId("explore-map").click();
+  await expect(page).toHaveURL(/mapa=1/);
   const box = page.locator(".map-full-box");
   await expect(page.getByRole("button", { name: /Ver lista · 4 casas/ })).toBeVisible();
   const b = (await box.boundingBox())!;
@@ -143,4 +147,26 @@ test("teléfono: el mapa completo busca al moverlo y sigue abierto; el área que
   expect(new URL(page.url()).searchParams.get("mapa")).toBe("1");
   await expect(page.locator(".map-full")).toBeVisible();
   await expect(page.locator(".search-pill-text").first()).toHaveText("Zona del mapa");
+  const area = areaOfUrl(page);
+  // «Ver lista» vuelve a la lista con esa misma área (antes, Atrás devolvía la lista sin área: salían todas las casas).
+  await page.locator(".map-count").click();
+  await expect(page.locator(".map-full")).toHaveCount(0);
+  await expect.poll(() => areaOfUrl(page)).toBe(area);
+  expect(new URL(page.url()).searchParams.get("mapa")).toBeNull();
+  await expect(count(page)).toContainText("en esta zona del mapa");
+  await expect(page.getByRole("heading", { name: "Casa Sámara" })).toHaveCount(0);
+
+  // Con el Atrás del teléfono, igual.
+  await page.goto("/explorar");
+  await page.getByTestId("explore-map").click();
+  await expect(page).toHaveURL(/mapa=1/);
+  const b2 = (await box.boundingBox())!;
+  await page.mouse.move(b2.x + b2.width / 2, b2.y + b2.height / 2);
+  await page.mouse.wheel(0, -400);
+  await expect.poll(() => areaOfUrl(page)).not.toBeNull();
+  const area2 = areaOfUrl(page);
+  await page.goBack();
+  await expect(page.locator(".map-full")).toHaveCount(0);
+  await expect.poll(() => areaOfUrl(page)).toBe(area2);
+  await expect(count(page)).toContainText("en esta zona del mapa");
 });

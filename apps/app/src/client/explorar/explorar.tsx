@@ -202,11 +202,21 @@ function Results({ filters: f, provinces, zoneName, zone }: { filters: Filters; 
   const listings = stale ? lastGood.current : fresh;
   // Al moverlo, el mapa busca el área visible, con los mismos filtros; sin zona ni provincia (historia #96). Sustituye la
   // entrada del historial: Atrás sale de Explorar, no recorre cada gesto.
+  // El área buscada con el mapa completo del teléfono abierto: al cerrarlo («Ver lista» o Atrás vuelven a la entrada de
+  // la lista de antes de abrirlo, sin ella) se lleva a la lista, para que enseñe las mismas casas que el mapa.
+  const mapArea = useRef<string | null>(null);
   const searchArea = (bbox: string) => {
+    if (mapOpen) mapArea.current = bbox;
     const area = parseArea(bbox);
     if (!area || (f.area && areaParam(area) === areaParam(f.area))) return;
     void navigate({ to: "/explorar", search: { ...searchFor({ ...f, area, zone: null, prov: ALL_PROVINCES }), ...(search.mapa ? { mapa: search.mapa } : {}) }, replace: true, resetScroll: false });
   };
+  useEffect(() => {
+    const bbox = mapArea.current;
+    if (mapOpen || !bbox) return;
+    mapArea.current = null;
+    searchArea(bbox);
+  }, [mapOpen]);
   const selectedHouse = desktop ? listings?.find((listing) => listing.publicId === selected) : undefined;
   // La casa elegida que sale del área del mapa (o de los resultados): se cierra su tarjeta.
   useEffect(() => {
